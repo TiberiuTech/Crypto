@@ -38,9 +38,12 @@ body.dark-theme .navbar {
     font-size: 1.5rem;
     font-weight: bold;
     color: #00ff88;
-    z-index: 2;
-    white-space: nowrap;
-    flex-shrink: 0;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.logo:hover {
+    color: #00cc6a;
 }
 
 .hamburger {
@@ -227,4 +230,246 @@ body.dark-theme .auth-btn:hover {
         padding: 0.4rem 0.8rem;
         font-size: 0.9rem;
     }
+}
+
+.news-container {
+    max-width: 1200px;
+    margin: 100px auto 40px auto;
+    padding: 0 20px;
+}
+
+.news-title {
+    font-size: 2.5rem;
+    margin-bottom: 40px;
+    text-align: center;
+    color: var(--text-color);
+}
+
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.news-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+}
+
+.news-image {
+    height: 200px;
+    overflow: hidden;
+}
+
+.news-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.news-content {
+    padding: 20px;
+}
+
+.news-category {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.news-content h2 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.news-excerpt {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.news-date {
+    color: var(--text-secondary);
+}
+
+.read-more {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.read-more:hover {
+    text-decoration: underline;
+}
+
+/* Dark mode variables */
+:root {
+    --primary-color: #4a90e2;
+    --primary-color-rgb: 74, 144, 226;
+    --text-color: #333;
+    --text-secondary: #666;
+    --card-bg: #fff;
+}
+
+[data-theme="dark"] {
+    --primary-color: #60a5fa;
+    --primary-color-rgb: 96, 165, 250;
+    --text-color: #fff;
+    --text-secondary: #ccc;
+    --card-bg: #1a1a1a;
+}
+
+/* Footer Styles */
+.site-footer {
+    background-color: var(--card-bg);
+    color: var(--text-secondary);
+    padding: 40px 0;
+    margin-top: 60px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    text-align: center;
+}
+
+.footer-links {
+    margin-bottom: 20px;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin: 0 15px;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--primary-color);
+}
+
+.footer-social {
+    margin-bottom: 20px;
+}
+
+.footer-social a {
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+    margin: 0 10px;
+    transition: color 0.3s ease;
+}
+
+.footer-social a:hover {
+    color: var(--primary-color);
+}
+
+.footer-copyright {
+    font-size: 0.9rem;
+}
+
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+    gap: 10px;
+}
+
+.pagination-btn,
+.pagination-ellipsis {
+    padding: 8px 12px;
+    border: 1px solid var(--primary-color);
+    background-color: var(--card-bg);
+    color: var(--primary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 0.9rem;
+    min-width: 38px; /* Ensure buttons have a minimum width */
+    text-align: center;
+}
+
+.pagination-btn:hover,
+.pagination-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+/* Controls Container */
+.controls-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 15px; 
+}
+
+.search-input, .source-filter {
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid var(--primary-color);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-input:focus, .source-filter:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); /* Use RGB for box-shadow color */
+}
+
+.search-input {
+    flex-grow: 1; /* Allow search input to take more space */
+    min-width: 200px;
+}
+
+.source-filter {
+    min-width: 180px;
+    cursor: pointer;
+}
+
+/* Message for no results */
+.no-results-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    width: 100%; /* Ensure it takes full width for centering */
 } 
