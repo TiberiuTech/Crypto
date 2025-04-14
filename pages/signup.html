@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - Crypto-Platform</title>
+    <title>Sign Up - Crypto-Platform</title>
     <script>
       (function() {
         try { 
@@ -16,12 +16,13 @@
         }
       })();
     </script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/signup.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <nav class="navbar">
-        <a href="index.html" class="logo">Crypto-Platform</a>
+        <a href="../index.html" class="logo">Crypto-Platform</a>
         <button class="hamburger">
             <i class="fas fa-bars"></i>
         </button>
@@ -51,45 +52,37 @@
 
     <main class="form-page-container">
         <div class="form-container">
-            <h1 class="form-title">Forgot Password</h1>
-            <p class="form-description">Enter the email address associated with your account, and we'll send you a link to reset your password.</p>
-            <form id="forgot-password-form">
+            <h1 class="form-title">Sign Up</h1>
+            <form id="signup-form">
                 <div class="form-group">
-                    <label for="forgot-email">Email</label>
-                    <input type="email" id="forgot-email" name="email" required>
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" name="username" required>
                 </div>
-                <button type="submit" class="form-submit-btn">Send Reset Link</button>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="signup-password" name="password" required>
+                        <i class="fas fa-eye password-toggle-icon" id="toggle-signup-password"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">Confirm Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="signup-confirm-password" name="confirmPassword" required>
+                        <i class="fas fa-eye password-toggle-icon" id="toggle-signup-confirm-password"></i>
+                    </div>
+                </div>
+                <button type="submit" class="form-submit-btn">Sign Up</button>
             </form>
-             <p id="forgot-message" class="form-message"></p> <!-- For success/error messages -->
-            <p class="form-switch-link"><a href="login.html">Back to Login</a></p>
+            <p class="form-switch-link">Already have an account? <a href="login.html">Login</a></p>
         </div>
     </main>
 
-    <script src="script.js"></script> 
-    <script>
-        // Basic JS simulation for forgot password form
-        const forgotForm = document.getElementById('forgot-password-form');
-        const forgotMessage = document.getElementById('forgot-message');
-        if (forgotForm && forgotMessage) {
-            forgotForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('forgot-email').value;
-                forgotMessage.textContent = 'Processing...';
-                forgotMessage.style.color = 'var(--text-secondary)';
-                // Simulate API call
-                setTimeout(() => {
-                    if (email) {
-                        console.log('Simulating sending reset link to:', email);
-                        forgotMessage.textContent = 'If an account exists for this email, a password reset link has been sent.';
-                        forgotMessage.style.color = 'green';
-                        forgotForm.reset(); 
-                    } else {
-                        forgotMessage.textContent = 'Please enter a valid email address.';
-                        forgotMessage.style.color = 'red';
-                    }
-                }, 1500);
-            });
-        }
-    </script>
+    <script src="../script.js"></script>
+    <script src="js/signup.js"></script>
 </body>
 </html> 

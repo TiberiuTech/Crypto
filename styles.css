@@ -181,15 +181,14 @@ html[data-theme="dark"] .auth-btn:hover {
     border-color: var(--primary-color);
 }
 
-/* Style for active auth button */
 .auth-btn.active {
     background-color: var(--primary-color);
     color: white;
-    cursor: default; /* Optional: Indicate it's the current page */
+    cursor: default;
 }
 
 html[data-theme="dark"] .auth-btn.active {
-    background-color: var(--primary-color); /* Ensure consistency */
+    background-color: var(--primary-color);
     color: white;
 }
 
@@ -199,25 +198,25 @@ html[data-theme="dark"] .auth-btn.active {
     }
 
     .nav-links {
-        position: fixed;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100vh;
-        background-color: #f8f9fa;
+        display: none;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        transition: left 0.3s ease, background-color 0.3s;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 1rem 0;
         z-index: 1;
+        gap: 0;
     }
 
     html[data-theme="dark"] .nav-links {
-        background-color: #1a1a1a;
+        background-color: #2c2c2c;
     }
 
     .nav-links.active {
-        left: 0;
+        display: flex;
     }
 
     .controls-desktop {
@@ -227,12 +226,14 @@ html[data-theme="dark"] .auth-btn.active {
     .auth-buttons.desktop {
         display: none;
     }
-
+    
     .auth-buttons.mobile {
         display: flex;
         flex-direction: column;
+        align-items: center;
+        width: 100%;
         gap: 1rem;
-        margin-top: 2rem;
+        margin-top: 1rem;
     }
 
     .theme-toggle-btn.mobile {
@@ -240,12 +241,12 @@ html[data-theme="dark"] .auth-btn.active {
     }
 
     .auth-buttons.mobile .auth-btn {
-        width: 200px;
+        width: 80%;
         text-align: center;
     }
 
     .navbar {
-        padding: 1rem;
+        flex-wrap: wrap;
     }
 }
 
@@ -253,103 +254,12 @@ html[data-theme="dark"] .auth-btn.active {
     .logo {
         font-size: 1.2rem;
     }
-
     .auth-btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.9rem;
     }
 }
 
-.news-container {
-    max-width: 1200px;
-    margin: 100px auto 40px auto;
-    padding: 0 20px;
-}
-
-.news-title {
-    font-size: 2.5rem;
-    margin-bottom: 40px;
-    text-align: center;
-    color: var(--text-color);
-}
-
-.news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-}
-
-.news-card {
-    background: var(--card-bg);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.news-card:hover {
-    transform: translateY(-5px);
-}
-
-.news-image {
-    height: 200px;
-    overflow: hidden;
-}
-
-.news-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.news-content {
-    padding: 20px;
-}
-
-.news-category {
-    display: inline-block;
-    padding: 4px 12px;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    margin-bottom: 10px;
-}
-
-.news-content h2 {
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-    color: var(--text-color);
-}
-
-.news-excerpt {
-    color: var(--text-secondary);
-    margin-bottom: 15px;
-    line-height: 1.5;
-}
-
-.news-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9rem;
-}
-
-.news-date {
-    color: var(--text-secondary);
-}
-
-.read-more {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.read-more:hover {
-    text-decoration: underline;
-}
-
-/* Dark mode variables */
 :root {
     --primary-color: #4a90e2;
     --primary-color-rgb: 74, 144, 226;
@@ -365,306 +275,3 @@ html[data-theme="dark"] .auth-btn.active {
     --text-secondary: #ccc;
     --card-bg: #1a1a1a;
 }
-
-/* Footer Styles */
-.site-footer {
-    background-color: var(--card-bg);
-    color: var(--text-secondary);
-    padding: 40px 0;
-    margin-top: 60px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-    text-align: center;
-}
-
-.footer-links {
-    margin-bottom: 20px;
-}
-
-.footer-links a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    margin: 0 15px;
-    transition: color 0.3s ease;
-}
-
-.footer-links a:hover {
-    color: var(--primary-color);
-}
-
-.footer-social {
-    margin-bottom: 20px;
-}
-
-.footer-social a {
-    color: var(--text-secondary);
-    font-size: 1.3rem;
-    margin: 0 10px;
-    transition: color 0.3s ease;
-}
-
-.footer-social a:hover {
-    color: var(--primary-color);
-}
-
-.footer-copyright {
-    font-size: 0.9rem;
-}
-
-/* Pagination Styles */
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 40px;
-    gap: 10px;
-}
-
-.pagination-btn,
-.pagination-ellipsis {
-    padding: 8px 12px;
-    border: 1px solid var(--primary-color);
-    background-color: #ffffff;
-    color: var(--primary-color);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    font-size: 0.9rem;
-    min-width: 38px;
-    text-align: center;
-}
-
-.pagination-btn:hover,
-.pagination-btn.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.pagination-ellipsis {
-    border: none;
-    background: none;
-    color: var(--text-secondary);
-    cursor: default;
-}
-
-/* Controls Container */
-.controls-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.search-input, .source-filter {
-    padding: 10px 15px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: #ffffff;
-    color: var(--text-color);
-    font-size: 0.95rem;
-    transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
-}
-
-.search-input:focus, .source-filter:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5);
-}
-
-.search-input {
-    flex-grow: 1;
-    min-width: 200px;
-}
-
-.source-filter {
-    min-width: 180px;
-    cursor: pointer;
-}
-
-/* Message for no results */
-.no-results-message {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    width: 100%;
-}
-
-html[data-theme="dark"] .search-input, 
-html[data-theme="dark"] .source-filter {
-    background-color: var(--card-bg);
-    color: var(--text-color);
-    border-color: #444;
-}
-
-html[data-theme="dark"] .pagination-btn,
-html[data-theme="dark"] .pagination-ellipsis {
-     background-color: var(--card-bg);
-}
-
-html[data-theme="dark"] .pagination-ellipsis {
-     border: none;
-     background: none;
-     color: var(--text-secondary);
-}
-
-/* Form Page Styles */
-.form-page-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 80px); /* Adjust based on navbar height */
-    padding: 40px 20px;
-}
-
-.form-container {
-    background-color: var(--card-bg);
-    padding: 30px 40px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 450px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-html[data-theme="dark"] .form-container {
-     border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.form-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 30px;
-    color: var(--text-color);
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px 15px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-    color: #333;
-    font-size: 1rem;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-html[data-theme="dark"] .form-group input {
-    background-color: #2a2a2a;
-    border-color: #444;
-    color: #fff;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5);
-}
-
-.form-submit-btn {
-    width: 100%;
-    padding: 12px 20px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-    margin-top: 10px;
-}
-
-.form-submit-btn:hover {
-    opacity: 0.9;
-}
-
-.form-submit-btn:active {
-    transform: scale(0.98);
-}
-
-.form-extra-links {
-    text-align: right;
-    margin-top: 15px;
-    margin-bottom: -10px; /* Reduce space before switch link */
-}
-
-.forgot-password-link {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-}
-
-.forgot-password-link:hover {
-    color: var(--primary-color);
-    text-decoration: underline;
-}
-
-.form-switch-link {
-    text-align: center;
-    margin-top: 25px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.form-description {
-    text-align: center;
-    margin-bottom: 25px;
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.form-message {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 0.9rem;
-    min-height: 1.2em; /* Prevent layout jump */
-}
-
-.password-input-container {
-    position: relative;
-}
-
-.password-toggle-icon {
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: color 0.2s;
-}
-
-.password-toggle-icon:hover {
-    color: var(--primary-color);
-}
-
-.password-toggle-icon.fa-eye-slash {
-    /* Optional: slightly different color when slashed */
-    color: var(--primary-color);
-} 
