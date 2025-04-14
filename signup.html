@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto-Platform - News</title>
+    <title>Sign Up - Crypto-Platform</title>
     <script>
       (function() {
         try { 
@@ -26,7 +26,7 @@
             <i class="fas fa-bars"></i>
         </button>
         <div class="nav-links">
-            <a href="news.html" class="nav-item active">News</a>
+            <a href="news.html" class="nav-item">News</a>
             <a href="#" class="nav-item">Prices</a>
             <a href="#" class="nav-item">Orionix</a>
             <a href="#" class="nav-item">Trade</a>
@@ -49,26 +49,38 @@
         </div>
     </nav>
 
-    <main class="news-container">
-        <h1 class="news-title">Latest Crypto News</h1>
-
-        <div class="controls-container">
-            <input type="text" id="search-input" class="search-input" placeholder="Search news...">
-            <select id="source-filter" class="source-filter">
-                <option value="">All Sources</option>
-                <!-- Options will be populated by JavaScript -->
-            </select>
-        </div>
-        
-        <div class="news-grid" id="news-grid-container">
-            <!-- News articles will be loaded here by JavaScript -->
-        </div>
-
-        <div class="pagination-container" id="pagination-controls">
-            <!-- Pagination controls will be loaded here by JavaScript -->
+    <main class="form-page-container">
+        <div class="form-container">
+            <h1 class="form-title">Sign Up</h1>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="signup-password" name="password" required>
+                        <i class="fas fa-eye password-toggle-icon" id="toggle-signup-password"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm-password">Confirm Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="signup-confirm-password" name="confirmPassword" required>
+                        <i class="fas fa-eye password-toggle-icon" id="toggle-signup-confirm-password"></i>
+                    </div>
+                </div>
+                <button type="submit" class="form-submit-btn">Sign Up</button>
+            </form>
+            <p class="form-switch-link">Already have an account? <a href="login.html">Login</a></p>
         </div>
     </main>
 
-    <script src="script.js"></script>
+    <script src="script.js"></script> 
 </body>
 </html> 

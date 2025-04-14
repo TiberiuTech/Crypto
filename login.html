@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto-Platform - News</title>
+    <title>Login - Crypto-Platform</title>
     <script>
       (function() {
         try { 
@@ -26,7 +26,7 @@
             <i class="fas fa-bars"></i>
         </button>
         <div class="nav-links">
-            <a href="news.html" class="nav-item active">News</a>
+            <a href="news.html" class="nav-item">News</a>
             <a href="#" class="nav-item">Prices</a>
             <a href="#" class="nav-item">Orionix</a>
             <a href="#" class="nav-item">Trade</a>
@@ -49,26 +49,30 @@
         </div>
     </nav>
 
-    <main class="news-container">
-        <h1 class="news-title">Latest Crypto News</h1>
-
-        <div class="controls-container">
-            <input type="text" id="search-input" class="search-input" placeholder="Search news...">
-            <select id="source-filter" class="source-filter">
-                <option value="">All Sources</option>
-                <!-- Options will be populated by JavaScript -->
-            </select>
-        </div>
-        
-        <div class="news-grid" id="news-grid-container">
-            <!-- News articles will be loaded here by JavaScript -->
-        </div>
-
-        <div class="pagination-container" id="pagination-controls">
-            <!-- Pagination controls will be loaded here by JavaScript -->
+    <main class="form-page-container">
+        <div class="form-container">
+            <h1 class="form-title">Login</h1>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="login-password" name="password" required>
+                        <i class="fas fa-eye password-toggle-icon" id="toggle-login-password"></i>
+                    </div>
+                </div>
+                <button type="submit" class="form-submit-btn">Login</button>
+                <div class="form-extra-links">
+                     <a href="forgot-password.html" class="forgot-password-link">Forgot password?</a>
+                </div>
+            </form>
+            <p class="form-switch-link">Don't have an account? <a href="signup.html">Sign Up</a></p>
         </div>
     </main>
 
-    <script src="script.js"></script>
+    <script src="script.js"></script> 
 </body>
 </html> 
