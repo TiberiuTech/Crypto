@@ -18,7 +18,6 @@
     </script>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/prices.css">
-    <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -69,25 +68,26 @@
             </button>
         </div>
 
-        <div class="crypto-table-container">
+        <div class="table-container">
             <table class="crypto-table">
                 <thead>
                     <tr>
-                        <th>Monedă</th>
-                        <th>Preț</th>
+                        <th>Coin</th>
+                        <th>Price</th>
                         <th>24h %</th>
-                        <th>Volum 24h</th>
-                        <th>Capitalizare</th>
-                        <th>Grafic 7z</th>
+                        <th>Volume 24h</th>
+                        <th>Market Cap</th>
+                        <th>Chart 7d</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="cryptoTableBody">
-                    <!-- Table rows will be dynamically added here -->
+                    <!-- Datele vor fi populate dinamic -->
                 </tbody>
             </table>
-            <div class="table-pagination" id="tablePagination">
-                <!-- Pagination buttons will be dynamically added here -->
-            </div>
+        </div>
+        <div id="tablePagination" class="pagination">
+            <!-- Paginația va fi populată dinamic -->
         </div>
     </main>
 
@@ -233,6 +233,7 @@
         </div>
     </div>
     
+    <script src="../script.js" defer></script>
     <script src="js/prices.js"></script>
 </body>
 </html> 

@@ -144,3 +144,89 @@ html[data-theme="dark"] .form-group input {
 .password-toggle-icon.fa-eye-slash {
     color: var(--primary-color);
 }
+
+/* Stiluri specifice pentru pagina de login */
+.login-form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remember-me input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.social-login {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.social-login-title {
+    position: relative;
+    margin-bottom: 20px;
+    color: var(--secondary-text-color);
+}
+
+.social-login-title::before,
+.social-login-title::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background-color: var(--border-color);
+}
+
+.social-login-title::before {
+    left: 0;
+}
+
+.social-login-title::after {
+    right: 0;
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.social-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.social-btn.google {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid var(--border-color);
+}
+
+.social-btn.facebook {
+    background-color: #1877f2;
+    color: white;
+}
+
+.social-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

@@ -5,273 +5,589 @@
     font-family: Arial, sans-serif;
 }
 
+:root {
+    /* Dark Theme Defaults */
+    --background-color: #0a0d14;
+    --card-background: #151922;
+    --text-color: #ffffff;
+    --secondary-text-color: rgba(255, 255, 255, 0.7);
+    --accent-color: #4a90e2;
+    --accent-color-darker: #2563eb;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --positive-color: #10b981;
+    --negative-color: #ef4444;
+    --positive-bg: rgba(16, 185, 129, 0.1);
+    --negative-bg: rgba(239, 68, 68, 0.1);
+}
+
+html[data-theme="light"] {
+    --background-color: #f4f7f9;
+    --card-background: #ffffff;
+    --text-color: #1f2937;
+    --secondary-text-color: #6b7280;
+    --accent-color: #3b82f6;
+    --accent-color-darker: #1d4ed8;
+    --border-color: #e5e7eb;
+    --positive-color: #059669;
+    --negative-color: #dc2626;
+    --positive-bg: rgba(16, 185, 129, 0.1);
+    --negative-bg: rgba(239, 68, 68, 0.1);
+}
+
 body {
-    background-color: #f4f4f4;
-    color: #1a1a1a;
-    transition: background-color 0.3s, color 0.3s;
+    background-color: var(--background-color);
+    background-attachment: fixed;
+    color: var(--text-color);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    position: relative;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-html[data-theme="dark"] body {
-    background-color: #1a1a1a;
+/* Efecte radiale pentru tema întunecată (implicită) */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 15% 25%, rgba(74, 144, 226, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 85% 75%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* Stiluri pentru tema luminoasă */
+html[data-theme="light"] body {
+    background: linear-gradient(135deg, #E0EAFC, #CFDEF3);
+}
+
+/* Ascundem efectele radiale dark și aplicăm unele light */
+html[data-theme="light"] body::before {
+    opacity: 0;
+}
+
+/* Stiluri generale pentru formulare */
+.form-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px); 
+    padding: 40px 20px;
+}
+
+.form-container {
+    background-color: var(--card-background);
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid var(--border-color);
+}
+
+.form-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: var(--text-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+.form-submit-btn {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: var(--accent-color);
     color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 10px;
 }
 
+.form-submit-btn:hover {
+    opacity: 0.9;
+}
+
+.form-submit-btn:active {
+    transform: scale(0.98);
+}
+
+.form-extra-links {
+    text-align: right;
+    margin-top: 15px;
+    margin-bottom: -10px; 
+}
+
+.form-switch-link {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+}
+
+.form-description {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--secondary-text-color);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.form-message {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    min-height: 1.2em; 
+}
+
+.password-input-container {
+    position: relative;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    transition: color 0.2s;
+}
+
+.password-toggle-icon:hover {
+    color: var(--accent-color);
+}
+
+.password-toggle-icon.fa-eye-slash {
+    color: var(--accent-color);
+}
+
+/* Stiluri generale pentru paginare */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+    gap: 10px;
+}
+
+.pagination-btn,
+.pagination-ellipsis {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    font-size: 0.9rem;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.pagination-btn:hover,
+.pagination-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    border: none;
+    background: none;
+    color: var(--secondary-text-color);
+    cursor: default;
+}
+
+/* Stiluri generale pentru mesaje */
+.no-results-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--secondary-text-color);
+    font-size: 1.1rem;
+    width: 100%;
+}
+
+/* Stiluri generale pentru containere */
+.controls-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Stiluri generale pentru carduri */
+.card {
+    background: var(--card-background);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border-color: rgba(74, 144, 226, 0.3);
+}
+
+/* Stiluri generale pentru butoane */
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    color: var(--text-color);
+}
+
+.btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-color-darker);
+    border-color: var(--accent-color-darker);
+}
+
+/* Stiluri generale pentru input-uri */
+.input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+/* Stiluri generale pentru select-uri */
+.select {
+    width: 100%;
+    padding: 10px 15px;
+    padding-right: 3rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+/* Stiluri generale pentru grid-uri */
+.grid {
+    display: grid;
+    gap: 20px;
+}
+
+.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .grid-4 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .grid-3, .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-container {
+        padding: 20px;
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Navbar Styling */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background-color: #ffffff;
-    color: #333;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    position: relative;
-    flex-wrap: nowrap;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-html[data-theme="dark"] .navbar {
-    background-color: #1a1a1a;
-    color: white;
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
 }
 
 .logo {
+    color: var(--accent-color);
+    text-decoration: none;
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary-color);
-    text-decoration: none;
-    transition: color 0.3s ease;
 }
 
-.logo:hover {
-    color: var(--primary-color);
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.nav-item {
+    color: var(--secondary-text-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    padding: 0.5rem 0;
+    position: relative;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    color: var(--text-color);
+}
+
+.nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--accent-color);
+}
+
+.controls-desktop {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.auth-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    background-color: transparent;
+    color: var(--text-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.auth-btn.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+.theme-toggle-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+    color: var(--text-color);
+    border-color: var(--text-color);
 }
 
 .hamburger {
     display: none;
     background: none;
     border: none;
-    color: #333;
+    color: var(--text-color);
     font-size: 1.5rem;
     cursor: pointer;
-    z-index: 2;
 }
 
-html[data-theme="dark"] .hamburger {
-    color: white;
-}
-
-.nav-links {
-    display: flex;
-    gap: 2rem;
-    margin: 0 auto;
-    flex-wrap: nowrap;
-    align-items: center;
-}
-
-.nav-item {
-    color: var(--text-secondary);
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s, color 0.3s;
-    white-space: nowrap;
-}
-
-.nav-item.active {
-    color: var(--primary-color);
-    font-weight: bold;
-    position: relative;
-}
-
-.nav-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0.5rem;
-    right: 0.5rem;
-    height: 2px;
-    background-color: var(--primary-color);
-}
-
-html[data-theme="dark"] .nav-item {
-    color: var(--text-secondary);
-}
-
-html[data-theme="dark"] .nav-item.active {
-    color: var(--primary-color);
-}
-
-.nav-item:hover {
-    background-color: rgba(var(--primary-color-rgb), 0.1);
-    color: var(--primary-color);
-}
-
-html[data-theme="dark"] .nav-item:hover {
-    background-color: rgba(var(--primary-color-rgb), 0.2);
-    color: var(--primary-color);
-}
-
-.controls-desktop {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.auth-buttons {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.auth-buttons.mobile {
-    display: none;
-}
-
-.theme-toggle-btn {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s;
-}
-
-.theme-toggle-btn:hover {
-    color: var(--primary-color);
-}
-
+/* Ascundem elementele mobile pe desktop */
+.auth-buttons.mobile,
 .theme-toggle-btn.mobile {
     display: none;
-    margin-top: 1rem;
 }
 
-.auth-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    background-color: transparent;
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    white-space: nowrap;
-    font-weight: bold;
-}
-
-html[data-theme="dark"] .auth-btn {
-    background-color: transparent;
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-}
-
-.auth-btn:hover {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-html[data-theme="dark"] .auth-btn:hover {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.auth-btn.active {
-    background-color: var(--primary-color);
-    color: white;
-    cursor: default;
-}
-
-html[data-theme="dark"] .auth-btn.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-@media (max-width: 768px) {
-    .hamburger {
-        display: block;
-    }
-
+/* Media Queries pentru Responsive Design */
+@media (max-width: 900px) { 
     .nav-links {
-        display: none;
-        flex-direction: column;
         position: absolute;
-        top: 100%;
+        top: 100%; 
         left: 0;
         width: 100%;
-        background-color: #ffffff;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        background-color: var(--card-background);
+        flex-direction: column;
+        align-items: center;
         padding: 1rem 0;
-        z-index: 1;
-        gap: 0;
-    }
-
-    html[data-theme="dark"] .nav-links {
-        background-color: #2c2c2c;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+        border-top: 1px solid var(--border-color);
     }
 
     .nav-links.active {
-        display: flex;
+        max-height: 500px;
+        padding: 1rem 0;
+    }
+
+    .hamburger {
+        display: block;
     }
 
     .controls-desktop {
         display: none;
     }
 
-    .auth-buttons.desktop {
-        display: none;
-    }
-    
-    .auth-buttons.mobile {
-        display: flex;
+    /* Afișăm butoanele mobile în meniul hamburger */
+    .auth-buttons.mobile,
+    .theme-toggle-btn.mobile {
+        display: flex; 
         flex-direction: column;
         align-items: center;
-        width: 100%;
         gap: 1rem;
         margin-top: 1rem;
     }
 
-    .theme-toggle-btn.mobile {
-        display: flex;
+    .auth-buttons.desktop, 
+    .theme-toggle-btn:not(.mobile) {
+        display: none;
     }
 
-    .auth-buttons.mobile .auth-btn {
-        width: 80%;
+    .nav-item {
+        width: 100%;
         text-align: center;
+        padding: 0.8rem 0;
     }
 
-    .navbar {
-        flex-wrap: wrap;
+    .nav-item.active::after {
+        display: none;
+    }
+
+    .nav-item.active {
+        background-color: var(--accent-color);
+        color: white;
     }
 }
 
 @media (max-width: 480px) {
+    .navbar {
+        padding: 1rem;
+    }
+
     .logo {
         font-size: 1.2rem;
     }
+
     .auth-btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.9rem;
     }
-}
-
-:root {
-    --primary-color: #4a90e2;
-    --primary-color-rgb: 74, 144, 226;
-    --text-color: #333;
-    --text-secondary: #666;
-    --card-bg: #fff;
-}
-
-[data-theme="dark"] {
-    --primary-color: #60a5fa;
-    --primary-color-rgb: 96, 165, 250;
-    --text-color: #fff;
-    --text-secondary: #ccc;
-    --card-bg: #1a1a1a;
 }

@@ -1,40 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Theme toggle functionality
-    const themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
-    const htmlElement = document.documentElement;
-    
-    // Check saved theme preference or system preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcons(savedTheme);
-    } else {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        htmlElement.setAttribute('data-theme', systemTheme);
-        updateThemeIcons(systemTheme);
-    }
-    
-    // Theme toggle click handler for both buttons
-    themeToggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcons(newTheme);
-        });
-    });
-    
-    function updateThemeIcons(theme) {
-        themeToggleBtns.forEach(btn => {
-            const iconElement = btn.querySelector('i');
-            if (iconElement) {
-                iconElement.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-            }
-        });
-    }
-
     const API_KEY = 'bf3377596e9ff67662bd43919805d92f1416e7721a7a2d7e60a96486f027f343';
     // Lista extinsă de monede
     const ALL_COINS = [
@@ -406,6 +370,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const endIndex = startIndex + ITEMS_PER_PAGE;
         const pageData = tableData.slice(startIndex, endIndex);
 
+        // Actualizăm headerele tabelului
+        document.querySelector('.crypto-table thead tr').innerHTML = `
+            <th>Coin</th>
+            <th>Price</th>
+            <th>24h %</th>
+            <th>Volume 24h</th>
+            <th>Market Cap</th>
+            <th>Chart 7d</th>
+            <th>Actions</th>
+        `;
+
         tableBody.innerHTML = pageData.map(coin => `
             <tr>
                 <td>
@@ -423,8 +398,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="volume-cell">$${formatNumber(coin.volume24h)}</td>
                 <td class="market-cap-cell">$${formatNumber(coin.marketCap)}</td>
-                <td>
+                <td class="chart-cell">
                     <canvas id="chart-${coin.symbol}" class="mini-chart"></canvas>
+                </td>
+                <td class="actions-cell">
+                    <div class="action-buttons">
+                        <button class="action-btn trade-btn" onclick="window.location.href='trade.html?symbol=${coin.symbol}&price=${coin.price}'">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Trade</span>
+                        </button>
+                        <button class="action-btn alert-btn" onclick="openAlertModal('${coin.symbol}', ${coin.price})">
+                            <i class="fas fa-bell"></i>
+                            <span>Alert</span>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -539,37 +526,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPages = Math.ceil(tableData.length / ITEMS_PER_PAGE);
         
         let paginationHTML = `
-            <button class="page-button" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(1)">
-                <i class="fas fa-angle-double-left"></i>
-            </button>
-            <button class="page-button" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
-                <i class="fas fa-angle-left"></i>
+            <button class="pagination-btn prev" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+                << Prev
             </button>
         `;
 
+        // Afișăm toate numerele de pagină
         for (let i = 1; i <= totalPages; i++) {
-            if (
-                i === 1 ||
-                i === totalPages ||
-                (i >= currentPage - 1 && i <= currentPage + 1)
-            ) {
-                paginationHTML += `
-                    <button class="page-button ${i === currentPage ? 'active' : ''}" 
-                            onclick="changePage(${i})">
-                        ${i}
-                    </button>
-                `;
-            } else if (i === currentPage - 2 || i === currentPage + 2) {
-                paginationHTML += `<span class="page-button">...</span>`;
-            }
+            paginationHTML += `
+                <button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
+                    ${i}
+                </button>
+            `;
         }
 
         paginationHTML += `
-            <button class="page-button" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
-                <i class="fas fa-angle-right"></i>
-            </button>
-            <button class="page-button" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${totalPages})">
-                <i class="fas fa-angle-double-right"></i>
+            <button class="pagination-btn next" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+                Next >>
             </button>
         `;
 
@@ -910,4 +883,68 @@ document.addEventListener('DOMContentLoaded', () => {
         // Combinăm scorurile pentru a obține o tensiune între 0 (linie dreaptă) și 0.6 (foarte curbată)
         return 0.2 + (volumeScore + volatilityScore) * 0.2;
     }
+
+    // Adăugăm funcțiile pentru gestionarea modalurilor
+    window.openAlertModal = function(symbol, currentPrice) {
+        const modal = document.createElement('div');
+        modal.className = 'modal alert-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Set Price Alert for ${symbol}</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="current-price-info">
+                        <span>Current Price:</span>
+                        <span class="current-price">$${currentPrice.toFixed(2)}</span>
+                    </div>
+                    
+                    <div class="alert-form">
+                        <div class="input-group">
+                            <label>Alert me when price is:</label>
+                            <select class="condition-select">
+                                <option value="above">Above</option>
+                                <option value="below">Below</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Target Price (USD)</label>
+                            <input type="number" class="target-price" placeholder="0.00" step="0.01">
+                        </div>
+                        
+                        <div class="notification-options">
+                            <label>Notification Method:</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="browser-notify" checked>
+                                <label for="browser-notify">Browser Notification</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="email-notify">
+                                <label for="email-notify">Email</label>
+                            </div>
+                        </div>
+                        
+                        <button class="set-alert-btn">Set Alert</button>
+                    </div>
+                    
+                    <div class="active-alerts">
+                        <h3>Active Alerts</h3>
+                        <div class="alerts-list">
+                            <!-- Lista de alerte active va fi populată dinamic -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        const closeBtn = modal.querySelector('.modal-close');
+        closeBtn.onclick = () => modal.remove();
+        
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+    };
 }); 
