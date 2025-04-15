@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto-Platform - Prices</title>
+    <script>
+      (function() {
+        try { 
+          const savedTheme = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          console.warn('Could not apply theme from localStorage', e);
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/prices.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="logo">Crypto-Platform</a>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="news.html" class="nav-item">News</a>
+            <a href="#" class="nav-item active">Prices</a>
+            <a href="#" class="nav-item">Orionix</a>
+            <a href="#" class="nav-item">Trade</a>
+            <div class="auth-buttons mobile">
+                <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+                <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+            <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="controls-desktop">
+            <button id="themeToggleBtn" class="theme-toggle-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="auth-buttons desktop">
+                <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+                <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="prices-container">
+        <h1 class="prices-title">Crypto Prices</h1>
+        
+        <div class="carousel-container">
+            <button class="carousel-btn prev" id="prevBtn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="carousel-track" id="carouselTrack">
+                <!-- Coin cards will be dynamically added here -->
+            </div>
+            
+            <button class="carousel-btn next" id="nextBtn">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div class="crypto-table-container">
+            <table class="crypto-table">
+                <thead>
+                    <tr>
+                        <th>Monedă</th>
+                        <th>Preț</th>
+                        <th>24h %</th>
+                        <th>Volum 24h</th>
+                        <th>Capitalizare</th>
+                        <th>Grafic 7z</th>
+                    </tr>
+                </thead>
+                <tbody id="cryptoTableBody">
+                    <!-- Table rows will be dynamically added here -->
+                </tbody>
+            </table>
+            <div class="table-pagination" id="tablePagination">
+                <!-- Pagination buttons will be dynamically added here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal pentru detalii monedă -->
+    <div id="coinModal" class="coin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="coin-info">
+                    <img id="modalCoinImage" alt="Coin icon" />
+                    <div>
+                        <h2 id="modalCoinName"></h2>
+                        <span id="modalCoinSymbol" class="coin-symbol"></span>
+                    </div>
+                </div>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-label">Preț Curent</div>
+                    <div id="modalPrice" class="stat-value"></div>
+                    <div id="modal24hChange" class="stat-change"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">24h High/Low</div>
+                    <div id="modal24hHigh" class="stat-value"></div>
+                    <div id="modal24hLow" class="stat-value" style="font-size: 16px; color: rgba(255,255,255,0.7);"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Volum 24h</div>
+                    <div id="modal24hVolume" class="stat-value"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Capitalizare</div>
+                    <div id="modalMarketCap" class="stat-value"></div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3 class="chart-title">Evoluție Preț</h3>
+                    <div class="chart-periods">
+                        <button class="period-button active" data-period="24h">24h</button>
+                        <button class="period-button" data-period="7d">7d</button>
+                        <button class="period-button" data-period="30d">30d</button>
+                        <button class="period-button" data-period="1y">1y</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3><i class="fas fa-microchip"></i> Specificații Tehnice</h3>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Algoritm</span>
+                            <span class="info-value">SHA-256</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tip Consens</span>
+                            <span class="info-value">PoW</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Putere Hash</span>
+                            <span class="info-value">411.84 EH/s</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dificultate</span>
+                            <span class="info-value">72.005 T</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3><i class="fas fa-coins"></i> Economie & Supply</h3>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Supply Maxim</span>
+                            <span class="info-value">21M BTC</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Supply Circulant</span>
+                            <span class="info-value">19.6M BTC</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Următorul Halving</span>
+                            <span class="info-value">Apr 2024</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Block Reward</span>
+                            <span class="info-value">6.25 BTC</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3><i class="fas fa-network-wired"></i> Rețea & Performanță</h3>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Timp Block</span>
+                            <span class="info-value">10 min</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">TPS</span>
+                            <span class="info-value">7</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Noduri Active</span>
+                            <span class="info-value">15,000+</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dimensiune Chain</span>
+                            <span class="info-value">491.23 GB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3><i class="fas fa-history"></i> Istoric & Dezvoltare</h3>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Data Lansării</span>
+                            <span class="info-value">Ian 2009</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Creator</span>
+                            <span class="info-value">S. Nakamoto</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Prima Tranzacție</span>
+                            <span class="info-value">12 Ian 2009</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Primul Halving</span>
+                            <span class="info-value">Nov 2012</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/prices.js"></script>
+</body>
+</html> 
