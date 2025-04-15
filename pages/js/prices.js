@@ -209,14 +209,25 @@ document.addEventListener('DOMContentLoaded', () => {
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: Array(coin.historicalData.length).fill(''),
+                labels: coin.historicalData.map(point => ''),
                 datasets: [{
                     data: coin.historicalData,
                     borderColor: coin.change24h >= 0 ? '#10b981' : '#ef4444',
-                    borderWidth: 1.5,
+                    borderWidth: Math.abs(coin.change24h) > 2 ? 2 : 1.5,
                     fill: true,
-                    backgroundColor: gradient,
-                    tension: 0.4,
+                    backgroundColor: (context) => {
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 50);
+                        const alpha = Math.min(Math.abs(coin.change24h) / 10, 0.3);
+                        if (coin.change24h >= 0) {
+                            gradient.addColorStop(0, `rgba(16, 185, 129, ${alpha})`);
+                            gradient.addColorStop(1, `rgba(16, 185, 129, 0)`);
+                        } else {
+                            gradient.addColorStop(0, `rgba(239, 68, 68, ${alpha})`);
+                            gradient.addColorStop(1, `rgba(239, 68, 68, 0)`);
+                        }
+                        return gradient;
+                    },
+                    tension: 0.6,
                     pointRadius: 0
                 }]
             },
@@ -225,31 +236,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { 
+                    tooltip: {
                         enabled: true,
-                        mode: 'nearest', // Show tooltip for the nearest point
+                        mode: 'index',
                         intersect: false,
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         titleColor: '#fff',
                         bodyColor: '#fff',
-                        padding: 8,
-                        displayColors: false, // Don't show the color box
+                        padding: 12,
+                        displayColors: false,
                         callbacks: {
-                            title: function() { return ''; }, // No title needed for mini chart
-                            label: function(context) {
-                                const value = context.raw.toFixed(2);
-                                // Assuming data corresponds to last 24 hours for carousel
-                                const hour = context.dataIndex;
-                                return `${hour}:00 - $${value}`; 
-                            }
-                        },
-                        caretSize: 5,
-                        cornerRadius: 4
+                            title: (items) => {
+                                if (!items.length) return '';
+                                const hoursAgo = 24 - items[0].dataIndex;
+                                const date = new Date();
+                                date.setHours(date.getHours() - hoursAgo);
+                                return date.toLocaleString('ro-RO', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                            },
+                            label: (item) => `$${item.raw.toFixed(2)}`
+                        }
                     }
                 },
                 scales: {
                     x: { display: false },
-                    y: { display: false }
+                    y: {
+                        display: false,
+                        min: (context) => {
+                            const values = context.chart.data.datasets[0].data;
+                            const min = Math.min(...values);
+                            const range = Math.max(...values) - min;
+                            const padding = range * (Math.abs(coin.change24h) / 100);
+                            return min - padding;
+                        },
+                        max: (context) => {
+                            const values = context.chart.data.datasets[0].data;
+                            const max = Math.max(...values);
+                            const range = max - Math.min(...values);
+                            const padding = range * (Math.abs(coin.change24h) / 100);
+                            return max + padding;
+                        }
+                    }
                 }
             }
         });
@@ -428,30 +457,35 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    // Labels now represent 168 hours (7 days)
-                    labels: Array(coin.historicalData.length).fill(''), 
+                    labels: coin.historicalData.map(point => ''),
                     datasets: [{
                         data: coin.historicalData,
                         borderColor: coin.change24h >= 0 ? '#10b981' : '#ef4444',
-                        borderWidth: 1.5, // Keep slightly thinner line for table
+                        borderWidth: Math.abs(coin.change24h) > 2 ? 2 : 1.5,
                         fill: true,
-                        backgroundColor: gradient,
-                        tension: 0.4,
-                        pointRadius: 0, // No points needed for detailed line
-                        pointHoverRadius: 0 // No hover points needed
+                        backgroundColor: (context) => {
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 50);
+                            const alpha = Math.min(Math.abs(coin.change24h) / 10, 0.3);
+                            if (coin.change24h >= 0) {
+                                gradient.addColorStop(0, `rgba(16, 185, 129, ${alpha})`);
+                                gradient.addColorStop(1, `rgba(16, 185, 129, 0)`);
+                            } else {
+                                gradient.addColorStop(0, `rgba(239, 68, 68, ${alpha})`);
+                                gradient.addColorStop(1, `rgba(239, 68, 68, 0)`);
+                            }
+                            return gradient;
+                        },
+                        tension: 0.6,
+                        pointRadius: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index' // Keep index mode 
-                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            enabled: true, // Keep tooltips enabled
+                            enabled: true,
                             mode: 'index',
                             intersect: false,
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -459,38 +493,39 @@ document.addEventListener('DOMContentLoaded', () => {
                             bodyColor: '#fff',
                             padding: 12,
                             displayColors: false,
-                            titleFont: { weight: 'normal' },
-                            bodyFont: { size: 12 },
-                            titleMarginBottom: 4,
                             callbacks: {
                                 title: (items) => {
                                     if (!items.length) return '';
-                                    // Calculate approximate date/time based on hourly index over 7 days
-                                    const hoursAgo = 168 - items[0].dataIndex;
+                                    const hoursAgo = 24 - items[0].dataIndex;
                                     const date = new Date();
                                     date.setHours(date.getHours() - hoursAgo);
-                                    return date.toLocaleString('ro-RO', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+                                    return date.toLocaleString('ro-RO', {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    });
                                 },
-                                label: (item) => {
-                                    const value = item.raw.toFixed(2);
-                                    return `$${value}`; 
-                                }
-                            },
-                            cornerRadius: 4,
-                            caretSize: 5,
-                            caretPadding: 6
+                                label: (item) => `$${item.raw.toFixed(2)}`
+                            }
                         }
                     },
                     scales: {
-                        x: { display: false }, // Keep axes hidden for mini charts
-                        y: { display: false }
-                    },
-                    layout: {
-                        padding: {
-                            left: 0,
-                            right: 0,
-                            top: 20,
-                            bottom: 0
+                        x: { display: false },
+                        y: {
+                            display: false,
+                            min: (context) => {
+                                const values = context.chart.data.datasets[0].data;
+                                const min = Math.min(...values);
+                                const range = Math.max(...values) - min;
+                                const padding = range * (Math.abs(coin.change24h) / 100);
+                                return min - padding;
+                            },
+                            max: (context) => {
+                                const values = context.chart.data.datasets[0].data;
+                                const max = Math.max(...values);
+                                const range = max - Math.min(...values);
+                                const padding = range * (Math.abs(coin.change24h) / 100);
+                                return max + padding;
+                            }
                         }
                     }
                 }
@@ -865,4 +900,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('resize', handleResize);
     // --- End Responsive Chart Handling ---
+
+    // Funcție helper pentru calcularea tensiunii curbei
+    function calculateTension(coin) {
+        // Tensiune bazată pe volatilitate și volum
+        const volumeScore = Math.min(coin.volume24h / 1e9, 1); // Normalizăm volumul la 1B
+        const volatilityScore = Math.min(Math.abs(coin.change24h) / 10, 1); // Normalizăm volatilitatea la 10%
+        
+        // Combinăm scorurile pentru a obține o tensiune între 0 (linie dreaptă) și 0.6 (foarte curbată)
+        return 0.2 + (volumeScore + volatilityScore) * 0.2;
+    }
 }); 
