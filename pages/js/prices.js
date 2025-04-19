@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let modalChart = null;
     let currentChartPeriod = '24h'; // Store the currently selected period
 
+    // Adăugăm variabile pentru căutare și filtrare
+    let searchTerm = '';
+    let filterValue = 'all';
+    let filteredData = [];
+
     async function fetchCoinData() {
         try {
             const response = await fetch(
@@ -345,11 +350,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }).filter(coin => coin !== null); // Filter out any null entries from missing data
 
+            filteredData = [...tableData]; // Inițializăm filteredData cu toate datele
             renderTable();
             renderPagination();
         } catch (error) {
             console.error('Error fetching table data:', error);
-            document.getElementById('cryptoTableBody').innerHTML = '<tr><td colspan="6">Failed to load crypto data. Please try again later.</td></tr>';
+            document.getElementById('cryptoTableBody').innerHTML = '<tr><td colspan="7">Failed to load crypto data. Please try again later.</td></tr>';
         }
     }
 
@@ -368,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tableBody = document.getElementById('cryptoTableBody');
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
-        const pageData = tableData.slice(startIndex, endIndex);
+        const pageData = filteredData.slice(startIndex, endIndex);
 
         // Actualizăm headerele tabelului
         document.querySelector('.crypto-table thead tr').innerHTML = `
@@ -523,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderPagination() {
         const pagination = document.getElementById('tablePagination');
-        const totalPages = Math.ceil(tableData.length / ITEMS_PER_PAGE);
+        const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
         
         let paginationHTML = `
             <button class="pagination-btn prev" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
@@ -947,4 +953,45 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === modal) modal.remove();
         };
     };
+
+    // Adăugăm event listeners pentru căutare și filtrare
+    const searchInput = document.querySelector('.search-input');
+    const filterSelect = document.querySelector('.filter-select');
+
+    searchInput.addEventListener('input', (e) => {
+        searchTerm = e.target.value.toLowerCase();
+        filterAndDisplayData();
+    });
+
+    filterSelect.addEventListener('change', (e) => {
+        filterValue = e.target.value;
+        filterAndDisplayData();
+    });
+
+    function filterAndDisplayData() {
+        filteredData = tableData.filter(coin => {
+            const matchesSearch = 
+                coin.name.toLowerCase().includes(searchTerm) ||
+                coin.symbol.toLowerCase().includes(searchTerm);
+
+            if (!matchesSearch) return false;
+
+            switch (filterValue) {
+                case 'market_cap':
+                    return coin.marketCap > 1000000000; // > 1B
+                case 'volume':
+                    return coin.volume24h > 100000000; // > 100M
+                case 'price':
+                    return coin.price > 100; // > $100
+                case 'change':
+                    return Math.abs(coin.change24h) > 5; // > 5%
+                default:
+                    return true;
+            }
+        });
+
+        currentPage = 1; // Reset to first page when filtering
+        renderTable();
+        renderPagination();
+    }
 }); 

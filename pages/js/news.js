@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("News page specific script loaded.");
 
         const paginationControls = document.getElementById('pagination-controls');
-        const searchInput = document.getElementById('search-input');
+        const searchInput = document.getElementById('news-search');
+        const searchButton = document.querySelector('.search-button');
         const sourceFilter = document.getElementById('source-filter');
         const newsTitle = document.querySelector('.news-title');
 
@@ -214,7 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             currentPage = pageNumber;
             displayUI(); 
-            window.scrollTo({ top: newsGridContainer.offsetTop - 100, behavior: 'smooth' }); 
+            window.scrollTo({ 
+                top: 0,
+                behavior: 'smooth'
+            }); 
         }
         
         function displayError(message) {
@@ -229,10 +233,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         let searchTimeout;
+        if (searchButton) {
+            searchButton.addEventListener('click', () => {
+                applyFiltersAndSearch();
+            });
+        }
         if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    applyFiltersAndSearch();
+                }
+            });
+            
             searchInput.addEventListener('input', () => {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(applyFiltersAndSearch, 400); 
+                searchTimeout = setTimeout(applyFiltersAndSearch, 400);
             });
         }
         if (sourceFilter) {
