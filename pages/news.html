@@ -51,8 +51,6 @@
     </nav>
 
     <main class="news-container">
-        <h1 class="news-title">Latest Crypto News</h1>
-        
         <div class="search-container">
             <input type="text" id="news-search" class="news-search" placeholder="Search news...">
             <button class="search-button">
@@ -60,10 +58,53 @@
             </button>
         </div>
 
-        <div class="news-grid" id="news-grid-container">
+        <div class="filters-container">
+            <div class="filter-item">
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                    <option value="bitcoin">Bitcoin</option>
+                    <option value="ethereum">Ethereum</option>
+                    <option value="altcoins">Altcoins</option>
+                    <option value="defi">DeFi</option>
+                    <option value="nft">NFTs</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select id="coin-filter" class="filter-select">
+                    <option value="">All Coins</option>
+                    <option value="btc">Bitcoin (BTC)</option>
+                    <option value="eth">Ethereum (ETH)</option>
+                    <option value="sol">Solana (SOL)</option>
+                    <option value="ada">Cardano (ADA)</option>
+                    <option value="dot">Polkadot (DOT)</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select id="trading-filter" class="filter-select">
+                    <option value="">Trading News</option>
+                    <option value="analysis">Analysis</option>
+                    <option value="signals">Signals</option>
+                    <option value="trends">Market Trends</option>
+                    <option value="strategy">Trading Strategy</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select id="source-filter" class="filter-select">
+                    <option value="">All Sources</option>
+                </select>
+            </div>
         </div>
 
-        <div class="pagination-container" id="pagination-controls">
+        <!-- Adăugăm înapoi containerul pentru cardurile de știri -->
+        <div id="news-grid-container">
+            <div class="news-grid">
+                <!-- Cardurile vor fi generate dinamic via JavaScript -->
+            </div>
+            
+            <!-- Container pentru paginare -->
+            <div class="pagination" id="news-pagination">
+                <!-- Butoanele de paginare vor fi generate dinamic via JavaScript -->
+            </div>
         </div>
     </main>
 

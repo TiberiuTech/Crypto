@@ -13,11 +13,13 @@
     --secondary-text-color: rgba(255, 255, 255, 0.7);
     --accent-color: #4a90e2;
     --accent-color-darker: #2563eb;
+    --accent-color-transparent: rgba(74, 144, 226, 0.1);
     --border-color: rgba(255, 255, 255, 0.1);
     --positive-color: #10b981;
     --negative-color: #ef4444;
     --positive-bg: rgba(16, 185, 129, 0.1);
     --negative-bg: rgba(239, 68, 68, 0.1);
+    --bg-color: #0a0d14;
 }
 
 html[data-theme="light"] {
@@ -27,11 +29,13 @@ html[data-theme="light"] {
     --secondary-text-color: #6b7280;
     --accent-color: #3b82f6;
     --accent-color-darker: #1d4ed8;
+    --accent-color-transparent: rgba(59, 130, 246, 0.1);
     --border-color: #e5e7eb;
     --positive-color: #059669;
     --negative-color: #dc2626;
     --positive-bg: rgba(16, 185, 129, 0.1);
     --negative-bg: rgba(239, 68, 68, 0.1);
+    --bg-color: #f8f9fa;
 }
 
 body {
@@ -200,60 +204,6 @@ html[data-theme="light"] body::before {
     color: var(--accent-color);
 }
 
-/* Stiluri generale pentru paginare */
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 40px;
-    gap: 10px;
-}
-
-.pagination-btn,
-.pagination-ellipsis {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    background-color: var(--card-background);
-    color: var(--text-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    font-size: 0.9rem;
-    min-width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.pagination-btn:hover,
-.pagination-btn.active {
-    background-color: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
-}
-
-.pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.pagination-ellipsis {
-    border: none;
-    background: none;
-    color: var(--secondary-text-color);
-    cursor: default;
-}
-
-/* Stiluri generale pentru mesaje */
-.no-results-message {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--secondary-text-color);
-    font-size: 1.1rem;
-    width: 100%;
-}
 
 /* Stiluri generale pentru containere */
 .controls-container {
@@ -263,22 +213,6 @@ html[data-theme="light"] body::before {
     margin-bottom: 30px;
     flex-wrap: wrap;
     gap: 15px;
-}
-
-/* Stiluri generale pentru carduri */
-.card {
-    background: var(--card-background);
-    border-radius: 16px;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid var(--border-color);
-    position: relative;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    border-color: rgba(74, 144, 226, 0.3);
 }
 
 /* Stiluri generale pentru butoane */
@@ -352,50 +286,6 @@ html[data-theme="light"] body::before {
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
 }
 
-/* Stiluri generale pentru grid-uri */
-.grid {
-    display: grid;
-    gap: 20px;
-}
-
-.grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-3 {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-4 {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .grid-4 {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 900px) {
-    .grid-3, .grid-4 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 600px) {
-    .grid-2, .grid-3, .grid-4 {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-container {
-        padding: 20px;
-    }
-    
-    .form-title {
-        font-size: 1.5rem;
-    }
-}
 
 /* Navbar Styling */
 .navbar {
@@ -404,11 +294,12 @@ html[data-theme="light"] body::before {
     align-items: center;
     padding: 1rem 2rem;
     background-color: var(--card-background);
-    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 1000;
     transition: background-color 0.3s ease;
+    border-bottom: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .logo {
@@ -430,6 +321,8 @@ html[data-theme="light"] body::before {
     transition: color 0.3s ease;
     padding: 0.5rem 0;
     position: relative;
+    border: none;
+    background: transparent;
 }
 
 .nav-item:hover,
@@ -508,6 +401,15 @@ html[data-theme="light"] body::before {
     color: var(--text-color);
     font-size: 1.5rem;
     cursor: pointer;
+    outline: none;
+}
+
+.hamburger:focus {
+    outline: none;
+}
+
+.hamburger.active {
+    color: var(--accent-color);
 }
 
 /* Ascundem elementele mobile pe desktop */
@@ -517,7 +419,12 @@ html[data-theme="light"] body::before {
 }
 
 /* Media Queries pentru Responsive Design */
-@media (max-width: 900px) { 
+@media (max-width: 900px) {
+    .navbar {
+        box-shadow: none;
+        border-bottom: none;
+    }
+    
     .nav-links {
         position: absolute;
         top: 100%; 
@@ -526,16 +433,20 @@ html[data-theme="light"] body::before {
         background-color: var(--card-background);
         flex-direction: column;
         align-items: center;
-        padding: 1rem 0;
+        padding: 0;
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.4s ease-out, padding 0.4s ease-out;
-        border-top: 1px solid var(--border-color);
+        border-top: none;
+        box-shadow: none;
     }
 
     .nav-links.active {
         max-height: 500px;
         padding: 1rem 0;
+        border-top: none;
+        box-shadow: none;
+        background-color: var(--card-background);
     }
 
     .hamburger {
@@ -554,6 +465,7 @@ html[data-theme="light"] body::before {
         align-items: center;
         gap: 1rem;
         margin-top: 1rem;
+        border-top: none;
     }
 
     .auth-buttons.desktop, 
@@ -565,15 +477,33 @@ html[data-theme="light"] body::before {
         width: 100%;
         text-align: center;
         padding: 0.8rem 0;
+        border: none;
+        border-top: none;
+        border-bottom: none;
+        margin: 0;
+        background: transparent;
     }
-
-    .nav-item.active::after {
-        display: none;
+    
+    .nav-item + .nav-item {
+        border-top: none;
     }
-
+    
+    .nav-item:last-child {
+        border-bottom: none;
+    }
+    
     .nav-item.active {
         background-color: var(--accent-color);
         color: white;
+        border: none;
+    }
+    
+    .auth-buttons.mobile {
+        border-top: none;
+        border-bottom: none;
+        padding-top: 0;
+        padding-bottom: 0;
+        background: transparent;
     }
 }
 
@@ -590,4 +520,30 @@ html[data-theme="light"] body::before {
         padding: 0.4rem 0.8rem;
         font-size: 0.9rem;
     }
+}
+
+@media (max-width: 600px) {
+    .form-container {
+        padding: 20px;
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Stilizare specifică pentru butonul mobile de toggle tema */
+.theme-toggle-btn.mobile {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    margin: 0;
+    padding: 10px;
+}
+
+/* Stilizare îmbunătățită pentru butoanele de autentificare din meniul mobil */
+.auth-buttons.mobile .auth-btn {
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    margin: 5px 0;
 }
