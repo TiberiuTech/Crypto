@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Calculăm prețul de start bazat pe schimbarea procentuală
         const startPrice = currentPrice / (1 + percentChange/100);
         
-        // Generăm o tendință bazată pe schimbarea reală
+        // Generăm mai multe puncte pentru grafice mai detaliate
         return Array(points).fill(0).map((_, i) => {
             // Adăugăm o componentă aleatoare pentru a face graficele să arate natural
             const progress = i / (points - 1); // 0 la început, 1 la final
@@ -680,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="volume-cell">$${formatNumber(coin.volume24h)}</td>
                 <td class="market-cap-cell">$${formatNumber(coin.marketCap)}</td>
-                <td class="chart-cell">
+                <td class="chart-cell" align="center">
                     <canvas id="chart-${coin.symbol}" class="mini-chart"></canvas>
                 </td>
                 <td class="actions-cell">
@@ -703,6 +703,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
+            // Generate more detailed historical data - 24 points instead of just 7
+            const detailedHistoricalData = generateHistoricalData(coin.price, coin.change24h, 36);
+            
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
             if (rect.width === 0 || rect.height === 0) return;
@@ -712,38 +715,36 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.style.width = `${rect.width}px`;
             canvas.style.height = `${rect.height}px`;
 
-            const gradient = ctx.createLinearGradient(0, 0, 0, 60);
+            const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
             if (coin.change24h >= 0) {
-                gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+                gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
                 gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
             } else {
-                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.2)');
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
                 gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
             }
 
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: coin.historicalData.map(point => ''),
+                    labels: detailedHistoricalData.map((_, i) => {
+                        const date = new Date();
+                        date.setHours(date.getHours() - (36 - i));
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit' });
+                    }),
                     datasets: [{
-                        data: coin.historicalData,
+                        data: detailedHistoricalData,
                         borderColor: coin.change24h >= 0 ? '#10b981' : '#ef4444',
-                        borderWidth: Math.abs(coin.change24h) > 2 ? 2 : 1.5,
+                        borderWidth: 2.5,
                         fill: true,
-                        backgroundColor: (context) => {
-                            const gradient = ctx.createLinearGradient(0, 0, 0, 50);
-                            const alpha = Math.min(Math.abs(coin.change24h) / 10, 0.3);
-                            if (coin.change24h >= 0) {
-                                gradient.addColorStop(0, `rgba(16, 185, 129, ${alpha})`);
-                                gradient.addColorStop(1, `rgba(16, 185, 129, 0)`);
-                            } else {
-                                gradient.addColorStop(0, `rgba(239, 68, 68, ${alpha})`);
-                                gradient.addColorStop(1, `rgba(239, 68, 68, 0)`);
-                            }
-                            return gradient;
-                        },
-                        tension: 0.6,
-                        pointRadius: 0
+                        backgroundColor: gradient,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointBackgroundColor: coin.change24h >= 0 ? '#10b981' : '#ef4444',
+                        pointHoverBackgroundColor: coin.change24h >= 0 ? '#10b981' : '#ef4444',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
                     }]
                 },
                 options: {
@@ -763,10 +764,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             callbacks: {
                                 title: (items) => {
                                     if (!items.length) return '';
-                                    const hoursAgo = 24 - items[0].dataIndex;
+                                    const hoursAgo = 36 - items[0].dataIndex;
                                     const date = new Date();
                                     date.setHours(date.getHours() - hoursAgo);
-                                    return date.toLocaleString('ro-RO', {
+                                    return date.toLocaleString('en-US', {
                                         hour: '2-digit',
                                         minute: '2-digit'
                                     });
@@ -776,32 +777,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     },
                     scales: {
-                        x: { display: false },
-                        y: {
-                            position: 'right',
+                        x: { 
+                            display: false,
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.08)'
+                                display: false
                             },
                             ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                callback: (value) => `$${value.toFixed(2)}`,
-                                font: {
-                                    size: 11
-                                },
-                                padding: 8
+                                display: false
+                            }
+                        },
+                        y: {
+                            display: false,
+                            position: 'right',
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                display: false
                             },
                             min: (context) => {
                                 const values = context.chart.data.datasets[0].data;
                                 const min = Math.min(...values);
                                 const range = Math.max(...values) - min;
-                                const padding = range * (Math.abs(coin.change24h) / 100);
+                                const padding = range * 0.15;
                                 return min - padding;
                             },
                             max: (context) => {
                                 const values = context.chart.data.datasets[0].data;
                                 const max = Math.max(...values);
                                 const range = max - Math.min(...values);
-                                const padding = range * (Math.abs(coin.change24h) / 100);
+                                const padding = range * 0.15;
                                 return max + padding;
                             }
                         }
