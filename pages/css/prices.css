@@ -238,7 +238,7 @@
 }
 
 .table-container {
-    background: rgba(20, 20, 30, 0.5);
+    background: var(--card-background);
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
@@ -258,7 +258,7 @@
     text-align: left;
     font-weight: 500;
     color: var(--secondary-text-color);
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--card-background);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
