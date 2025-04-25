@@ -1029,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const coinData = tableData.find(c => c.symbol === symbol);
             
             if (!coinData) {
-                throw new Error(`Nu am găsit date pentru moneda ${symbol}`);
+                throw new Error(`No data found for coin ${symbol}`);
             }
             
             // Actualizăm interfața cu datele din tabel - evităm o cerere API în plus
@@ -1064,17 +1064,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('modal24hLow').textContent = `$${detailedData.market_data.low_24h.usd.toFixed(2)}`;
                     }
                 } else {
-                    console.log('Omitem cererea pentru detalii suplimentare din cauza limitării ratei sau a numărului maxim de cereri');
+                    console.log('Skipping request for additional details due to rate limiting or maximum request count');
                 }
             } catch (error) {
-                console.warn('Nu am putut obține date detaliate suplimentare:', error);
+                console.warn('Could not get additional detailed data:', error);
                 // Continuăm cu datele pe care le avem deja
             }
             
             // Inițializăm graficul fără cereri API suplimentare
             await loadChartData('24h');
         } catch (error) {
-            console.error('Eroare la afișarea detaliilor monedei:', error);
+            console.error('Error displaying coin details:', error);
         }
     }
 
@@ -1085,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const coinData = tableData.find(c => c.symbol === currentCoin);
         
         if (!coinData) {
-            console.error(`Nu am găsit date pentru moneda ${currentCoin}`);
+            console.error(`No data found for coin ${currentCoin}`);
             return;
         }
         
@@ -1132,9 +1132,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: chartData.map(point => {
                     const date = new Date(point.time);
                     if (period === '24h') {
-                        return date.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                     } else {
-                        return date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
+                        return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                     }
                 }),
                 datasets: [{
@@ -1217,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Doar dacă nu avem deja datele în cache
                 if (!apiCache.historicalData[cacheKey]) {
-                    console.log(`Încercăm să obținem date reale pentru grafic: ${coinData.id}, perioada: ${period}`);
+                    console.log(`Trying to get real data for chart: ${coinData.id}, period: ${period}`);
                     
                     const days = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 365;
                     const url = `https://api.coingecko.com/api/v3/coins/${coinData.id}/market_chart?vs_currency=usd&days=${days}`;
@@ -1235,9 +1235,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             modalChart.data.labels = realChartData.map(point => {
                                 const date = new Date(point.time);
                                 if (period === '24h') {
-                                    return date.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+                                    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                                 } else {
-                                    return date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
+                                    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                                 }
                             });
                             modalChart.data.datasets[0].data = realChartData.map(point => point.close);
@@ -1251,13 +1251,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             modalChart.options.scales.y.max = maxPrice + padding;
                             
                             modalChart.update();
-                            console.log('Grafic actualizat cu date reale');
+                            console.log('Chart updated with real data');
                         }
                     }
                 }
             }
         } catch (error) {
-            console.warn('Nu am putut obține date reale pentru grafic, continuăm cu datele generate anterior:', error);
+            console.warn('Could not get real data for chart, continuing with previously generated data:', error);
             // Graficul rămâne cu datele generate anterior
         }
     }
