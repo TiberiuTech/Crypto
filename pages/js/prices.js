@@ -654,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pageData = filteredData.slice(startIndex, endIndex);
 
         document.querySelector('.crypto-table thead tr').innerHTML = `
+            <th>#</th>
             <th>Coin</th>
             <th>Price</th>
             <th>24h %</th>
@@ -663,8 +664,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <th>Actions</th>
         `;
 
-        tableBody.innerHTML = pageData.map(coin => `
+        tableBody.innerHTML = pageData.map((coin, idx) => `
             <tr>
+                <td>${startIndex + idx + 1}</td>
                 <td>
                     <div class="coin-info">
                         <img src="${coin.imageUrl}" alt="${coin.symbol}">
