@@ -76,9 +76,13 @@
 
 .carousel-container {
     width: 100%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
     overflow: hidden;
     position: relative;
-    margin: 15px 0;
+    margin-top: 15px;
+    margin-bottom: 15px;
     padding: 10px 0;
 }
 
@@ -234,44 +238,38 @@
 }
 
 .crypto-table-container {
-    margin-top: 2rem;
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(var(--primary-color-rgb), 0.1);
-    backdrop-filter: blur(10px);
+    margin: 2rem auto;
+    padding: 2rem;
+    background: var(--card-background);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
 }
 
-.table-container {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 1300px;
+.table-container, .crypto-table, .carousel-container {
+    max-width: 1600px;
     width: 100%;
 }
 
 .crypto-table {
-    width: 100%;
-    max-width: 1300px;
+    border-spacing: 0 1rem;
     margin: 0 auto;
-    border-collapse: separate;
-    border-spacing: 0 12px;
 }
 
-.crypto-table th, .crypto-table td {
-    text-align: center;
-    vertical-align: middle;
-    padding-top: 18px;
-    padding-bottom: 18px;
-    padding-left: 12px;
-    padding-right: 12px;
+.crypto-table th, 
+.crypto-table td {
+    padding: 1.2rem 1.5rem !important;
+    border-bottom: 2px solid var(--border-color);
 }
 
-.crypto-table th:first-child,
-.crypto-table td:first-child {
-    text-align: right;
-    padding-left: 16px;
-    padding-right: 8px;
+.crypto-table th:first-child, .crypto-table td:first-child {
+    padding-left: 2rem !important;
+    padding-right: 1rem !important;
+    width: 60px;
+}
+
+.crypto-table th:last-child, .crypto-table td:last-child {
+    padding-right: 2rem !important;
 }
 
 .crypto-table th:nth-child(2),
@@ -294,6 +292,7 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: background-color 0.3s ease;
     font-size: 0.95rem;
+    background: var(--card-background);
 }
 
 .crypto-table tr:hover td {
@@ -305,26 +304,23 @@
 }
 
 .actions-cell {
-    text-align: right;
+    padding-right: 2rem !important;
 }
 
 .action-buttons {
     display: flex;
-    gap: 10px;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.8rem;
     justify-content: flex-end;
+    padding: 0 1rem;
+    flex-wrap: nowrap;
 }
 
 .action-btn {
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 0.85em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+    padding: 0.6rem 1.2rem;
+    min-width: 85px;
+    font-size: 0.9rem;
 }
 
 .action-btn.trade-btn {
@@ -357,23 +353,15 @@
     width: 270px;
     height: 80px;
     padding: 8px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow: visible !important;
     position: relative;
-    text-align: center;
-}
-
-.crypto-table tr {
-    height: 80px;
 }
 
 .mini-chart {
-    width: 100%;
-    height: 100%;
-    display: block;
-    margin: 0 auto;
-    border-radius: 8px;
+    width: 120% !important;
+    height: 120% !important;
+    transform: scale(0.85);
+    transform-origin: left center;
 }
 
 .volume-cell,
@@ -481,14 +469,51 @@
     }
 
     .action-buttons {
-        flex-direction: column;
-        gap: 6px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
     }
     
     .action-btn {
         padding: 6px 10px;
         font-size: 0.8em;
         width: 100%;
+    }
+
+    .crypto-table-container {
+        padding: 1rem;
+        margin: 1rem;
+    }
+    
+    .crypto-table th, 
+    .crypto-table td {
+        padding: 0.8rem !important;
+    }
+    
+    .action-btn {
+        min-width: auto;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .chart-cell {
+        width: 200px;
+        height: 60px;
+    }
+    
+    .mini-chart {
+        transform: scale(0.7);
+    }
+    
+    #modalChart {
+        height: 300px;
+    }
+}
+
+@media (max-width: 600px) {
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
     }
 }
 
@@ -679,11 +704,12 @@
 
 #modalChart {
     width: 100%;
-    height: 350px;
+    height: 400px;
     border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    padding: 15px;
 }
 
 .info-grid {
@@ -770,7 +796,7 @@
     }
     
     #modalChart {
-        height: 250px;
+        height: 300px;
     }
     
     .chart-header {
@@ -909,4 +935,37 @@
 .crypto-table th:nth-child(5),
 .crypto-table td:nth-child(5) {
     border-right: 18px solid transparent;
+}
+
+/* Lățime fixă pentru coloanele numerice din tabelul crypto */
+.crypto-table th:nth-child(3),
+.crypto-table td:nth-child(3), /* Price */
+.crypto-table th:nth-child(4),
+.crypto-table td:nth-child(4), /* 24h % */
+.crypto-table th:nth-child(5),
+.crypto-table td:nth-child(5), /* Volume 24h */
+.crypto-table th:nth-child(6),
+.crypto-table td:nth-child(6)  /* Market Cap */
+{
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+    box-sizing: border-box;
+}
+
+/* Unificare border-radius și margini */
+.crypto-table tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.crypto-table tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.crypto-table tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+.crypto-table tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
 } 
