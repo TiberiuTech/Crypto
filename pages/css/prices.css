@@ -993,4 +993,31 @@
 
 .sortable:hover .sort-arrow {
     opacity: 0.7;
+}
+
+.notification-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 20px;
+    margin-left: 8px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.notification-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.crypto-table tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.crypto-table tbody tr:hover {
+    background: rgba(0, 123, 255, 0.08);
 } 

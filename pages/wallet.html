@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - Crypto-Platform</title>
+    <title>Crypto-Platform - Wallet</title>
     <script>
       (function() {
         try { 
@@ -17,7 +17,6 @@
       })();
     </script>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="css/forgot-password.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -29,7 +28,7 @@
         <div class="nav-links">
             <a href="news.html" class="nav-item">News</a>
             <a href="prices.html" class="nav-item">Prices</a>
-            <a href="wallet.html" class="nav-item">Wallet</a>
+            <a href="wallet.html" class="nav-item active">Wallet</a>
             <a href="trade.html" class="nav-item">Trade</a>
             <div class="auth-buttons mobile">
                 <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
@@ -40,6 +39,9 @@
             </button>
         </div>
         <div class="controls-desktop">
+            <button id="notificationBtn" class="notification-btn">
+                <i class="fas fa-bell"></i>
+            </button>
             <button id="themeToggleBtn" class="theme-toggle-btn">
                 <i class="fas fa-moon"></i>
             </button>
@@ -49,24 +51,10 @@
             </div>
         </div>
     </nav>
-
-    <main class="form-page-container">
-        <div class="form-container">
-            <h1 class="form-title">Forgot Password</h1>
-            <p class="form-description">Enter the email address associated with your account, and we'll send you a link to reset your password.</p>
-            <form id="forgot-password-form">
-                <div class="form-group">
-                    <label for="forgot-email">Email</label>
-                    <input type="email" id="forgot-email" name="email" required>
-                </div>
-                <button type="submit" class="form-submit-btn">Send Reset Link</button>
-            </form>
-             <p id="forgot-message" class="form-message"></p> <!-- For success/error messages -->
-            <p class="form-switch-link"><a href="login.html">Back to Login</a></p>
-        </div>
+    <main style="padding: 100px 20px; text-align: center;">
+        <h1>Wallet</h1>
+        <p>Aici vei putea gestiona portofelul tău crypto.</p>
     </main>
-
-    <script src="../script.js"></script>
-    <script src="js/forgot-password.js"></script>
+    <script src="../script.js" defer></script>
 </body>
 </html> 
