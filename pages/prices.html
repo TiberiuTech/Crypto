@@ -56,13 +56,6 @@
         
         <div class="search-container">
             <input type="text" class="search-input" placeholder="Search coins...">
-            <select class="filter-select">
-                <option value="all">All Sources</option>
-                <option value="market_cap">Market Cap</option>
-                <option value="volume">Volume</option>
-                <option value="price">Price</option>
-                <option value="change">24h Change</option>
-            </select>
         </div>
 
         <div class="carousel-container">
@@ -83,11 +76,12 @@
             <table class="crypto-table">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Coin</th>
-                        <th>Price</th>
-                        <th>24h %</th>
-                        <th>Volume 24h</th>
-                        <th>Market Cap</th>
+                        <th class="sortable" data-sort="price">Price <span class="sort-arrow"></span></th>
+                        <th class="sortable" data-sort="change24h">24h % <span class="sort-arrow"></span></th>
+                        <th class="sortable" data-sort="volume24h">Volume 24h <span class="sort-arrow"></span></th>
+                        <th class="sortable" data-sort="marketCap">Market Cap <span class="sort-arrow"></span></th>
                         <th>Chart 7d</th>
                         <th>Actions</th>
                     </tr>

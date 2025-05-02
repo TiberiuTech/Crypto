@@ -73,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let filterValue = 'all';
     let filteredData = [];
     
+    let currentSort = { key: null, direction: 'desc' };
+
     // Funcție pentru a apela un URL prin proxy CORS cu gestionare avansată a erorilor
     async function fetchWithProxy(url, forceRefresh = false) {
         // Verificăm dacă am depășit numărul maxim de cereri
@@ -656,13 +658,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.crypto-table thead tr').innerHTML = `
             <th>#</th>
             <th>Coin</th>
-            <th>Price</th>
-            <th>24h %</th>
-            <th>Volume 24h</th>
-            <th>Market Cap</th>
+            <th class="sortable" data-sort="price">Price <span class="sort-arrow">▲</span></th>
+            <th class="sortable" data-sort="change24h">24h % <span class="sort-arrow">▲</span></th>
+            <th class="sortable" data-sort="volume24h">Volume 24h <span class="sort-arrow">▲</span></th>
+            <th class="sortable" data-sort="marketCap">Market Cap <span class="sort-arrow">▲</span></th>
             <th>Chart 7d</th>
             <th>Actions</th>
         `;
+
+        // Adaugă event listener-ele pentru sortare după fiecare re-redare a header-ului
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const key = th.getAttribute('data-sort');
+                sortTableBy(key);
+            });
+        });
 
         tableBody.innerHTML = pageData.map((coin, idx) => `
             <tr>
@@ -1007,6 +1017,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Începem inițializarea aplicației cu un mic delay pentru a permite browserului să termine renderizarea inițială
     setTimeout(() => {
         init();
+        updateSortArrows();
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const key = th.getAttribute('data-sort');
+                sortTableBy(key);
+            });
+        });
     }, 0);
 
     async function showCoinDetails(symbol) {
@@ -1317,5 +1334,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const volatilityScore = Math.min(Math.abs(coin.change24h) / 10, 1);
         
         return 0.2 + (volumeScore + volatilityScore) * 0.2;
+    }
+
+    function sortTableBy(key) {
+        if (currentSort.key === key) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.key = key;
+            currentSort.direction = 'desc';
+        }
+        filteredData.sort((a, b) => {
+            if (a[key] < b[key]) return currentSort.direction === 'asc' ? -1 : 1;
+            if (a[key] > b[key]) return currentSort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        renderTable();
+        renderPagination();
+        updateSortArrows();
+    }
+
+    function updateSortArrows() {
+        document.querySelectorAll('.sortable').forEach(th => {
+            const arrow = th.querySelector('.sort-arrow');
+            const key = th.getAttribute('data-sort');
+            th.classList.remove('active');
+            if (currentSort.key === key) {
+                arrow.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
+                th.classList.add('active');
+            } else {
+                arrow.textContent = '▲'; // Săgeata neutră vizibilă mereu
+            }
+        });
     }
 }); 
