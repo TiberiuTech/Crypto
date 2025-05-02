@@ -318,9 +318,9 @@
 }
 
 .action-btn {
-    padding: 0.6rem 1.2rem;
-    min-width: 85px;
-    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    min-width: 65px;
+    font-size: 0.8rem;
 }
 
 .action-btn.trade-btn {
@@ -358,9 +358,9 @@
 }
 
 .mini-chart {
-    width: 120% !important;
-    height: 120% !important;
-    transform: scale(0.85);
+    width: 140% !important;
+    height: 130% !important;
+    transform: scale(0.8);
     transform-origin: left center;
 }
 

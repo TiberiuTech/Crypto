@@ -850,19 +850,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         console.log('Inițializare aplicație...');
         
-        // Afișăm un mesaj pentru a informa utilizatorul despre posibilele limitări API
-        const notificationElement = document.createElement('div');
-        notificationElement.className = 'api-notification';
-        notificationElement.innerHTML = `
-            <div style="background-color: rgba(255, 182, 0, 0.1); border: 1px solid rgba(255, 182, 0, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 20px; font-size: 14px; color: var(--text-color);">
-                <i class="fas fa-info-circle" style="color: #ffb600; margin-right: 8px;"></i>
-                Aplicația limitează numărul de cereri către API pentru a evita depășirea ratei limită. Datele pot fi reîmprospătate o dată la 15 minute.
-            </div>
-        `;
-        
-        const pricesContainer = document.querySelector('.prices-container');
-        pricesContainer.insertBefore(notificationElement, pricesContainer.firstChild);
-        
         Promise.all([
             fetchCoinData().catch(error => {
                 console.error('Eroare la încărcarea datelor pentru carusel:', error);
