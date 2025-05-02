@@ -1132,6 +1132,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxPrice = Math.max(...chartData.map(point => point.close));
         const padding = (maxPrice - minPrice) * 0.1; // 10% padding
         
+        // --- Detectează tema curentă pentru axă și grid ---
+        const theme = document.documentElement.getAttribute('data-theme');
+        const axisColor = theme === 'light' ? 'rgba(60,60,60,0.7)' : 'rgba(255,255,255,0.7)';
+        const gridColor = theme === 'light' ? 'rgba(60,60,60,0.08)' : 'rgba(255,255,255,0.08)';
         modalChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1185,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         },
                         ticks: {
                             maxRotation: 0,
-                            color: 'rgba(255, 255, 255, 0.6)',
+                            color: axisColor,
                             maxTicksLimit: period === '24h' ? 6 : 8,
                             font: {
                                 size: 11
@@ -1195,10 +1199,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     y: {
                         position: 'right',
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.08)'
+                            color: gridColor
                         },
                         ticks: {
-                            color: 'rgba(255, 255, 255, 0.7)',
+                            color: axisColor,
                             callback: (value) => `$${value.toFixed(2)}`,
                             font: {
                                 size: 11
@@ -1366,4 +1370,44 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Detectează schimbarea temei și actualizează modalul dacă este deschis
+    const observer = new MutationObserver(() => {
+        const modal = document.getElementById('coinModal');
+        if (modal && modal.style.display === 'block') {
+            // Forțează re-redarea pentru a aplica stilurile noi
+            modal.classList.remove('light-theme', 'dark-theme');
+            const theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'light') {
+                modal.classList.add('light-theme');
+            } else {
+                modal.classList.add('dark-theme');
+            }
+            // Reîncarcă graficul cu noile culori
+            if (typeof currentCoin === 'string' && currentCoin) {
+                loadChartData(currentChartPeriod);
+            }
+        }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // La deschiderea modalului, aplică tema curentă
+    function applyModalTheme() {
+        const modal = document.getElementById('coinModal');
+        if (modal) {
+            modal.classList.remove('light-theme', 'dark-theme');
+            const theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'light') {
+                modal.classList.add('light-theme');
+            } else {
+                modal.classList.add('dark-theme');
+            }
+        }
+    }
+    // Apelează applyModalTheme la deschiderea modalului
+    const originalShowCoinDetails = showCoinDetails;
+    showCoinDetails = async function(symbol) {
+        await originalShowCoinDetails(symbol);
+        applyModalTheme();
+    };
 }); 

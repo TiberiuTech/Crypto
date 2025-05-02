@@ -531,6 +531,43 @@
     backdrop-filter: blur(5px);
 }
 
+.coin-modal.light-theme .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    color: #222;
+    border: 1px solid #e0e0e0;
+}
+.coin-modal.light-theme .stat-card,
+.coin-modal.light-theme .info-card {
+    background: rgba(0,0,0,0.03);
+    color: #222;
+    border: 1px solid #e0e0e0;
+}
+.coin-modal.light-theme .modal-header {
+    background: rgba(240,240,240,0.7);
+}
+.coin-modal.light-theme .period-button.active {
+    background: #4a90e2;
+    color: #fff;
+    border-color: #4a90e2;
+}
+.coin-modal.light-theme .period-button {
+    background: rgba(0,0,0,0.04);
+    color: #222;
+    border: 1px solid #e0e0e0;
+}
+.coin-modal.light-theme .modal-close {
+    color: #222;
+}
+.coin-modal.light-theme .modal-close:hover {
+    color: #4a90e2;
+}
+
+.coin-modal.dark-theme .modal-content {
+    background: rgba(20, 20, 30, 0.75);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+
 .modal-content {
     position: relative;
     background: rgba(20, 20, 30, 0.75);
