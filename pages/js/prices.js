@@ -954,6 +954,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openAlertModal = function(symbol, currentPrice) {
         const modal = document.createElement('div');
         modal.className = 'modal alert-modal';
+        // Aplică tema curentă la deschidere
+        modal.classList.remove('light-theme', 'dark-theme');
+        const theme = document.documentElement.getAttribute('data-theme');
+        if (theme === 'light') {
+            modal.classList.add('light-theme');
+        } else {
+            modal.classList.add('dark-theme');
+        }
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
@@ -965,7 +973,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>Current Price:</span>
                         <span class="current-price">$${currentPrice.toFixed(2)}</span>
                     </div>
-                    
                     <div class="alert-form">
                         <div class="input-group">
                             <label>Alert me when price is:</label>
@@ -974,43 +981,49 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <option value="below">Below</option>
                             </select>
                         </div>
-                        
                         <div class="input-group">
                             <label>Target Price (USD)</label>
                             <input type="number" class="target-price" placeholder="0.00" step="0.01">
                         </div>
-                        
-                        <div class="notification-options">
-                            <label>Notification Method:</label>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="browser-notify" checked>
-                                <label for="browser-notify">Browser Notification</label>
-                            </div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="email-notify">
-                                <label for="email-notify">Email</label>
-                            </div>
-                        </div>
-                        
                         <button class="set-alert-btn">Set Alert</button>
-                    </div>
-                    
-                    <div class="active-alerts">
-                        <h3>Active Alerts</h3>
-                        <div class="alerts-list">
-                            <!-- Lista de alerte active va fi populată dinamic -->
-                        </div>
                     </div>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
-        
+        // Actualizez tema la schimbare
+        const themeObserver = new MutationObserver(() => {
+            modal.classList.remove('light-theme', 'dark-theme');
+            const theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'light') {
+                modal.classList.add('light-theme');
+            } else {
+                modal.classList.add('dark-theme');
+            }
+        });
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        // Închidere modal
         const closeBtn = modal.querySelector('.modal-close');
-        closeBtn.onclick = () => modal.remove();
-        
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
+        closeBtn.onclick = () => { themeObserver.disconnect(); modal.remove(); };
+        modal.onclick = (e) => { if (e.target === modal) { themeObserver.disconnect(); modal.remove(); } };
+        // Set Alert (păstrăm funcționalitatea de salvare, dar nu mai afișăm lista)
+        let alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
+        modal.querySelector('.set-alert-btn').onclick = () => {
+            const condition = modal.querySelector('.condition-select').value;
+            const price = parseFloat(modal.querySelector('.target-price').value);
+            if (isNaN(price) || price <= 0) {
+                alert('Please enter a valid price!');
+                return;
+            }
+            const id = symbol + '-' + Date.now();
+            alerts.push({ id, symbol, condition, price });
+            localStorage.setItem('cryptoAlerts', JSON.stringify(alerts));
+            modal.querySelector('.target-price').value = '';
+            if (typeof updateAlertBadgeAndDropdown === 'function') {
+                updateAlertBadgeAndDropdown();
+            }
+            themeObserver.disconnect();
+            modal.remove();
         };
     };
 
@@ -1306,11 +1319,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 showCoinDetails(symbol);
             });
         });
-        
         document.querySelectorAll('.crypto-table tbody tr').forEach(row => {
-            row.addEventListener('click', () => {
+            row.addEventListener('click', function (e) {
+                // Dacă s-a dat click pe un buton din Actions, nu deschide detalii
+                if (e.target.closest('.action-btn')) return;
                 const symbol = row.querySelector('.coin-symbol').textContent;
                 showCoinDetails(symbol);
+            });
+        });
+        // Previne propagarea clickului pe butoanele din Actions
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
             });
         });
     }
@@ -1391,23 +1411,106 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-    // La deschiderea modalului, aplică tema curentă
-    function applyModalTheme() {
-        const modal = document.getElementById('coinModal');
-        if (modal) {
-            modal.classList.remove('light-theme', 'dark-theme');
+    // Adaug update la badge și dropdown la schimbarea temei
+    observer.disconnect();
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    document.documentElement.addEventListener('data-theme-change', updateAlertBadgeAndDropdown);
+    // Forțez update la fiecare schimbare de temă
+    const origSetAttribute = document.documentElement.setAttribute;
+    document.documentElement.setAttribute = function(attr, value) {
+        origSetAttribute.call(this, attr, value);
+        if (attr === 'data-theme') {
+            updateAlertBadgeAndDropdown();
+        }
+    };
+
+    function updateAlertBadgeAndDropdown() {
+        // Badge
+        const alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
+        const count = alerts.length;
+        document.querySelectorAll('.notification-btn').forEach(btn => {
+            let badge = btn.querySelector('.alert-badge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'alert-badge';
+                btn.appendChild(badge);
+            }
+            badge.textContent = count > 0 ? count : '';
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        });
+        // Dropdown
+        let dropdown = document.getElementById('alertDropdown');
+        if (!dropdown) {
+            dropdown = document.createElement('div');
+            dropdown.className = 'alert-dropdown';
+            dropdown.id = 'alertDropdown';
+            document.body.appendChild(dropdown);
+        }
+        if (count === 0) {
+            dropdown.innerHTML = `<h4>Active Alerts</h4><div class='no-alerts'>No alerts set yet.</div>`;
+        } else {
+            dropdown.innerHTML = `<h4>Active Alerts</h4><div class='alert-list'>${alerts.map(a => `
+                <div class='alert-row'>
+                    <span class='alert-symbol'>${a.symbol}</span>
+                    <span class='alert-condition'>${a.condition === 'above' ? 'Above' : 'Below'}</span>
+                    <span class='alert-price'>$${a.price}</span>
+                    <button class='remove-alert-btn' data-id='${a.id}' title='Remove'>&times;</button>
+                </div>`).join('')}</div>`;
+            dropdown.querySelectorAll('.remove-alert-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-id');
+                    const newAlerts = alerts.filter(a => a.id !== id);
+                    localStorage.setItem('cryptoAlerts', JSON.stringify(newAlerts));
+                    updateAlertBadgeAndDropdown();
+                };
+            });
+        }
+        // Aplica tema pe dropdown
+        if (dropdown) {
+            dropdown.classList.remove('light-theme', 'dark-theme');
             const theme = document.documentElement.getAttribute('data-theme');
             if (theme === 'light') {
-                modal.classList.add('light-theme');
+                dropdown.classList.add('light-theme');
             } else {
-                modal.classList.add('dark-theme');
+                dropdown.classList.add('dark-theme');
             }
         }
     }
-    // Apelează applyModalTheme la deschiderea modalului
-    const originalShowCoinDetails = showCoinDetails;
-    showCoinDetails = async function(symbol) {
-        await originalShowCoinDetails(symbol);
-        applyModalTheme();
+    // Deschidere/închidere dropdown la click pe clopoțel
+    function setupAlertDropdownEvents() {
+        document.querySelectorAll('.notification-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const dropdown = document.getElementById('alertDropdown');
+                if (!dropdown) return;
+                // Poziționează sub clopoțel, dar mai spre stânga
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+                dropdown.style.left = (rect.right - 320) + 'px'; // era 270, acum mai spre stânga
+                dropdown.classList.toggle('active');
+                // Închide la click în afara dropdown-ului
+                function closeDropdown(ev) {
+                    if (!dropdown.contains(ev.target) && ev.target !== btn) {
+                        dropdown.classList.remove('active');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                }
+                setTimeout(() => document.addEventListener('click', closeDropdown), 10);
+            };
+        });
+    }
+    // Actualizez badge și dropdown la încărcare și la orice modificare alertă
+    updateAlertBadgeAndDropdown();
+    setupAlertDropdownEvents();
+    window.addEventListener('storage', updateAlertBadgeAndDropdown);
+    // Actualizez și după setarea unei alerte
+    const originalOpenAlertModal = window.openAlertModal;
+    window.openAlertModal = function(symbol, currentPrice) {
+        originalOpenAlertModal(symbol, currentPrice);
+        setTimeout(() => {
+            updateAlertBadgeAndDropdown();
+            setupAlertDropdownEvents();
+        }, 100);
     };
 }); 
