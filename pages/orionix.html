@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orionix Token - Crypto-Platform</title>
+    <script>
+      (function() {
+        try { 
+          const savedTheme = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          console.warn('Could not apply theme from localStorage', e);
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.0.umd.min.js" type="application/javascript"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../index.html" class="logo">Crypto-Platform</a>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="news.html" class="nav-item">News</a>
+            <a href="prices.html" class="nav-item">Prices</a>
+            <a href="wallet.html" class="nav-item">Wallet</a>
+            <a href="trade.html" class="nav-item">Trade</a>
+            <a href="orionix.html" class="nav-item active">Orionix</a>
+            <div class="auth-buttons mobile">
+                <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+                <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+            <button id="notificationBtnMobile" class="notification-btn mobile">
+                <i class="fas fa-bell"></i>
+                <span class="alert-badge"></span>
+            </button>
+            <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="controls-desktop">
+            <button id="notificationBtn" class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="alert-badge"></span>
+            </button>
+            <button id="themeToggleBtn" class="theme-toggle-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="auth-buttons desktop">
+                <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+                <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="orionix-page">
+        <div class="container">
+            <div class="orionix-header">
+                <div class="orionix-logo">
+                    <img src="https://via.placeholder.com/80/3b82f6/FFFFFF?text=ORX" alt="Orionix Logo">
+                </div>
+                <div class="orionix-info">
+                    <h1>Orionix (ORX)</h1>
+                    <p>Propriul tău token ERC-20 pe blockchain-ul Ethereum</p>
+                </div>
+            </div>
+            
+            <div class="token-details">
+                <div class="detail-card">
+                    <h3>Informații Generale</h3>
+                    <div class="detail-row">
+                        <span>Nume:</span>
+                        <span>Orionix</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Simbol:</span>
+                        <span>ORX</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Standard:</span>
+                        <span>ERC-20</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Decimale:</span>
+                        <span>18</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Supply inițial:</span>
+                        <span>1,000,000 ORX</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Rețea:</span>
+                        <span>Sepolia Testnet</span>
+                    </div>
+                    <div class="detail-row contract-address">
+                        <span>Adresă Contract:</span>
+                        <span id="contract-address">Se încarcă...</span>
+                    </div>
+                </div>
+                
+                <div class="wallet-info-card">
+                    <h3>Portofelul Tău</h3>
+                    <div class="wallet-connect">
+                        <button id="connect-wallet-btn" class="connect-btn">Conectează MetaMask</button>
+                    </div>
+                    <div class="wallet-details">
+                        <div class="detail-row">
+                            <span>Adresă:</span>
+                            <span id="wallet-address">Neconectat</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Sold ORX:</span>
+                            <span id="token-balance">0 ORX</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="token-actions">
+                <div class="action-card">
+                    <h3>Transfer Tokeni</h3>
+                    <div class="form-group">
+                        <label for="recipient-address">Adresa Destinatarului:</label>
+                        <input type="text" id="recipient-address" placeholder="0x...">
+                    </div>
+                    <div class="form-group">
+                        <label for="transfer-amount">Cantitate:</label>
+                        <div class="amount-input">
+                            <input type="number" id="transfer-amount" min="0" step="0.01">
+                            <span>ORX</span>
+                        </div>
+                    </div>
+                    <button id="transfer-btn" class="action-btn">Transferă Tokeni</button>
+                    <div id="transfer-status" class="status-message"></div>
+                </div>
+                
+                <div class="action-card" id="mint-card">
+                    <h3>Emite Tokeni Noi (Doar Owner)</h3>
+                    <div class="form-group">
+                        <label for="mint-address">Adresa Destinatarului:</label>
+                        <input type="text" id="mint-address" placeholder="0x...">
+                    </div>
+                    <div class="form-group">
+                        <label for="mint-amount">Cantitate:</label>
+                        <div class="amount-input">
+                            <input type="number" id="mint-amount" min="0" step="0.01">
+                            <span>ORX</span>
+                        </div>
+                    </div>
+                    <button id="mint-btn" class="action-btn">Emite Tokeni</button>
+                    <div id="mint-status" class="status-message"></div>
+                </div>
+            </div>
+            
+            <div class="transaction-history">
+                <h3>Istoricul Tranzacțiilor</h3>
+                <div class="transaction-list" id="transaction-list">
+                    <div class="empty-state">
+                        Conectează-ți portofelul pentru a vedea tranzacțiile tale.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="../script.js"></script>
+    <script src="../orionix-interface.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inițializăm managerul pentru tokenul Orionix
+            const tokenManager = new OrionixTokenManager();
+            
+            // Actualizăm adresa contractului în interfață
+            document.getElementById('contract-address').textContent = 
+                orionixInfo.contractAddress || 'Contract nedisponibil încă';
+            
+            // Adăugăm event listener pentru butonul de conectare
+            document.getElementById('connect-wallet-btn').addEventListener('click', async function() {
+                try {
+                    await tokenManager.connect();
+                    this.textContent = 'Portofel Conectat';
+                    document.querySelector('.empty-state').textContent = 'Nu există tranzacții recente.';
+                } catch (error) {
+                    document.getElementById('wallet-address').textContent = 'Eroare de conectare';
+                    console.error(error);
+                }
+            });
+            
+            // Adăugăm event listener pentru butonul de transfer
+            document.getElementById('transfer-btn').addEventListener('click', async function() {
+                const statusElement = document.getElementById('transfer-status');
+                statusElement.textContent = '';
+                
+                try {
+                    if (!tokenManager.isConnected) {
+                        throw new Error("Portofelul nu este conectat");
+                    }
+                    
+                    const recipientAddress = document.getElementById('recipient-address').value;
+                    const amount = document.getElementById('transfer-amount').value;
+                    
+                    if (!recipientAddress || !amount) {
+                        throw new Error("Completați adresa destinatarului și suma");
+                    }
+                    
+                    if (!ethers.utils.isAddress(recipientAddress)) {
+                        throw new Error("Adresa destinatarului nu este validă");
+                    }
+                    
+                    statusElement.textContent = "Se procesează transferul...";
+                    const tx = await tokenManager.transferTokens(recipientAddress, amount);
+                    
+                    statusElement.textContent = `Transfer realizat cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
+                    document.getElementById('recipient-address').value = '';
+                    document.getElementById('transfer-amount').value = '';
+                    
+                    // Actualizăm soldul și istoricul tranzacțiilor
+                    tokenManager.updateUI();
+                    addTransactionToHistory('transfer', recipientAddress, amount);
+                } catch (error) {
+                    statusElement.textContent = `Eroare: ${error.message}`;
+                    console.error(error);
+                }
+            });
+            
+            // Adăugăm event listener pentru butonul de emitere
+            document.getElementById('mint-btn').addEventListener('click', async function() {
+                const statusElement = document.getElementById('mint-status');
+                statusElement.textContent = '';
+                
+                try {
+                    if (!tokenManager.isConnected) {
+                        throw new Error("Portofelul nu este conectat");
+                    }
+                    
+                    const mintAddress = document.getElementById('mint-address').value;
+                    const amount = document.getElementById('mint-amount').value;
+                    
+                    if (!mintAddress || !amount) {
+                        throw new Error("Completați adresa destinatarului și suma");
+                    }
+                    
+                    if (!ethers.utils.isAddress(mintAddress)) {
+                        throw new Error("Adresa destinatarului nu este validă");
+                    }
+                    
+                    statusElement.textContent = "Se procesează emiterea...";
+                    const tx = await tokenManager.mintTokens(mintAddress, amount);
+                    
+                    statusElement.textContent = `Emitere realizată cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
+                    document.getElementById('mint-address').value = '';
+                    document.getElementById('mint-amount').value = '';
+                    
+                    // Actualizăm soldul și istoricul tranzacțiilor
+                    tokenManager.updateUI();
+                    addTransactionToHistory('mint', mintAddress, amount);
+                } catch (error) {
+                    statusElement.textContent = `Eroare: ${error.message}`;
+                    console.error(error);
+                }
+            });
+            
+            // Funcție pentru adăugarea unei tranzacții în istoric
+            function addTransactionToHistory(type, address, amount) {
+                const list = document.getElementById('transaction-list');
+                const emptyState = list.querySelector('.empty-state');
+                
+                if (emptyState) {
+                    list.removeChild(emptyState);
+                }
+                
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                
+                const typeIcon = type === 'transfer' ? 'fa-paper-plane' : 'fa-plus-circle';
+                const typeText = type === 'transfer' ? 'Transfer către' : 'Emitere către';
+                
+                item.innerHTML = `
+                    <div class="transaction-icon">
+                        <i class="fas ${typeIcon}"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-type">${typeText}</div>
+                        <div class="transaction-address">${address.substring(0, 10)}...${address.substring(38)}</div>
+                    </div>
+                    <div class="transaction-amount">
+                        ${type === 'transfer' ? '-' : '+'} ${amount} ORX
+                    </div>
+                    <div class="transaction-time">
+                        ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                `;
+                
+                list.insertBefore(item, list.firstChild);
+            }
+            
+            // Verificăm dacă există adresa contractului și ascundem cardul de mint dacă nu este owner
+            if (!orionixInfo.contractAddress) {
+                document.getElementById('mint-card').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -9,14 +9,17 @@
     /* Dark Theme Defaults */
     --background-color: #0a0d14;
     --card-background: #151922;
+    --crypto-card-background: #13151d;
+    --crypto-card-shadow: rgba(0, 0, 0, 0.1);
+    --crypto-card-hover-shadow: rgba(0, 0, 0, 0.15);
     --text-color: #ffffff;
     --secondary-text-color: rgba(255, 255, 255, 0.7);
     --accent-color: #4a90e2;
     --accent-color-darker: #2563eb;
     --accent-color-transparent: rgba(74, 144, 226, 0.1);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --positive-color: #10b981;
-    --negative-color: #ef4444;
+    --border-color: rgba(255, 255, 255, 0.05);
+    --positive-color: #00ca72;
+    --negative-color: #ff5c5c;
     --positive-bg: rgba(16, 185, 129, 0.1);
     --negative-bg: rgba(239, 68, 68, 0.1);
     --bg-color: #0a0d14;
@@ -25,6 +28,9 @@
 html[data-theme="light"] {
     --background-color: #f4f7f9;
     --card-background: #ffffff;
+    --crypto-card-background: #f8f9fb;
+    --crypto-card-shadow: rgba(0, 0, 0, 0.04);
+    --crypto-card-hover-shadow: rgba(0, 0, 0, 0.08);
     --text-color: #1f2937;
     --secondary-text-color: #6b7280;
     --accent-color: #3b82f6;
@@ -690,4 +696,1497 @@ html[data-theme="light"] body::before {
     text-align: center;
     padding: 12px 0 6px 0;
     font-size: 0.98em;
+}
+
+/* Stiluri pentru secțiunea Hero */
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-color);
+    padding: 80px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 15% 25%, rgba(74, 144, 226, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-heading {
+    font-size: 3.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-subheading {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--secondary-text-color);
+    text-align: center;
+    margin-bottom: 70px;
+    max-width: 700px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-container {
+    width: 100%;
+    max-width: 1300px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.crypto-cards {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.crypto-card {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px;
+    background-color: var(--crypto-card-background);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px var(--crypto-card-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.crypto-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px var(--crypto-card-hover-shadow);
+}
+
+.featured-badge {
+    display: none;
+}
+
+.crypto-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.crypto-icon img {
+    width: 100%;
+    height: auto;
+}
+
+.crypto-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 15px;
+}
+
+.price-label, .volume-label, .change-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.price-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 12px;
+}
+
+.chart-container {
+    width: 100%;
+    height: 80px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.chart-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+}
+
+.volume-value, .change-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.change-positive {
+    color: var(--positive-color);
+}
+
+.change-negative {
+    color: var(--negative-color);
+}
+
+/* Stiluri responsiv pentru carduri */
+@media (max-width: 1100px) {
+    .crypto-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .crypto-card {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .hero-heading {
+        font-size: 3.2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 20px;
+    }
+    
+    .hero-heading {
+        font-size: 2.6rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1.1rem;
+        margin-bottom: 50px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 50px 16px;
+    }
+    
+    .hero-heading {
+        font-size: 2.2rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1rem;
+        margin-bottom: 40px;
+    }
+    
+    .crypto-card {
+        min-width: 100%;
+        padding: 20px;
+    }
+}
+
+/* Stiluri pentru pagina Orionix */
+
+.orionix-page {
+    padding: 2rem 1rem;
+}
+
+.orionix-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.orionix-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+}
+
+.orionix-logo {
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+}
+
+.orionix-logo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.orionix-info h1 {
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem;
+    color: var(--text-color);
+}
+
+.orionix-info p {
+    font-size: 1rem;
+    color: var(--secondary-text-color);
+    margin: 0;
+}
+
+.token-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.detail-card, .wallet-info-card, .action-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+}
+
+.detail-card h3, .wallet-info-card h3, .action-card h3, .transaction-history h3 {
+    font-size: 1.25rem;
+    margin: 0 0 1.25rem;
+    color: var(--text-color);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-row span:first-child {
+    color: var(--secondary-text-color);
+}
+
+.detail-row span:last-child {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.contract-address span:last-child {
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.wallet-connect {
+    margin-bottom: 1.5rem;
+}
+
+.connect-btn {
+    display: block;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.connect-btn:hover {
+    background: var(--accent-hover-color);
+}
+
+.connect-btn.connected {
+    background: var(--success-color);
+}
+
+.token-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--secondary-text-color);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+.amount-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--input-bg);
+    overflow: hidden;
+}
+
+.amount-input input {
+    flex: 1;
+    border: none;
+    padding: 0.75rem;
+    background: transparent;
+}
+
+.amount-input input:focus {
+    outline: none;
+}
+
+.amount-input span {
+    padding: 0.75rem 1rem;
+    background: var(--border-color);
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.action-btn {
+    display: block;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--accent-hover-color);
+}
+
+.status-message {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    min-height: 3em;
+}
+
+.transaction-history {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+}
+
+.transaction-list {
+    min-height: 150px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--secondary-text-color);
+    font-size: 0.95rem;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-icon {
+    margin-right: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--card-accent-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.transaction-icon i {
+    font-size: 0.95rem;
+    color: var(--accent-color);
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-type {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 0.2rem;
+}
+
+.transaction-address {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+}
+
+.transaction-amount {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-right: 1rem;
+}
+
+.transaction-time {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .token-details, .token-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .orionix-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .orionix-logo {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Stiluri pentru secțiunea Orionix */
+
+.orionix-section {
+    padding: 80px 20px;
+    background-color: var(--background-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.orionix-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.07) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.orionix-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.orionix-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[data-theme="light"] .orionix-header {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.orionix-header:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.orionix-logo {
+    margin-right: 2rem;
+    flex-shrink: 0;
+}
+
+.orionix-logo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.orionix-logo img:hover {
+    transform: scale(1.05) rotate(5deg);
+}
+
+.orionix-info h1 {
+    font-size: 2.2rem;
+    margin: 0 0 0.7rem;
+    color: var(--text-color);
+    font-weight: 700;
+    background: linear-gradient(135deg, #4a90e2 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.orionix-info p {
+    font-size: 1.1rem;
+    color: var(--secondary-text-color);
+    margin: 0;
+}
+
+.about-orionix {
+    margin-bottom: 3.5rem;
+    text-align: center;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.about-orionix h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+.about-orionix p {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: var(--secondary-text-color);
+    margin-bottom: 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.8rem;
+    margin-top: 2.5rem;
+}
+
+.feature-item {
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 16px;
+    padding: 2.5rem 1.8rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+html[data-theme="light"] .feature-item {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feature-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
+    z-index: -1;
+}
+
+.feature-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+}
+
+.feature-item i {
+    font-size: 3rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.feature-item:hover i {
+    transform: scale(1.1);
+}
+
+.feature-item h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+.feature-item p {
+    font-size: 1rem;
+    color: var(--secondary-text-color);
+    line-height: 1.7;
+}
+
+.token-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.detail-card, .wallet-info-card {
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[data-theme="light"] .detail-card,
+html[data-theme="light"] .wallet-info-card,
+html[data-theme="light"] .action-card,
+html[data-theme="light"] .transaction-history {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-card:hover, 
+.wallet-info-card:hover,
+.action-card:hover,
+.transaction-history:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.detail-card h3, 
+.wallet-info-card h3, 
+.action-card h3, 
+.transaction-history h3 {
+    font-size: 1.4rem;
+    margin: 0 0 1.5rem;
+    color: var(--text-color);
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+}
+
+html[data-theme="light"] .detail-card h3,
+html[data-theme="light"] .wallet-info-card h3,
+html[data-theme="light"] .action-card h3,
+html[data-theme="light"] .transaction-history h3 {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="light"] .detail-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.detail-row span:first-child {
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+.detail-row span:last-child {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.contract-address span:last-child {
+    font-size: 0.85rem;
+    word-break: break-all;
+    font-family: monospace;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: inline-block;
+    margin-top: 0.5rem;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+html[data-theme="light"] .contract-address span:last-child {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.wallet-connect {
+    margin-bottom: 1.8rem;
+}
+
+.connect-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.connect-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.7s ease;
+}
+
+.connect-btn:hover::before {
+    left: 100%;
+}
+
+.connect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+}
+
+.connect-btn:active {
+    transform: translateY(1px);
+}
+
+.connect-btn.connected {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.token-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.action-card {
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#mint-card {
+    background: linear-gradient(135deg, rgba(25, 30, 45, 0.5) 0%, rgba(31, 41, 55, 0.5) 100%);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+html[data-theme="light"] #mint-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(243, 244, 246, 0.8) 100%);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+html[data-theme="light"] .form-group input {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.form-group input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.amount-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+html[data-theme="light"] .amount-input {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.amount-input input {
+    flex: 1;
+    border: none;
+    padding: 1rem;
+    background: transparent;
+    color: var(--text-color);
+}
+
+.amount-input input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.amount-input span {
+    padding: 1rem 1.2rem;
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+html[data-theme="light"] .amount-input span {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.action-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.7s ease;
+}
+
+.action-btn:hover::before {
+    left: 100%;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+}
+
+.action-btn:active {
+    transform: translateY(1px);
+}
+
+.status-message {
+    margin-top: 1rem;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    min-height: 3em;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .status-message {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.transaction-history {
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.transaction-list {
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.transaction-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.transaction-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.transaction-list::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+}
+
+.transaction-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--secondary-text-color);
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+html[data-theme="light"] .empty-state {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 1.2rem;
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[data-theme="light"] .transaction-item {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.transaction-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-icon {
+    margin-right: 1.2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.transaction-icon i {
+    font-size: 1.1rem;
+    color: var(--accent-color);
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-type {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.3rem;
+}
+
+.transaction-address {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    font-family: monospace;
+    padding: 0.2rem 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    display: inline-block;
+}
+
+html[data-theme="light"] .transaction-address {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.transaction-amount {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-right: 1.2rem;
+}
+
+.transaction-time {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+html[data-theme="light"] .transaction-time {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive pentru secțiunea Orionix */
+@media (max-width: 900px) {
+    .features-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .about-orionix h2 {
+        font-size: 2.2rem;
+    }
+    
+    .orionix-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .orionix-logo {
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .token-details, 
+    .token-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-card, 
+    .wallet-info-card,
+    .action-card,
+    .transaction-history {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .about-orionix h2 {
+        font-size: 1.8rem;
+    }
+    
+    .about-orionix p {
+        font-size: 1rem;
+    }
+    
+    .orionix-section {
+        padding: 60px 15px;
+    }
+    
+    .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .transaction-icon {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .transaction-amount,
+    .transaction-time {
+        margin-top: 0.8rem;
+        margin-right: 0;
+    }
+}
+
+/* Stiluri pentru secțiunea de comparare */
+.compare-section {
+    padding: 80px 20px;
+    background-color: var(--background-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.compare-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(239, 68, 68, 0.05) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.compare-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.compare-heading {
+    font-size: 2.8rem;
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+.compare-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.crypto-compare-card {
+    flex: 1;
+    min-width: 320px;
+    max-width: 450px;
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[data-theme="light"] .crypto-compare-card {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.crypto-compare-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.crypto-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.crypto-icon {
+    margin-right: 1rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.crypto-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.crypto-name h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 0.2rem;
+    color: var(--text-color);
+}
+
+.crypto-symbol {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+.crypto-data {
+    margin-bottom: 1.5rem;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="light"] .data-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.data-row:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+.data-label {
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.data-value-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.data-value {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+.change-badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.change-badge.positive {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.change-badge.negative {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.crypto-chart-container {
+    width: 100%;
+    height: 250px;
+    margin-top: 1.5rem;
+    position: relative;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html[data-theme="light"] .crypto-chart-container {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.03);
+}
+
+.vs-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+}
+
+.vs-text {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 10px rgba(59, 130, 246, 0.1);
+}
+
+/* Dropdown select styling */
+.crypto-select-container {
+    position: relative;
+    margin-bottom: 0.3rem;
+}
+
+.crypto-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 2rem 0.5rem 1rem;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+html[data-theme="light"] .crypto-select {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.crypto-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.crypto-select-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--text-color);
+    pointer-events: none;
+}
+
+/* Responsive styles for compare section */
+@media (max-width: 900px) {
+    .compare-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .crypto-compare-card {
+        min-width: 100%;
+    }
+    
+    .vs-container {
+        margin: 1rem 0;
+        width: auto;
+        height: auto;
+    }
+    
+    .compare-heading {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .compare-heading {
+        font-size: 1.8rem;
+    }
+    
+    .crypto-compare-card {
+        padding: 1.2rem;
+    }
+    
+    .data-value {
+        font-size: 1rem;
+    }
 }

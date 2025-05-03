@@ -877,7 +877,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const id = symbol + '-' + Date.now();
-            alerts.push({ id, symbol, condition, price });
+            alerts.push({
+                id,
+                symbol,
+                condition,
+                price,
+                triggered: false,
+                lastTriggered: null,
+                created: Date.now()
+            });
             localStorage.setItem('cryptoAlerts', JSON.stringify(alerts));
             modal.querySelector('.target-price').value = '';
             if (typeof updateAlertBadgeAndDropdown === 'function') {

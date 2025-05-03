@@ -1,14 +1,13 @@
 // Informații despre tokenul Orionix
 window.orionixInfo = {
-    // Adresa contractului de token pe Sepolia testnet - se va actualiza după deployment
-    // Exemple de tokeni ERC-20 pe Sepolia pentru testare:
-    // - USDC (Sepolia): 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
-    // - DAI (Sepolia): 0x68194a729C2450ad26072b3D33ADaCbcef39D574
-    // - WETH (Sepolia): 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14
-    contractAddress: "0x0000000000000000000000000000000000000000", // Adresa va fi actualizată la deployment
+    // Adresa contractului de token pe Sepolia testnet - setată pe adresa zero pentru simulare
+    contractAddress: "0x0000000000000000000000000000000000000000",
     
-    // Flag pentru a indica dacă contractul este disponibil (se va seta automat)
-    contractDeployed: false,
+    // Flag pentru a indica faptul că suntem în modul simulare
+    contractDeployed: true, // Setăm pe true pentru simulare
+    
+    // Flag pentru a indica modul de simulare (valoare nouă)
+    simulationMode: true,
     
     // ABI-ul contractului - interfața pentru interacțiunea cu contractul smart
     // Actualizat pentru a corespunde contractului nostru OrionixToken.sol
@@ -266,6 +265,12 @@ class OrionixTokenManager {
     
     // Metodă pentru verificarea existenței contractului
     async verifyContract() {
+        // În modul simulare, contractul este întotdeauna considerat valid
+        if (window.orionixInfo.simulationMode) {
+            console.log("Modul simulare: Contractul este considerat valid pentru testare");
+            return true;
+        }
+
         if (!this.contract) return false;
         
         try {
@@ -541,12 +546,17 @@ class OrionixTokenManager {
         // Actualizăm starea contractului
         const contractStatusElement = document.getElementById('contract-status');
         if (contractStatusElement) {
-            if (window.orionixInfo.contractDeployed) {
-                contractStatusElement.textContent = "Activ";
+            if (window.orionixInfo.simulationMode) {
+                contractStatusElement.textContent = "Simulare";
                 contractStatusElement.classList.remove('error');
+                contractStatusElement.classList.add('simulation');
+            } else if (window.orionixInfo.contractDeployed) {
+                contractStatusElement.textContent = "Activ";
+                contractStatusElement.classList.remove('error', 'simulation');
             } else {
                 contractStatusElement.textContent = "Inactiv";
                 contractStatusElement.classList.add('error');
+                contractStatusElement.classList.remove('simulation');
             }
         }
         
@@ -560,30 +570,35 @@ class OrionixTokenManager {
                 walletAddressElement.textContent = `${this.userAddress.substring(0, 6)}...${this.userAddress.substring(38)}`;
             }
             
-            // Obținem și afișăm soldul de tokeni dacă contractul este activ
-            if (window.orionixInfo.contractDeployed) {
+            // Obținem și afișăm soldul de tokeni dacă contractul este activ sau în modul simulare
+            if (window.orionixInfo.contractDeployed || window.orionixInfo.simulationMode) {
                 const tokenBalanceElement = document.getElementById('token-balance');
                 if (tokenBalanceElement) {
-                    try {
-                        // Încercăm să obținem informațiile reale ale contractului
-                        // Dacă eșuează, folosim valori simulate pentru testare
-                        let decimals = 18; // Valoare implicită
-                        let balance = this.ethers.BigNumber.from("1000000000000000000000000"); // 1,000,000 tokens (cu 18 zecimale)
-                        
-                        try {
-                            // Încercăm să obținem valorile reale, dar nu ne bazăm pe ele
-                            decimals = await this.contract.decimals();
-                            balance = await this.contract.balanceOf(this.userAddress);
-                        } catch (error) {
-                            console.log("Folosim valori simulate pentru sold, contractul nu răspunde:", error.message);
-                        }
-                        
-                        const formattedBalance = this.ethers.utils.formatUnits(balance, decimals);
-                        tokenBalanceElement.textContent = `${parseFloat(formattedBalance).toLocaleString()} ORX`;
-                    } catch (error) {
-                        console.error("Eroare la obținerea soldului:", error);
-                        // Setăm un sold simulat în cazul în care nu putem obține soldul real
+                    if (window.orionixInfo.simulationMode) {
+                        // În modul simulare, afișăm un sold fix
                         tokenBalanceElement.textContent = "1,000,000 ORX";
+                    } else {
+                        try {
+                            // Încercăm să obținem informațiile reale ale contractului
+                            // Dacă eșuează, folosim valori simulate pentru testare
+                            let decimals = 18; // Valoare implicită
+                            let balance = this.ethers.BigNumber.from("1000000000000000000000000"); // 1,000,000 tokens (cu 18 zecimale)
+                            
+                            try {
+                                // Încercăm să obținem valorile reale, dar nu ne bazăm pe ele
+                                decimals = await this.contract.decimals();
+                                balance = await this.contract.balanceOf(this.userAddress);
+                            } catch (error) {
+                                console.log("Folosim valori simulate pentru sold, contractul nu răspunde:", error.message);
+                            }
+                            
+                            const formattedBalance = this.ethers.utils.formatUnits(balance, decimals);
+                            tokenBalanceElement.textContent = `${parseFloat(formattedBalance).toLocaleString()} ORX`;
+                        } catch (error) {
+                            console.error("Eroare la obținerea soldului:", error);
+                            // Setăm un sold simulat în cazul în care nu putem obține soldul real
+                            tokenBalanceElement.textContent = "1,000,000 ORX";
+                        }
                     }
                 }
             }
@@ -649,34 +664,33 @@ class OrionixTokenManager {
         }
         
         if (!window.orionixInfo.contractDeployed) {
-            window.showCenterAlert(`
-                <b>Contractul Orionix nu este deploiat</b><br><br>
-                Pentru a face transferuri de tokeni Orionix, trebuie mai întâi să deployați contractul pe rețeaua Sepolia.
-                <br><br>
-                Consultați fișierul README.md sau rulați scriptul deployment-helper.js pentru a vă ghida prin procesul de deployment.
-            `, true);
             throw new Error("Contractul Orionix nu este activ sau nu a fost deploiat");
         }
         
         try {
-            // Simulăm o tranzacție reușită pentru testare
-            if (window.orionixInfo.contractAddress === "0x0000000000000000000000000000000000000000") {
+            // Verificăm dacă suntem în modul simulare
+            if (window.orionixInfo.simulationMode) {
+                console.log("Modul simulare: Se simulează transferul de tokeni");
+                
+                // Simulăm un transfer reușit
+                // În mod normal, am scădea din soldul utilizatorului, dar în simulare ignorăm asta
+                
                 // Arătăm un mesaj de succes simulat
                 window.showCenterAlert(`
                     <b>Transfer simulat cu succes!</b><br><br>
                     Recipient: ${recipientAddress}<br>
                     Sumă: ${amount} ORX<br><br>
-                    <small>Notă: Acesta este un transfer simulat deoarece contractul nu este deploiat.</small>
+                    <small>Notă: Aceasta este o tranzacție simulată în modul de testare.</small>
                 `, true);
                 
                 console.log(`Transfer simulat: ${amount} ORX către ${recipientAddress}`);
                 return {
                     success: true,
-                    transactionHash: "0x" + Array(64).fill('0').map(() => Math.floor(Math.random() * 16).toString(16)).join('')
+                    transactionHash: "0x" + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')
                 };
             }
         
-            // Încercăm transferul real dacă există un contract valid
+            // Cod pentru transferul real (se execută doar dacă nu suntem în modul simulare)
             try {
                 // Convertim suma la unitatea tokenului (cu decimale)
                 const decimals = await this.contract.decimals();
@@ -712,55 +726,42 @@ class OrionixTokenManager {
         }
         
         if (!window.orionixInfo.contractDeployed) {
-            window.showCenterAlert(`
-                <b>Contractul Orionix nu este deploiat</b><br><br>
-                Pentru a emite tokeni Orionix, trebuie mai întâi să deployați contractul pe rețeaua Sepolia.
-                <br><br>
-                Consultați fișierul README.md sau rulați scriptul deployment-helper.js pentru a vă ghida prin procesul de deployment.
-            `, true);
             throw new Error("Contractul Orionix nu este activ sau nu a fost deploiat");
         }
         
         if (!this.isOwner) {
-            window.showCenterAlert(`
-                <b>Permisiune refuzată</b><br><br>
-                Doar proprietarul contractului poate emite tokeni noi.
-                <br><br>
-                Contractul a fost deploiat de un alt cont, iar dvs. nu aveți permisiuni de admin.
-            `, true);
             throw new Error("Doar proprietarul contractului poate emite tokeni noi");
         }
         
         // Verifică dacă contractul are funcția mint
         if (!window.orionixInfo.contractABI.some(item => item.includes("mint("))) {
-            window.showCenterAlert(`
-                <b>Funcționalitate neimplementată</b><br><br>
-                Acest contract ERC-20 nu are funcția de mint implementată.
-                <br><br>
-                Trebuie să deployați un contract care include această funcționalitate.
-            `, true);
             throw new Error("Acest contract ERC-20 nu are funcția de mint implementată");
         }
         
         try {
-            // Simulăm o tranzacție reușită pentru testare
-            if (window.orionixInfo.contractAddress === "0x0000000000000000000000000000000000000000") {
+            // Verificăm dacă suntem în modul simulare
+            if (window.orionixInfo.simulationMode) {
+                console.log("Modul simulare: Se simulează mint-ul de tokeni noi");
+                
+                // Simulăm un mint reușit
+                // În mod normal, am adăuga la soldul utilizatorului, dar în simulare ignorăm asta
+                
                 // Arătăm un mesaj de succes simulat
                 window.showCenterAlert(`
                     <b>Mint simulat cu succes!</b><br><br>
                     Recipient: ${recipientAddress}<br>
                     Sumă: ${amount} ORX<br><br>
-                    <small>Notă: Acesta este un mint simulat deoarece contractul nu este deploiat.</small>
+                    <small>Notă: Aceasta este o tranzacție simulată în modul de testare.</small>
                 `, true);
                 
                 console.log(`Mint simulat: ${amount} ORX către ${recipientAddress}`);
                 return {
                     success: true,
-                    transactionHash: "0x" + Array(64).fill('0').map(() => Math.floor(Math.random() * 16).toString(16)).join('')
+                    transactionHash: "0x" + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')
                 };
             }
             
-            // Încercăm mint-ul real dacă există un contract valid
+            // Cod pentru mint-ul real (se execută doar dacă nu suntem în modul simulare)
             try {
                 // Convertim suma la unitatea tokenului (cu decimale)
                 const decimals = await this.contract.decimals();
