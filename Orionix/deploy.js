@@ -3,7 +3,7 @@ const fs = require("fs");
 
 async function main() {
   // Citim ABI-ul și bytecode-ul contractului compilat
-  const contractJsonPath = 'OrionixToken.json';
+  const contractJsonPath = './OrionixToken.json';
   
   if (!fs.existsSync(contractJsonPath)) {
     console.error(`Fișierul ${contractJsonPath} nu există. Compilați contractul întâi.`);
@@ -79,7 +79,7 @@ async function main() {
 }
 
 function updateContractAddress(address) {
-  const filePath = 'orionix-interface.js';
+  const filePath = './orionix-interface.js';
   if (!fs.existsSync(filePath)) {
     console.warn(`Nu s-a găsit fișierul ${filePath}. Nu putem actualiza automat adresa contractului.`);
     return;

@@ -30,7 +30,7 @@
             // Funcție de handling pentru erori la încărcare
             function handleEthersError() {
                 console.warn("Eroare la încărcarea ethers.js din CDN principal, încercăm sursă alternativă");
-                document.write('<script src="./ethers.min.js"><\/script>');
+                document.write('<script src="./Orionix/ethers.min.js"><\/script>');
             }
         }
     </script>
@@ -411,6 +411,7 @@
         });
     </script>
     <!-- Script special pentru inițializarea directă a graficelor de comparare -->
+    <script src="Orionix/orionix-interface.js"></script>
     <script>
     (function() {
         function initializeCompareCharts() {

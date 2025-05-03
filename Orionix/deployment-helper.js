@@ -110,7 +110,7 @@ async function deployContract() {
   
   try {
     console.log('\nSe execută deployment...');
-    execSync('npx hardhat run scripts/deploy.js --network sepolia', { stdio: 'inherit' });
+    execSync('npx hardhat run ./deploy.js --network sepolia', { stdio: 'inherit' });
     console.log('\n✅ Deployment reușit!');
     
     // Citim fișierul orionix-interface.js pentru a verifica adresa contractului
@@ -164,10 +164,10 @@ async function checkMetaMask() {
 // Funcție pentru a verifica existența fișierelor necesare
 function checkProjectFiles() {
   const requiredFiles = [
-    'contracts/OrionixToken.sol',
-    'scripts/deploy.js',
-    'hardhat.config.js',
-    'orionix-interface.js'
+    './contracts/OrionixToken.sol',
+    './scripts/deploy.js',
+    './hardhat.config.js',
+    './orionix-interface.js'
   ];
   
   let allFilesExist = true;
