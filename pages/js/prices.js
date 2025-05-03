@@ -35,12 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
         coinDetails: {}
     };
     
-    // Timpul minim între cereri (15 minute) - mărim timpul pentru a reduce numărul total de cereri
-    const MIN_REQUEST_INTERVAL = 15 * 60 * 1000;
-    
-    // Flag pentru a controla numărul de cereri
-    let apiRequestCount = 0;
-    const MAX_REQUESTS_PER_SESSION = 5; // Maxim 5 cereri per sesiune
+    // Timpul minim între cereri (15 secunde) - mărim timpul pentru a reduce numărul total de cereri
+    const MIN_REQUEST_INTERVAL = 15 * 1000;
     
     const CAROUSEL_COINS = ALL_COINS.slice(0, 10); // Păstrăm primele 10 pentru carusel
     const ITEMS_PER_PAGE = 15;
@@ -75,58 +71,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentSort = { key: null, direction: 'desc' };
 
+    // Adaug referințe pentru mini-charts
+    const miniCharts = {};
+
     // Funcție pentru a apela un URL prin proxy CORS cu gestionare avansată a erorilor
     async function fetchWithProxy(url, forceRefresh = false) {
-        // Verificăm dacă am depășit numărul maxim de cereri
-        if (apiRequestCount >= MAX_REQUESTS_PER_SESSION) {
-            console.warn('Numărul maxim de cereri API a fost atins. Folosim datele din cache sau demo.');
-            throw new Error('MAX_REQUESTS_EXCEEDED');
-        }
-        
-        // Generăm un hash simplu pentru URL pentru a-l folosi ca și cheie de cache
-        const urlHash = url.split('?')[0] + (url.includes('market_chart') ? '-chart' : '');
-        
-        // Verificăm dacă avem deja datele în cache și dacă nu trebuie să forțăm reîmprospătarea
-        if (!forceRefresh) {
-            if (url.includes('markets?')) {
-                // Pentru date de piață
-                if (apiCache.marketData && (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL)) {
-                    console.log('Folosim datele din cache pentru', urlHash);
-                    return apiCache.marketData;
-                }
-            } else if (url.includes('market_chart')) {
-                // Pentru date istorice
-                const coinId = url.split('/coins/')[1].split('/')[0];
-                const period = url.includes('days=1') ? '24h' : 
-                              url.includes('days=7') ? '7d' : 
-                              url.includes('days=30') ? '30d' : '1y';
-                              
-                const cacheKey = `${coinId}-${period}`;
-                
-                if (apiCache.historicalData[cacheKey] && (Date.now() - apiCache.historicalData[cacheKey].timestamp < MIN_REQUEST_INTERVAL)) {
-                    console.log('Folosim datele istorice din cache pentru', cacheKey);
-                    return apiCache.historicalData[cacheKey].data;
-                }
-            } else if (url.includes('/coins/') && !url.includes('market_chart')) {
-                // Pentru detalii monedă
-                const coinId = url.split('/coins/')[1].split('?')[0];
-                
-                if (apiCache.coinDetails[coinId] && (Date.now() - apiCache.coinDetails[coinId].timestamp < MIN_REQUEST_INTERVAL)) {
-                    console.log('Folosim detaliile monedei din cache pentru', coinId);
-                    return apiCache.coinDetails[coinId].data;
-                }
-            }
-        }
-        
         try {
-            // Incrementăm contorul de cereri
-            apiRequestCount++;
-            
             // Nu mai adăugăm timestamp pentru evitarea cache-ului
             // Acest lucru contribuia semnificativ la problema de rate limit
             const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
             
-            console.log(`Fetch nou: ${url} (cererea ${apiRequestCount}/${MAX_REQUESTS_PER_SESSION})`);
+            console.log(`Fetch nou: ${url}`);
             const response = await fetch(proxyUrl);
             
             if (response.status === 429) {
@@ -250,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Verificăm dacă timpul scurs de la ultima cerere este mai mic decât intervalul minim
             // Sau dacă am depășit numărul maxim de cereri
-            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL || apiRequestCount >= MAX_REQUESTS_PER_SESSION) {
+            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL) {
                 // Folosim datele din cache dacă există
                 if (apiCache.marketData) {
                     console.log('Folosim datele din cache pentru carusel.');
@@ -416,8 +371,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function initializeMiniChart(cardElement, coin) {
         const canvas = cardElement.querySelector(`canvas`);
         if (!canvas) return;
+
+        // Dacă există deja un chart pe acest canvas, îl distrugem
+        if (miniCharts[canvas.id]) {
+            miniCharts[canvas.id].destroy();
+        }
+
         const ctx = canvas.getContext('2d');
-        
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return;
@@ -436,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
         }
 
-        new Chart(ctx, {
+        miniCharts[canvas.id] = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: coin.historicalData.map(point => ''),
@@ -567,17 +527,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Optimizăm și funcția fetchTableData pentru a obține date reale
-    async function fetchTableData() {
+    async function fetchTableData(forceRefresh = false) {
         try {
-            // Verificăm dacă timpul scurs de la ultima cerere este mai mic decât intervalul minim
-            // Sau dacă am depășit numărul maxim de cereri
-            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL || apiRequestCount >= MAX_REQUESTS_PER_SESSION) {
-                // Folosim datele din cache dacă există
-                if (apiCache.marketData) {
+            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL) {
+                if (apiCache.marketData && !forceRefresh) {
                     console.log('Folosim datele din cache pentru tabel.');
                     tableData = apiCache.marketData.map(coin => {
                         const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 7);
-                        
                         return {
                             id: coin.id,
                             symbol: coin.symbol.toUpperCase(),
@@ -591,24 +547,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                     });
                 } else {
-                    // Dacă nu există date în cache, generăm date demo
                     throw new Error('Nu există date în cache și limita de cereri a fost atinsă');
                 }
             } else {
-                // Folosim o singură cerere API în loc de mai multe loturi
-                // Astfel minimizăm riscul de a depăși rata limită
                 const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ALL_COINS.join(',')}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
-                const allData = await fetchWithProxy(url);
-                
+                const allData = await fetchWithProxy(url, forceRefresh);
                 if (!allData || !Array.isArray(allData) || allData.length === 0) {
                     throw new Error('Nu am primit date de la API');
                 }
-                
-                // Procesăm datele pentru toate monedele
                 tableData = allData.map(coin => {
-                    // Generăm date istorice pe baza schimbării din 24h
                     const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 7);
-                    
                     return {
                         id: coin.id,
                         symbol: coin.symbol.toUpperCase(),
@@ -623,13 +571,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } catch (error) {
-            console.warn('Folosim date demonstrative pentru tabel:', error);
-            tableData = ALL_COINS.map((coin, index) => generateDemoData(coin, index));
+            console.warn('Eroare la actualizarea datelor din API:', error);
+            // Nu actualizăm tableData cu demoData!
+            // Poți adăuga aici un mesaj de eroare vizibil dacă vrei
+            return;
         }
-
-        filteredData = [...tableData]; // Inițializăm filteredData cu toate datele
-        
-        // Separăm renderizarea pentru a permite browserului să respire între operațiuni
+        filteredData = [...tableData];
         setTimeout(() => {
             renderTable();
             setTimeout(() => {
@@ -827,6 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         addCoinClickListeners();
+        checkPriceAlerts();
     }
 
     function renderPagination() {
@@ -860,20 +808,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         console.log('Inițializare aplicație...');
         
-        Promise.all([
-            fetchCoinData().catch(error => {
-                console.error('Eroare la încărcarea datelor pentru carusel:', error);
-                return CAROUSEL_COINS.map((coin, index) => generateDemoData(coin, index));
-            }),
-            fetchTableData().catch(error => {
-                console.error('Eroare la încărcarea datelor pentru tabel:', error);
-            })
-        ]).then(() => {
+        // Funcție pentru actualizarea sincronizată a ambelor componente
+        async function updateBothComponents() {
+            try {
+                await Promise.all([
+                    fetchCoinData(),
+                    fetchTableData(true)
+                ]);
+            } catch (error) {
+                console.error('Eroare la actualizarea datelor:', error);
+            }
+        }
+
+        // Inițializare inițială
+        updateBothComponents().then(() => {
             setupEventListeners();
             addCoinClickListeners();
             renderCarouselWithPosition(0);
             startAutoScroll();
         });
+
+        // Actualizare periodică sincronizată
+        setInterval(updateBothComponents, 15000);
     }
     
     function setupEventListeners() {
@@ -983,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="input-group">
                             <label>Target Price (USD)</label>
-                            <input type="number" class="target-price" placeholder="0.00" step="0.01">
+                            <input type="number" class="target-price" placeholder="0.00" step="0.01" min="0">
                         </div>
                         <button class="set-alert-btn">Set Alert</button>
                     </div>
@@ -1073,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Încercăm să obținem date suplimentare doar dacă nu am depășit rata limită
             try {
                 // Verificăm dacă timpul scurs de la ultima cerere este suficient ȘI dacă nu am depășit numărul maxim de cereri
-                if (Date.now() - apiCache.lastFetchTimestamp > MIN_REQUEST_INTERVAL && apiRequestCount < MAX_REQUESTS_PER_SESSION) {
+                if (Date.now() - apiCache.lastFetchTimestamp > MIN_REQUEST_INTERVAL) {
                     const url = `https://api.coingecko.com/api/v3/coins/${coinData.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`;
                     const detailedData = await fetchWithProxy(url);
                     
@@ -1235,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Verificăm dacă avem suficient timp între cereri pentru a nu depăși rata limită
             // ȘI dacă nu am depășit numărul maxim de cereri
-            if (Date.now() - apiCache.lastFetchTimestamp > MIN_REQUEST_INTERVAL && apiRequestCount < MAX_REQUESTS_PER_SESSION) {
+            if (Date.now() - apiCache.lastFetchTimestamp > MIN_REQUEST_INTERVAL) {
                 const cacheKey = `${coinData.id}-${period}`;
                 
                 // Doar dacă nu avem deja datele în cache
@@ -1512,5 +1468,151 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAlertBadgeAndDropdown();
             setupAlertDropdownEvents();
         }, 100);
+    };
+
+    // Functie pentru a afisa alerta pe mijlocul ecranului
+    function showCenterAlert(message) {
+        let alertDiv = document.getElementById('centerScreenAlert');
+        if (!alertDiv) {
+            alertDiv = document.createElement('div');
+            alertDiv.id = 'centerScreenAlert';
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '50%';
+            alertDiv.style.left = '50%';
+            alertDiv.style.transform = 'translate(-50%, -50%)';
+            alertDiv.style.background = 'var(--card-background)';
+            alertDiv.style.color = 'var(--text-color)';
+            alertDiv.style.padding = '24px 32px';
+            alertDiv.style.borderRadius = '12px';
+            alertDiv.style.fontSize = '1.1rem';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
+            alertDiv.style.textAlign = 'center';
+            alertDiv.style.minWidth = '300px';
+            alertDiv.style.maxWidth = '90vw';
+            alertDiv.style.pointerEvents = 'auto';
+            alertDiv.style.border = '1px solid var(--border-color)';
+            alertDiv.style.fontFamily = 'inherit';
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            alertDiv.style.backdropFilter = 'blur(8px)';
+            alertDiv.style.display = 'flex';
+            alertDiv.style.alignItems = 'center';
+            alertDiv.style.gap = '16px';
+            
+            // Icon de alertă
+            const icon = document.createElement('div');
+            icon.innerHTML = '<i class="fas fa-bell" style="color: var(--accent-color); font-size: 1.5rem;"></i>';
+            
+            // Buton X
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.style.position = 'absolute';
+            closeBtn.style.top = '12px';
+            closeBtn.style.right = '12px';
+            closeBtn.style.background = 'transparent';
+            closeBtn.style.border = 'none';
+            closeBtn.style.color = 'var(--secondary-text-color)';
+            closeBtn.style.fontSize = '1rem';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.style.padding = '4px';
+            closeBtn.style.borderRadius = '50%';
+            closeBtn.style.transition = 'all 0.2s ease';
+            closeBtn.onmouseover = () => {
+                closeBtn.style.color = 'var(--accent-color)';
+                closeBtn.style.transform = 'rotate(90deg)';
+            };
+            closeBtn.onmouseout = () => {
+                closeBtn.style.color = 'var(--secondary-text-color)';
+                closeBtn.style.transform = 'rotate(0deg)';
+            };
+            closeBtn.onclick = () => {
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transform = 'translate(-50%, -50%) scale(0.95)';
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 300);
+            };
+            
+            alertDiv.appendChild(closeBtn);
+            alertDiv.appendChild(icon);
+            document.body.appendChild(alertDiv);
+        } else {
+            alertDiv.innerHTML = '';
+            const icon = document.createElement('div');
+            icon.innerHTML = '<i class="fas fa-bell" style="color: var(--accent-color); font-size: 1.5rem;"></i>';
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.style.position = 'absolute';
+            closeBtn.style.top = '12px';
+            closeBtn.style.right = '12px';
+            closeBtn.style.background = 'transparent';
+            closeBtn.style.border = 'none';
+            closeBtn.style.color = 'var(--secondary-text-color)';
+            closeBtn.style.fontSize = '1rem';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.style.padding = '4px';
+            closeBtn.style.borderRadius = '50%';
+            closeBtn.style.transition = 'all 0.2s ease';
+            closeBtn.onmouseover = () => {
+                closeBtn.style.color = 'var(--accent-color)';
+                closeBtn.style.transform = 'rotate(90deg)';
+            };
+            closeBtn.onmouseout = () => {
+                closeBtn.style.color = 'var(--secondary-text-color)';
+                closeBtn.style.transform = 'rotate(0deg)';
+            };
+            closeBtn.onclick = () => {
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transform = 'translate(-50%, -50%) scale(0.95)';
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 300);
+            };
+            alertDiv.appendChild(closeBtn);
+            alertDiv.appendChild(icon);
+        }
+        
+        // Mesajul
+        const msgSpan = document.createElement('span');
+        msgSpan.textContent = message;
+        msgSpan.style.flex = '1';
+        alertDiv.appendChild(msgSpan);
+        
+        // Animație de intrare
+        alertDiv.style.display = 'flex';
+        alertDiv.style.transform = 'translate(-50%, -50%) scale(0.95)';
+        setTimeout(() => {
+            alertDiv.style.opacity = '1';
+            alertDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+        }, 10);
+    }
+
+    // Functie pentru a verifica alertele la fiecare update de pret
+    function checkPriceAlerts() {
+        const alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
+        if (!alerts.length) return;
+        // Cautam in datele din tabel (tableData)
+        alerts.forEach(alert => {
+            const coin = tableData.find(c => c.symbol === alert.symbol);
+            if (!coin) return;
+            if (
+                (alert.condition === 'above' && coin.price >= alert.price) ||
+                (alert.condition === 'below' && coin.price <= alert.price)
+            ) {
+                showCenterAlert(`Alerta: ${coin.name} (${coin.symbol}) a atins pragul de $${alert.price}!`);
+                // Stergem alerta dupa ce a fost declansata
+                const newAlerts = alerts.filter(a => a.id !== alert.id);
+                localStorage.setItem('cryptoAlerts', JSON.stringify(newAlerts));
+                if (typeof updateAlertBadgeAndDropdown === 'function') updateAlertBadgeAndDropdown();
+            }
+        });
+    }
+
+    // Apeleaza checkPriceAlerts dupa fiecare actualizare de tabel
+    const originalRenderTable = renderTable;
+    renderTable = function() {
+        originalRenderTable();
+        checkPriceAlerts();
     };
 }); 
