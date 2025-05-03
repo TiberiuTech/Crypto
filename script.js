@@ -463,10 +463,7 @@ function initCryptoCards() {
         orionixCard.style.cursor = 'pointer';
         orionixCard.addEventListener('click', function(e) {
             e.preventDefault();
-            const orionixSection = document.getElementById('orionix-section');
-            if (orionixSection) {
-                orionixSection.scrollIntoView({ behavior: 'smooth' });
-            }
+            window.location.href = 'pages/orionix.html';
         });
     }
     
@@ -475,10 +472,7 @@ function initCryptoCards() {
     if (orionixLink) {
         orionixLink.addEventListener('click', function(e) {
             e.preventDefault();
-            const orionixSection = document.getElementById('orionix-section');
-            if (orionixSection) {
-                orionixSection.scrollIntoView({ behavior: 'smooth' });
-            }
+            window.location.href = 'pages/orionix.html';
         });
     }
 }

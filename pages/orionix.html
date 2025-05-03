@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.0.umd.min.js" type="application/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -37,10 +37,6 @@
                 <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
                 <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
             </div>
-            <button id="notificationBtnMobile" class="notification-btn mobile">
-                <i class="fas fa-bell"></i>
-                <span class="alert-badge"></span>
-            </button>
             <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
                 <i class="fas fa-moon"></i>
             </button>
@@ -59,19 +55,9 @@
             </div>
         </div>
     </nav>
-    
-    <main class="orionix-page">
+
+    <section class="orionix-section">
         <div class="container">
-            <div class="orionix-header">
-                <div class="orionix-logo">
-                    <img src="https://via.placeholder.com/80/3b82f6/FFFFFF?text=ORX" alt="Orionix Logo">
-                </div>
-                <div class="orionix-info">
-                    <h1>Orionix (ORX)</h1>
-                    <p>Propriul tău token ERC-20 pe blockchain-ul Ethereum</p>
-                </div>
-            </div>
-            
             <div class="token-details">
                 <div class="detail-card">
                     <h3>Informații Generale</h3>
@@ -103,12 +89,20 @@
                         <span>Adresă Contract:</span>
                         <span id="contract-address">Se încarcă...</span>
                     </div>
+                    <div class="detail-row">
+                        <span>Stare Contract:</span>
+                        <span id="contract-status">Se verifică...</span>
+                    </div>
                 </div>
                 
                 <div class="wallet-info-card">
                     <h3>Portofelul Tău</h3>
                     <div class="wallet-connect">
                         <button id="connect-wallet-btn" class="connect-btn">Conectează MetaMask</button>
+                        <div id="load-error-message" class="error-message" style="display: none; margin-top: 10px; padding: 8px 12px; background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border-radius: 6px; text-align: center; font-size: 0.9rem;">
+                            <i class="fas fa-exclamation-circle"></i> 
+                            Nu s-a putut încărca biblioteca ethers.js. <a href="#" id="show-details-btn" style="color: #dc3545; text-decoration: underline;">Afișează detalii</a>
+                        </div>
                     </div>
                     <div class="wallet-details">
                         <div class="detail-row">
@@ -168,108 +162,200 @@
                 </div>
             </div>
         </div>
-    </main>
-    
-    <script src="../script.js"></script>
+    </section>
+
+    <script src="../script.js" defer></script>
     <script src="../orionix-interface.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Inițializăm managerul pentru tokenul Orionix
-            const tokenManager = new OrionixTokenManager();
-            
-            // Actualizăm adresa contractului în interfață
-            document.getElementById('contract-address').textContent = 
-                orionixInfo.contractAddress || 'Contract nedisponibil încă';
-            
-            // Adăugăm event listener pentru butonul de conectare
-            document.getElementById('connect-wallet-btn').addEventListener('click', async function() {
-                try {
-                    await tokenManager.connect();
-                    this.textContent = 'Portofel Conectat';
-                    document.querySelector('.empty-state').textContent = 'Nu există tranzacții recente.';
-                } catch (error) {
-                    document.getElementById('wallet-address').textContent = 'Eroare de conectare';
-                    console.error(error);
-                }
-            });
-            
-            // Adăugăm event listener pentru butonul de transfer
-            document.getElementById('transfer-btn').addEventListener('click', async function() {
-                const statusElement = document.getElementById('transfer-status');
-                statusElement.textContent = '';
+            if (typeof OrionixTokenManager !== 'undefined') {
+                const tokenManager = new OrionixTokenManager();
+                window.orionixToken = tokenManager; // Expunem managerul global pentru acces ușor
                 
-                try {
-                    if (!tokenManager.isConnected) {
-                        throw new Error("Portofelul nu este conectat");
-                    }
-                    
-                    const recipientAddress = document.getElementById('recipient-address').value;
-                    const amount = document.getElementById('transfer-amount').value;
-                    
-                    if (!recipientAddress || !amount) {
-                        throw new Error("Completați adresa destinatarului și suma");
-                    }
-                    
-                    if (!ethers.utils.isAddress(recipientAddress)) {
-                        throw new Error("Adresa destinatarului nu este validă");
-                    }
-                    
-                    statusElement.textContent = "Se procesează transferul...";
-                    const tx = await tokenManager.transferTokens(recipientAddress, amount);
-                    
-                    statusElement.textContent = `Transfer realizat cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
-                    document.getElementById('recipient-address').value = '';
-                    document.getElementById('transfer-amount').value = '';
-                    
-                    // Actualizăm soldul și istoricul tranzacțiilor
-                    tokenManager.updateUI();
-                    addTransactionToHistory('transfer', recipientAddress, amount);
-                } catch (error) {
-                    statusElement.textContent = `Eroare: ${error.message}`;
-                    console.error(error);
-                }
-            });
-            
-            // Adăugăm event listener pentru butonul de emitere
-            document.getElementById('mint-btn').addEventListener('click', async function() {
-                const statusElement = document.getElementById('mint-status');
-                statusElement.textContent = '';
+                // Actualizăm interfața inițial (adresa contractului și starea acestuia)
+                tokenManager.updateUI();
                 
-                try {
-                    if (!tokenManager.isConnected) {
-                        throw new Error("Portofelul nu este conectat");
+                // Adăugăm event listener pentru butonul de conectare
+                const connectWalletBtn = document.getElementById('connect-wallet-btn');
+                if (connectWalletBtn) {
+                    connectWalletBtn.addEventListener('click', async function() {
+                        try {
+                            connectWalletBtn.textContent = 'Se conectează...';
+                            connectWalletBtn.disabled = true;
+                            connectWalletBtn.classList.add('loading');
+                            
+                            await tokenManager.connect();
+                            
+                            connectWalletBtn.textContent = 'Portofel Conectat';
+                            connectWalletBtn.classList.remove('loading');
+                            connectWalletBtn.classList.add('connected');
+                            document.querySelector('.empty-state').textContent = 'Nu există tranzacții recente.';
+                            
+                            // Ascundem mesajul de eroare dacă era afișat
+                            document.getElementById('load-error-message').style.display = 'none';
+                        } catch (error) {
+                            console.error(error);
+                            
+                            // Afișăm mesaj de eroare potrivit pentru utilizator
+                            connectWalletBtn.textContent = 'Conectează MetaMask';
+                            connectWalletBtn.disabled = false;
+                            connectWalletBtn.classList.remove('loading');
+                            connectWalletBtn.classList.remove('connected');
+                            
+                            let errorMessage = 'Eroare de conectare';
+                            
+                            if (error.message.includes('MetaMask nu este instalat')) {
+                                errorMessage = 'MetaMask nu este instalat';
+                                window.showCenterAlert('Pentru a continua, instalați extensia MetaMask și creați un portofel.');
+                            } else if (error.message.includes('ethers.js')) {
+                                errorMessage = 'Eroare bibliotecă';
+                                // Afișăm mesajul de eroare special
+                                document.getElementById('load-error-message').style.display = 'block';
+                                
+                                window.showCenterAlert(`
+                                    Nu s-a putut încărca biblioteca necesară. Posibile soluții:
+                                    <br><br>1. Verificați conexiunea la internet
+                                    <br>2. Dezactivați Ad-Blocker sau alte extensii care blochează scripturile
+                                    <br>3. Folosiți un browser actualizat (Chrome, Firefox, Edge)
+                                    <br>4. Reîncărcați pagina și încercați din nou
+                                `, true);
+                            } else if (error.code === 4001) {
+                                // User a respins conectarea
+                                errorMessage = 'Conectare respinsă';
+                                window.showCenterAlert('Ați respins conectarea la MetaMask. Pentru a continua, trebuie să vă conectați portofelul.');
+                            } else {
+                                window.showCenterAlert(`
+                                    A apărut o eroare la conectare: ${error.message || 'Eroare necunoscută'}. 
+                                    <br><br>Verificați consola pentru detalii.
+                                    <br><br>Încercați să reîmprospătați pagina și să verificați dacă MetaMask este configurat corect.
+                                `, true);
+                            }
+                            
+                            document.getElementById('wallet-address').textContent = errorMessage;
+                        }
+                    });
+                    
+                    // Adăugăm event listener pentru butonul "Afișează detalii"
+                    const showDetailsBtn = document.getElementById('show-details-btn');
+                    if (showDetailsBtn) {
+                        showDetailsBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            window.showCenterAlert(`
+                                <h3 style="margin-top:0">Detalii eroare</h3>
+                                <p>Biblioteca ethers.js nu a putut fi încărcată din următoarele motive posibile:</p>
+                                <ul style="text-align:left; padding-left:20px;">
+                                    <li>Conexiune la internet instabilă</li>
+                                    <li>Blocarea scripturilor de către extensii browser (Ad-Blocker, Privacy Blockers)</li>
+                                    <li>Politici de securitate restrictive ale browser-ului</li>
+                                    <li>Server CDN indisponibil temporar</li>
+                                </ul>
+                                <p style="margin-bottom:0">Recomandări:</p>
+                                <ol style="text-align:left; padding-left:20px;">
+                                    <li>Reîncărcați pagina (F5 sau Ctrl+R)</li>
+                                    <li>Dezactivați temporar extensiile de blocare a scripturilor</li>
+                                    <li>Folosiți un browser modern actualizat (Chrome, Firefox, Edge)</li>
+                                    <li>Verificați conexiunea la internet</li>
+                                </ol>
+                            `, true, 0);
+                        });
                     }
-                    
-                    const mintAddress = document.getElementById('mint-address').value;
-                    const amount = document.getElementById('mint-amount').value;
-                    
-                    if (!mintAddress || !amount) {
-                        throw new Error("Completați adresa destinatarului și suma");
-                    }
-                    
-                    if (!ethers.utils.isAddress(mintAddress)) {
-                        throw new Error("Adresa destinatarului nu este validă");
-                    }
-                    
-                    statusElement.textContent = "Se procesează emiterea...";
-                    const tx = await tokenManager.mintTokens(mintAddress, amount);
-                    
-                    statusElement.textContent = `Emitere realizată cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
-                    document.getElementById('mint-address').value = '';
-                    document.getElementById('mint-amount').value = '';
-                    
-                    // Actualizăm soldul și istoricul tranzacțiilor
-                    tokenManager.updateUI();
-                    addTransactionToHistory('mint', mintAddress, amount);
-                } catch (error) {
-                    statusElement.textContent = `Eroare: ${error.message}`;
-                    console.error(error);
                 }
-            });
+                
+                // Adăugăm event listener pentru butonul de transfer
+                const transferBtn = document.getElementById('transfer-btn');
+                if (transferBtn) {
+                    transferBtn.addEventListener('click', async function() {
+                        const statusElement = document.getElementById('transfer-status');
+                        statusElement.textContent = '';
+                        
+                        try {
+                            if (!tokenManager.isConnected) {
+                                throw new Error("Portofelul nu este conectat");
+                            }
+                            
+                            const recipientAddress = document.getElementById('recipient-address').value;
+                            const amount = document.getElementById('transfer-amount').value;
+                            
+                            if (!recipientAddress || !amount) {
+                                throw new Error("Completați adresa destinatarului și suma");
+                            }
+                            
+                            if (!ethers.utils.isAddress(recipientAddress)) {
+                                throw new Error("Adresa destinatarului nu este validă");
+                            }
+                            
+                            statusElement.textContent = "Se procesează transferul...";
+                            const tx = await tokenManager.transferTokens(recipientAddress, amount);
+                            
+                            statusElement.textContent = `Transfer realizat cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
+                            document.getElementById('recipient-address').value = '';
+                            document.getElementById('transfer-amount').value = '';
+                            
+                            // Actualizăm soldul și istoricul tranzacțiilor
+                            tokenManager.updateUI();
+                            addTransactionToHistory('transfer', recipientAddress, amount);
+                        } catch (error) {
+                            statusElement.textContent = `Eroare: ${error.message}`;
+                            console.error(error);
+                        }
+                    });
+                }
+                
+                // Adăugăm event listener pentru butonul de emitere
+                const mintBtn = document.getElementById('mint-btn');
+                if (mintBtn) {
+                    mintBtn.addEventListener('click', async function() {
+                        const statusElement = document.getElementById('mint-status');
+                        statusElement.textContent = '';
+                        
+                        try {
+                            if (!tokenManager.isConnected) {
+                                throw new Error("Portofelul nu este conectat");
+                            }
+                            
+                            const mintAddress = document.getElementById('mint-address').value;
+                            const amount = document.getElementById('mint-amount').value;
+                            
+                            if (!mintAddress || !amount) {
+                                throw new Error("Completați adresa destinatarului și suma");
+                            }
+                            
+                            if (!ethers.utils.isAddress(mintAddress)) {
+                                throw new Error("Adresa destinatarului nu este validă");
+                            }
+                            
+                            statusElement.textContent = "Se procesează emiterea...";
+                            const tx = await tokenManager.mintTokens(mintAddress, amount);
+                            
+                            statusElement.textContent = `Emitere realizată cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
+                            document.getElementById('mint-address').value = '';
+                            document.getElementById('mint-amount').value = '';
+                            
+                            // Actualizăm soldul și istoricul tranzacțiilor
+                            tokenManager.updateUI();
+                            addTransactionToHistory('mint', mintAddress, amount);
+                        } catch (error) {
+                            statusElement.textContent = `Eroare: ${error.message}`;
+                            console.error(error);
+                        }
+                    });
+                }
+                
+                // Verificăm dacă există adresa contractului și ascundem cardul de mint dacă nu este owner
+                if (!window.orionixInfo?.contractAddress) {
+                    const mintCard = document.getElementById('mint-card');
+                    if (mintCard) {
+                        mintCard.style.display = 'none';
+                    }
+                }
+            }
             
             // Funcție pentru adăugarea unei tranzacții în istoric
-            function addTransactionToHistory(type, address, amount) {
+            window.addTransactionToHistory = function(type, address, amount) {
                 const list = document.getElementById('transaction-list');
+                if (!list) return;
+                
                 const emptyState = list.querySelector('.empty-state');
                 
                 if (emptyState) {
@@ -299,12 +385,7 @@
                 `;
                 
                 list.insertBefore(item, list.firstChild);
-            }
-            
-            // Verificăm dacă există adresa contractului și ascundem cardul de mint dacă nu este owner
-            if (!orionixInfo.contractAddress) {
-                document.getElementById('mint-card').style.display = 'none';
-            }
+            };
         });
     </script>
 </body>

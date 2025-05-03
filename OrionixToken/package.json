@@ -254,6 +254,7 @@
     "once": "^1.4.0",
     "optionator": "^0.8.3",
     "ordinal": "^1.0.3",
+    "orionixtoken": "file:",
     "os-tmpdir": "^1.0.2",
     "p-limit": "^3.1.0",
     "p-locate": "^5.0.0",
