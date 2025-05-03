@@ -193,89 +193,65 @@ document.addEventListener('DOMContentLoaded', () => {
         return `https://assets.coingecko.com/coins/images/1/small/${formattedId}.png`;
     }
 
-    // Funcție pentru a obține date reale de la CoinGecko
-    async function fetchCoinData() {
-        const oldPosition = currentPosition;
-        const wasScrolling = animationId !== null;
-        
-        if (animationId) {
-            cancelAnimationFrame(animationId);
-        }
-        
+    // Funcție unificată pentru a obține toate datele și a actualiza caruselul și tabelul
+    async function fetchAllCoinData(forceRefresh = false) {
         try {
-            // Verificăm dacă timpul scurs de la ultima cerere este mai mic decât intervalul minim
-            // Sau dacă am depășit numărul maxim de cereri
-            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL) {
-                // Folosim datele din cache dacă există
-                if (apiCache.marketData) {
-                    console.log('Folosim datele din cache pentru carusel.');
-                    
-                    // Procesăm datele din cache în același mod ca datele noi
-                    coinData = apiCache.marketData.map((coin) => {
-                        const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 24);
-                        
-                        return {
-                            id: coin.id,
-                            symbol: coin.symbol.toUpperCase(),
-                            name: coin.name,
-                            price: coin.current_price,
-                            change24h: coin.price_change_percentage_24h,
-                            volume24h: coin.total_volume,
-                            marketCap: coin.market_cap,
-                            imageUrl: coin.image,
-                            historicalData: historicalData
-                        };
-                    });
-                } else {
-                    // Dacă nu există date în cache, generăm date demo
-                    throw new Error('Nu există date în cache și limita de cereri a fost atinsă');
-                }
+            let allData;
+            // Folosește cache dacă nu e nevoie de refresh
+            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL && apiCache.marketData && !forceRefresh) {
+                console.log('Folosim datele din cache pentru toate monedele.');
+                allData = apiCache.marketData;
             } else {
-                // Obținem datele de la CoinGecko prin proxy
-                const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${CAROUSEL_COINS.join(',')}&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`;
-                const apiData = await fetchWithProxy(url);
-                
-                if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
-                    throw new Error('Format API nevalid sau niciun rezultat');
-                }
-                
-                // În loc să facem cereri separate pentru date istorice, le generăm pe baza schimbării din 24h
-                // Astfel reducem numărul de cereri API și evităm limitarea ratei
-                
-                // Construim datele pentru carusel
-                coinData = apiData.map((coin) => {
-                    // Generăm date istorice folosind prețul curent și schimbarea procentuală
-                    const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 24);
-                    
-                    return {
-                        id: coin.id,
-                        symbol: coin.symbol.toUpperCase(),
-                        name: coin.name,
-                        price: coin.current_price,
-                        change24h: coin.price_change_percentage_24h,
-                        volume24h: coin.total_volume,
-                        marketCap: coin.market_cap,
-                        imageUrl: coin.image,
-                        historicalData: historicalData
-                    };
-                });
-                
-                if (coinData.length === 0) {
+                const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ALL_COINS.join(',')}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
+                allData = await fetchWithProxy(url, forceRefresh);
+                if (!allData || !Array.isArray(allData) || allData.length === 0) {
                     throw new Error('Nu am primit date de la API');
                 }
+                apiCache.marketData = allData;
+                apiCache.lastFetchTimestamp = Date.now();
             }
+            // Actualizează datele pentru carusel (primele 10)
+            coinData = allData.slice(0, 10).map((coin) => {
+                const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 24);
+                return {
+                    id: coin.id,
+                    symbol: coin.symbol.toUpperCase(),
+                    name: coin.name,
+                    price: coin.current_price,
+                    change24h: coin.price_change_percentage_24h,
+                    volume24h: coin.total_volume,
+                    marketCap: coin.market_cap,
+                    imageUrl: coin.image,
+                    historicalData: historicalData
+                };
+            });
+            // Actualizează datele pentru tabel (toate)
+            tableData = allData.map(coin => {
+                const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 7);
+                return {
+                    id: coin.id,
+                    symbol: coin.symbol.toUpperCase(),
+                    name: coin.name,
+                    price: coin.current_price,
+                    change24h: coin.price_change_percentage_24h || 0,
+                    volume24h: coin.total_volume || 0,
+                    marketCap: coin.market_cap || 0,
+                    imageUrl: coin.image,
+                    historicalData: historicalData
+                };
+            });
+            filteredData = [...tableData];
         } catch (error) {
-            console.warn('Folosim date demonstrative pentru carusel:', error);
+            console.warn('Eroare la actualizarea datelor din API:', error);
+            // Fallback la date demo pentru carusel și tabel
             coinData = CAROUSEL_COINS.map((coin, index) => generateDemoData(coin, index));
+            tableData = ALL_COINS.map((coin, index) => generateDemoData(coin, index));
+            filteredData = [...tableData];
         }
-        
-        // Actualizăm caruselul
-        renderCarouselWithPosition(oldPosition);
-        
-        // Repornim scroll-ul doar dacă era activ înainte
-        if (wasScrolling && !isHovered) {
-            startAutoScroll();
-        }
+        // Actualizează UI-ul
+        renderCarouselWithPosition(currentPosition);
+        renderTable();
+        renderPagination();
     }
 
     // Generăm date istorice bazate pe prețul curent și schimbarea procentuală
@@ -526,65 +502,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Optimizăm și funcția fetchTableData pentru a obține date reale
-    async function fetchTableData(forceRefresh = false) {
-        try {
-            if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL) {
-                if (apiCache.marketData && !forceRefresh) {
-                    console.log('Folosim datele din cache pentru tabel.');
-                    tableData = apiCache.marketData.map(coin => {
-                        const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 7);
-                        return {
-                            id: coin.id,
-                            symbol: coin.symbol.toUpperCase(),
-                            name: coin.name,
-                            price: coin.current_price,
-                            change24h: coin.price_change_percentage_24h || 0,
-                            volume24h: coin.total_volume || 0,
-                            marketCap: coin.market_cap || 0,
-                            imageUrl: coin.image,
-                            historicalData: historicalData
-                        };
-                    });
-                } else {
-                    throw new Error('Nu există date în cache și limita de cereri a fost atinsă');
-                }
-            } else {
-                const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ALL_COINS.join(',')}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
-                const allData = await fetchWithProxy(url, forceRefresh);
-                if (!allData || !Array.isArray(allData) || allData.length === 0) {
-                    throw new Error('Nu am primit date de la API');
-                }
-                tableData = allData.map(coin => {
-                    const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 7);
-                    return {
-                        id: coin.id,
-                        symbol: coin.symbol.toUpperCase(),
-                        name: coin.name,
-                        price: coin.current_price,
-                        change24h: coin.price_change_percentage_24h || 0,
-                        volume24h: coin.total_volume || 0,
-                        marketCap: coin.market_cap || 0,
-                        imageUrl: coin.image,
-                        historicalData: historicalData
-                    };
-                });
-            }
-        } catch (error) {
-            console.warn('Eroare la actualizarea datelor din API:', error);
-            // Nu actualizăm tableData cu demoData!
-            // Poți adăuga aici un mesaj de eroare vizibil dacă vrei
-            return;
-        }
-        filteredData = [...tableData];
-        setTimeout(() => {
-            renderTable();
-            setTimeout(() => {
-                renderPagination();
-            }, 0);
-        }, 0);
-    }
-
     function formatNumber(number, decimals = 2) {
         if (number >= 1e9) {
             return (number / 1e9).toFixed(decimals) + 'B';
@@ -774,7 +691,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         addCoinClickListeners();
-        checkPriceAlerts();
     }
 
     function renderPagination() {
@@ -807,29 +723,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inițializăm aplicația
     function init() {
         console.log('Inițializare aplicație...');
-        
-        // Funcție pentru actualizarea sincronizată a ambelor componente
-        async function updateBothComponents() {
-            try {
-                await Promise.all([
-                    fetchCoinData(),
-                    fetchTableData(true)
-                ]);
-            } catch (error) {
-                console.error('Eroare la actualizarea datelor:', error);
-            }
+        async function updateAll() {
+            await fetchAllCoinData(true);
         }
-
         // Inițializare inițială
-        updateBothComponents().then(() => {
+        updateAll().then(() => {
             setupEventListeners();
             addCoinClickListeners();
             renderCarouselWithPosition(0);
             startAutoScroll();
         });
-
         // Actualizare periodică sincronizată
-        setInterval(updateBothComponents, 15000);
+        setInterval(updateAll, 15000);
     }
     
     function setupEventListeners() {
@@ -1587,32 +1492,4 @@ document.addEventListener('DOMContentLoaded', () => {
             alertDiv.style.transform = 'translate(-50%, -50%) scale(1)';
         }, 10);
     }
-
-    // Functie pentru a verifica alertele la fiecare update de pret
-    function checkPriceAlerts() {
-        const alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
-        if (!alerts.length) return;
-        // Cautam in datele din tabel (tableData)
-        alerts.forEach(alert => {
-            const coin = tableData.find(c => c.symbol === alert.symbol);
-            if (!coin) return;
-            if (
-                (alert.condition === 'above' && coin.price >= alert.price) ||
-                (alert.condition === 'below' && coin.price <= alert.price)
-            ) {
-                showCenterAlert(`Alerta: ${coin.name} (${coin.symbol}) a atins pragul de $${alert.price}!`);
-                // Stergem alerta dupa ce a fost declansata
-                const newAlerts = alerts.filter(a => a.id !== alert.id);
-                localStorage.setItem('cryptoAlerts', JSON.stringify(newAlerts));
-                if (typeof updateAlertBadgeAndDropdown === 'function') updateAlertBadgeAndDropdown();
-            }
-        });
-    }
-
-    // Apeleaza checkPriceAlerts dupa fiecare actualizare de tabel
-    const originalRenderTable = renderTable;
-    renderTable = function() {
-        originalRenderTable();
-        checkPriceAlerts();
-    };
 }); 

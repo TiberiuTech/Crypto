@@ -1033,6 +1033,20 @@
     opacity: 0.7;
 }
 
+/* Stiluri pentru dropdown-ul de alerte în light mode */
+.modal.alert-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+}
+
 .notification-btn {
     position: relative;
 }
@@ -1144,18 +1158,6 @@
     padding-bottom: 12px;
 }
 
-.modal.alert-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000;
-}
 .modal.alert-modal .modal-content {
     margin: 0;
     position: relative;
