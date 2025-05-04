@@ -5,13 +5,7 @@
 }
 
 .prices-title {
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    width: fit-content;
-    margin-bottom: 1.5rem;
-    color: var(--text-color);
-    font-size: 1.8rem;
+    display: none;
 }
 
 .search-container {

@@ -1306,6 +1306,12 @@ html[data-theme="light"] .orionix-header {
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
+    padding: 0 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="light"] .about-orionix {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .about-orionix h2 {
@@ -1322,7 +1328,15 @@ html[data-theme="light"] .orionix-header {
     font-size: 1.15rem;
     line-height: 1.8;
     color: var(--secondary-text-color);
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+html[data-theme="light"] .about-orionix p {
+    color: #4a5568;
+}
+
+.about-orionix p:last-child {
+    margin-bottom: 0;
 }
 
 .features-grid {
@@ -2188,5 +2202,37 @@ html[data-theme="light"] .crypto-select {
     
     .data-value {
         font-size: 1rem;
+    }
+}
+
+/* Stil global pentru titlurile de pagină în stilul about-orionix */
+.about-title {
+    margin-bottom: 3rem;
+    text-align: center;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem 1.5rem;
+}
+
+.about-title h2 {
+    font-size: 2.8rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}
+
+@media (max-width: 900px) {
+    .about-title h2 {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .about-title h2 {
+        font-size: 1.8rem;
     }
 }
