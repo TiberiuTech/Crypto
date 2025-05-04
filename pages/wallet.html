@@ -17,7 +17,9 @@
       })();
     </script>
     <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/wallet.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -52,10 +54,258 @@
             </div>
         </div>
     </nav>
-    <main style="padding: 100px 20px; text-align: center;">
-        <h1>Wallet</h1>
-        <p>Aici vei putea gestiona portofelul tău crypto.</p>
+
+    <main class="wallet-container">
+        <div class="about-title">
+            <h2>Crypto Wallet</h2>
+        </div>
+        
+        <!-- Dashboard Section -->
+        <div class="dashboard-section">
+            <div class="balance-card">
+                <div class="balance-header">
+                    <h3>Total Balance</h3>
+                    <div class="balance-actions">
+                        <button class="refresh-btn" title="Refresh Balance">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="view-btn" title="Change View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="balance-amount">
+                    <span class="currency">$</span>
+                    <span class="amount">87,429.56</span>
+                </div>
+                <div class="balance-change positive">
+                    <i class="fas fa-caret-up"></i>
+                    <span>2.45%</span>
+                    <span class="period">24h</span>
+                </div>
+                <div class="portfolio-chart">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="action-button">
+                    <div class="action-icon deposit">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <span>Deposit</span>
+                </button>
+                <button class="action-button">
+                    <div class="action-icon withdraw">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <span>Withdraw</span>
+                </button>
+                <button class="action-button">
+                    <div class="action-icon swap">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <span>Swap</span>
+                </button>
+                <button class="action-button">
+                    <div class="action-icon history">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <span>History</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Assets Section -->
+        <div class="assets-section">
+            <div class="section-header">
+                <h3>Your Assets</h3>
+                <div class="filters">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Tokens</button>
+                    <button class="filter-btn">NFTs</button>
+                </div>
+            </div>
+            
+            <div class="assets-list">
+                <div class="asset-item">
+                    <div class="asset-icon">
+                        <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Bitcoin</div>
+                        <div class="asset-ticker">BTC</div>
+                    </div>
+                    <div class="asset-balance">
+                        <div class="asset-amount">1.245 BTC</div>
+                        <div class="asset-value">$58,432.21</div>
+                    </div>
+                    <div class="asset-change positive">
+                        <i class="fas fa-caret-up"></i>
+                        <span>3.2%</span>
+                    </div>
+                    <div class="asset-chart">
+                        <canvas class="mini-chart" data-coin="btc"></canvas>
+                    </div>
+                    <div class="asset-actions">
+                        <button class="asset-action-btn" title="Send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button class="asset-action-btn" title="Receive">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                        <button class="asset-action-btn" title="Trade">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="asset-item">
+                    <div class="asset-icon">
+                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Ethereum</div>
+                        <div class="asset-ticker">ETH</div>
+                    </div>
+                    <div class="asset-balance">
+                        <div class="asset-amount">12.482 ETH</div>
+                        <div class="asset-value">$21,997.35</div>
+                    </div>
+                    <div class="asset-change negative">
+                        <i class="fas fa-caret-down"></i>
+                        <span>1.8%</span>
+                    </div>
+                    <div class="asset-chart">
+                        <canvas class="mini-chart" data-coin="eth"></canvas>
+                    </div>
+                    <div class="asset-actions">
+                        <button class="asset-action-btn" title="Send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button class="asset-action-btn" title="Receive">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                        <button class="asset-action-btn" title="Trade">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="asset-item">
+                    <div class="asset-icon">
+                        <img src="https://cryptologos.cc/logos/orion-protocol-orn-logo.png" alt="Orionix">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Orionix</div>
+                        <div class="asset-ticker">ORX</div>
+                    </div>
+                    <div class="asset-balance">
+                        <div class="asset-amount">1500.00 ORX</div>
+                        <div class="asset-value">$7,000.00</div>
+                    </div>
+                    <div class="asset-change positive">
+                        <i class="fas fa-caret-up"></i>
+                        <span>8.5%</span>
+                    </div>
+                    <div class="asset-chart">
+                        <canvas class="mini-chart" data-coin="orx"></canvas>
+                    </div>
+                    <div class="asset-actions">
+                        <button class="asset-action-btn" title="Send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button class="asset-action-btn" title="Receive">
+                            <i class="fas fa-qrcode"></i>
+                        </button>
+                        <button class="asset-action-btn" title="Trade">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Transactions Section -->
+        <div class="transactions-section">
+            <div class="section-header">
+                <h3>Recent Transactions</h3>
+                <button class="view-all-btn">View All</button>
+            </div>
+            
+            <div class="transactions-list">
+                <div class="transaction-item">
+                    <div class="transaction-icon send">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Sent Bitcoin</div>
+                        <div class="transaction-date">Today, 14:35</div>
+                    </div>
+                    <div class="transaction-amount negative">
+                        <div class="amount">-0.05 BTC</div>
+                        <div class="value">-$2,345.67</div>
+                    </div>
+                    <div class="transaction-status">
+                        <span class="status completed">Completed</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon receive">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Received Ethereum</div>
+                        <div class="transaction-date">Yesterday, 09:12</div>
+                    </div>
+                    <div class="transaction-amount positive">
+                        <div class="amount">+1.2 ETH</div>
+                        <div class="value">+$2,105.45</div>
+                    </div>
+                    <div class="transaction-status">
+                        <span class="status completed">Completed</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon swap">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Swapped BTC to ORX</div>
+                        <div class="transaction-date">12 May, 2023</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount">0.02 BTC → 100 ORX</div>
+                        <div class="value">$934.56</div>
+                    </div>
+                    <div class="transaction-status">
+                        <span class="status completed">Completed</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon deposit">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Deposited via Bank</div>
+                        <div class="transaction-date">05 May, 2023</div>
+                    </div>
+                    <div class="transaction-amount positive">
+                        <div class="amount">+5,000 USD</div>
+                        <div class="value">+$5,000.00</div>
+                    </div>
+                    <div class="transaction-status">
+                        <span class="status completed">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+
     <script src="../script.js" defer></script>
+    <script src="js/wallet.js"></script>
 </body>
 </html> 
