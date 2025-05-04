@@ -22,6 +22,9 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 html[data-theme="light"] .balance-card {
@@ -119,8 +122,9 @@ html[data-theme="light"] .balance-card {
 }
 
 .portfolio-chart {
-    height: 100px;
+    flex-grow: 1;
     margin-top: 1rem;
+    min-height: 180px;
 }
 
 /* Quick Actions */
@@ -129,6 +133,7 @@ html[data-theme="light"] .balance-card {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     gap: 1rem;
+    height: 100%;
 }
 
 .action-button {
@@ -143,6 +148,7 @@ html[data-theme="light"] .balance-card {
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    height: 100%;
 }
 
 html[data-theme="light"] .action-button {
@@ -387,6 +393,20 @@ html[data-theme="light"] .asset-action-btn {
     color: white;
 }
 
+.asset-action-btn.swap-btn {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.3);
+    width: auto;
+    padding: 0 15px;
+}
+
+.asset-action-btn.swap-btn:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+}
+
 /* Transactions Section */
 .view-all-btn {
     background: transparent;
@@ -627,4 +647,652 @@ html[data-theme="light"] .transaction-item {
         text-align: left;
         margin-top: 0.5rem;
     }
+}
+
+/* Stiluri pentru modale */
+.wallet-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    background: rgba(25, 30, 45, 0.95);
+    margin: 50px auto;
+    width: 90%;
+    max-width: 550px;
+    border-radius: 16px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease forwards;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+html[data-theme="light"] .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="light"] .modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--accent-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+}
+
+.form-select, .form-input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+html[data-theme="light"] .form-select,
+html[data-theme="light"] .form-input {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.form-select:focus, .form-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.submit-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+/* Stiluri pentru QR Container */
+.qr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+}
+
+html[data-theme="light"] .qr-container {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.qr-code {
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+}
+
+.qr-code img {
+    width: 200px;
+    height: 200px;
+    display: block;
+}
+
+.deposit-address {
+    width: 100%;
+    text-align: center;
+}
+
+.deposit-address p {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    word-break: break-all;
+    font-family: monospace;
+    margin: 0 0 0.8rem;
+}
+
+html[data-theme="light"] .deposit-address p {
+    background: rgba(0, 0, 0, 0.05);
+    color: #555;
+}
+
+.copy-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: var(--accent-color-darker);
+}
+
+.deposit-instructions {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+}
+
+html[data-theme="light"] .deposit-instructions {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.deposit-instructions h4 {
+    font-size: 1rem;
+    margin: 0 0 0.8rem;
+    color: var(--text-color);
+}
+
+.deposit-instructions ol {
+    padding-left: 1.5rem;
+    margin: 0;
+}
+
+.deposit-instructions li {
+    color: var(--secondary-text-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.deposit-instructions li:last-child {
+    margin-bottom: 0;
+}
+
+.deposit-coin-name {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+/* Stiluri pentru withdraw */
+.input-with-max {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="light"] .input-with-max {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.input-with-max .form-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    padding: 0.8rem 1rem;
+}
+
+.max-btn {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--accent-color);
+    border: none;
+    padding: 0.8rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+    height: 100%;
+}
+
+.max-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+.amount-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    margin-top: 0.5rem;
+}
+
+/* Stiluri pentru swap */
+.swap-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.swap-from, .swap-to {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.swap-input-group {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+html[data-theme="light"] .swap-input-group {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.coin-selector {
+    min-width: 80px;
+}
+
+.coin-selector .form-select {
+    border: none;
+    border-radius: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.8rem;
+    height: 100%;
+}
+
+html[data-theme="light"] .coin-selector .form-select {
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.swap-input-group .form-input {
+    border: none;
+    background: transparent;
+    padding: 0.8rem;
+}
+
+.swap-arrows {
+    display: flex;
+    justify-content: center;
+}
+
+#swapDirectionBtn {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+#swapDirectionBtn:hover {
+    transform: rotate(180deg);
+    background: var(--accent-color-darker);
+}
+
+.swap-details {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+html[data-theme="light"] .swap-details {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: var(--secondary-text-color);
+}
+
+.detail-value {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Stiluri pentru istoric tranzacții */
+.history-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.extended-transactions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.pagination-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+html[data-theme="light"] .pagination-btn {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.pagination-btn:not([disabled]):hover {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.pagination-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 40px auto;
+    }
+    
+    .swap-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .swap-arrows {
+        justify-content: center;
+        transform: rotate(90deg);
+        margin: 0.5rem 0;
+    }
+    
+    .history-filters {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* Custom Dropdown pentru selectarea monedei */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.selected-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #191e2d;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+html[data-theme="light"] .selected-option {
+    background-color: #f5f5f5;
+}
+
+.selected-option:hover {
+    border-color: var(--primary-color);
+}
+
+.coin-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.coin-name {
+    flex-grow: 1;
+    font-size: 14px;
+}
+
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+}
+
+.custom-dropdown.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: #191e2d;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 5px;
+    z-index: 10;
+    display: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="light"] .dropdown-options {
+    background-color: #f5f5f5;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.custom-dropdown.open .dropdown-options {
+    display: block;
+}
+
+.dropdown-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-option:hover {
+    background-color: #252a3d;
+}
+
+html[data-theme="light"] .dropdown-option:hover {
+    background-color: #e5e5e5;
+}
+
+.dropdown-option.selected {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Stiluri pentru Transaction Preview Card */
+.transaction-preview-card {
+    background: linear-gradient(145deg, #1e2335, #242a40);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="light"] .transaction-preview-card {
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.preview-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="light"] .preview-title {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.preview-label {
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+}
+
+.preview-value {
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Stiluri pentru mesajele când nu există active sau tranzacții */
+.no-assets-message,
+.no-transactions-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--secondary-text-color);
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    margin: 1rem 0;
+}
+
+.no-assets-message p,
+.no-transactions-message p {
+    margin: 0;
+    font-size: 0.95rem;
 } 

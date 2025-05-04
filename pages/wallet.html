@@ -66,17 +66,15 @@
                 <div class="balance-header">
                     <h3>Total Balance</h3>
                     <div class="balance-actions">
-                        <button class="refresh-btn" title="Refresh Balance">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <button class="view-btn" title="Change View">
+                        <button class="view-btn" title="Toggle Balance Visibility" id="toggleBalanceBtn">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
                 </div>
                 <div class="balance-amount">
                     <span class="currency">$</span>
-                    <span class="amount">87,429.56</span>
+                    <span class="amount" id="balanceAmount">87,429.56</span>
+                    <span class="amount hidden" id="hiddenBalance" style="display: none;">******</span>
                 </div>
                 <div class="balance-change positive">
                     <i class="fas fa-caret-up"></i>
@@ -89,25 +87,25 @@
             </div>
             
             <div class="quick-actions">
-                <button class="action-button">
+                <button class="action-button" id="depositButton">
                     <div class="action-icon deposit">
                         <i class="fas fa-arrow-down"></i>
                     </div>
                     <span>Deposit</span>
                 </button>
-                <button class="action-button">
+                <button class="action-button" id="withdrawButton">
                     <div class="action-icon withdraw">
                         <i class="fas fa-arrow-up"></i>
                     </div>
                     <span>Withdraw</span>
                 </button>
-                <button class="action-button">
+                <button class="action-button" id="swapButton">
                     <div class="action-icon swap">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
                     <span>Swap</span>
                 </button>
-                <button class="action-button">
+                <button class="action-button" id="historyButton">
                     <div class="action-icon history">
                         <i class="fas fa-history"></i>
                     </div>
@@ -120,108 +118,12 @@
         <div class="assets-section">
             <div class="section-header">
                 <h3>Your Assets</h3>
-                <div class="filters">
-                    <button class="filter-btn active">All</button>
-                    <button class="filter-btn">Tokens</button>
-                    <button class="filter-btn">NFTs</button>
-                </div>
             </div>
             
-            <div class="assets-list">
-                <div class="asset-item">
-                    <div class="asset-icon">
-                        <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin">
-                    </div>
-                    <div class="asset-info">
-                        <div class="asset-name">Bitcoin</div>
-                        <div class="asset-ticker">BTC</div>
-                    </div>
-                    <div class="asset-balance">
-                        <div class="asset-amount">1.245 BTC</div>
-                        <div class="asset-value">$58,432.21</div>
-                    </div>
-                    <div class="asset-change positive">
-                        <i class="fas fa-caret-up"></i>
-                        <span>3.2%</span>
-                    </div>
-                    <div class="asset-chart">
-                        <canvas class="mini-chart" data-coin="btc"></canvas>
-                    </div>
-                    <div class="asset-actions">
-                        <button class="asset-action-btn" title="Send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                        <button class="asset-action-btn" title="Receive">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                        <button class="asset-action-btn" title="Trade">
-                            <i class="fas fa-exchange-alt"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="asset-item">
-                    <div class="asset-icon">
-                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum">
-                    </div>
-                    <div class="asset-info">
-                        <div class="asset-name">Ethereum</div>
-                        <div class="asset-ticker">ETH</div>
-                    </div>
-                    <div class="asset-balance">
-                        <div class="asset-amount">12.482 ETH</div>
-                        <div class="asset-value">$21,997.35</div>
-                    </div>
-                    <div class="asset-change negative">
-                        <i class="fas fa-caret-down"></i>
-                        <span>1.8%</span>
-                    </div>
-                    <div class="asset-chart">
-                        <canvas class="mini-chart" data-coin="eth"></canvas>
-                    </div>
-                    <div class="asset-actions">
-                        <button class="asset-action-btn" title="Send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                        <button class="asset-action-btn" title="Receive">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                        <button class="asset-action-btn" title="Trade">
-                            <i class="fas fa-exchange-alt"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="asset-item">
-                    <div class="asset-icon">
-                        <img src="https://cryptologos.cc/logos/orion-protocol-orn-logo.png" alt="Orionix">
-                    </div>
-                    <div class="asset-info">
-                        <div class="asset-name">Orionix</div>
-                        <div class="asset-ticker">ORX</div>
-                    </div>
-                    <div class="asset-balance">
-                        <div class="asset-amount">1500.00 ORX</div>
-                        <div class="asset-value">$7,000.00</div>
-                    </div>
-                    <div class="asset-change positive">
-                        <i class="fas fa-caret-up"></i>
-                        <span>8.5%</span>
-                    </div>
-                    <div class="asset-chart">
-                        <canvas class="mini-chart" data-coin="orx"></canvas>
-                    </div>
-                    <div class="asset-actions">
-                        <button class="asset-action-btn" title="Send">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                        <button class="asset-action-btn" title="Receive">
-                            <i class="fas fa-qrcode"></i>
-                        </button>
-                        <button class="asset-action-btn" title="Trade">
-                            <i class="fas fa-exchange-alt"></i>
-                        </button>
-                    </div>
+            <div class="assets-list" id="assetsList">
+                <!-- Activele vor fi adăugate dinamic prin JavaScript -->
+                <div class="no-assets-message">
+                    <p>No assets yet. Make a deposit to add assets to your wallet.</p>
                 </div>
             </div>
         </div>
@@ -230,80 +132,224 @@
         <div class="transactions-section">
             <div class="section-header">
                 <h3>Recent Transactions</h3>
-                <button class="view-all-btn">View All</button>
             </div>
             
-            <div class="transactions-list">
-                <div class="transaction-item">
-                    <div class="transaction-icon send">
-                        <i class="fas fa-arrow-up"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="transaction-title">Sent Bitcoin</div>
-                        <div class="transaction-date">Today, 14:35</div>
-                    </div>
-                    <div class="transaction-amount negative">
-                        <div class="amount">-0.05 BTC</div>
-                        <div class="value">-$2,345.67</div>
-                    </div>
-                    <div class="transaction-status">
-                        <span class="status completed">Completed</span>
-                    </div>
-                </div>
-                
-                <div class="transaction-item">
-                    <div class="transaction-icon receive">
-                        <i class="fas fa-arrow-down"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="transaction-title">Received Ethereum</div>
-                        <div class="transaction-date">Yesterday, 09:12</div>
-                    </div>
-                    <div class="transaction-amount positive">
-                        <div class="amount">+1.2 ETH</div>
-                        <div class="value">+$2,105.45</div>
-                    </div>
-                    <div class="transaction-status">
-                        <span class="status completed">Completed</span>
-                    </div>
-                </div>
-                
-                <div class="transaction-item">
-                    <div class="transaction-icon swap">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="transaction-title">Swapped BTC to ORX</div>
-                        <div class="transaction-date">12 May, 2023</div>
-                    </div>
-                    <div class="transaction-amount">
-                        <div class="amount">0.02 BTC → 100 ORX</div>
-                        <div class="value">$934.56</div>
-                    </div>
-                    <div class="transaction-status">
-                        <span class="status completed">Completed</span>
-                    </div>
-                </div>
-                
-                <div class="transaction-item">
-                    <div class="transaction-icon deposit">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="transaction-title">Deposited via Bank</div>
-                        <div class="transaction-date">05 May, 2023</div>
-                    </div>
-                    <div class="transaction-amount positive">
-                        <div class="amount">+5,000 USD</div>
-                        <div class="value">+$5,000.00</div>
-                    </div>
-                    <div class="transaction-status">
-                        <span class="status completed">Completed</span>
-                    </div>
+            <div class="transactions-list" id="transactionsList">
+                <!-- Tranzacțiile vor fi adăugate dinamic prin JavaScript -->
+                <div class="no-transactions-message">
+                    <p>No transactions yet. Your transaction history will appear here.</p>
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Modal pentru Depozit -->
+    <div id="depositModal" class="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Deposit Crypto</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label for="depositCoin">Select Coin</label>
+                        <div class="custom-dropdown">
+                            <div class="selected-option" id="selectedCoin">
+                                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin" class="coin-icon">
+                                <span class="coin-name">Bitcoin (BTC)</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="dropdown-options" id="coinOptions">
+                                <!-- Options will be populated dynamically from prices table -->
+                            </div>
+                            <input type="hidden" id="depositCoin" value="btc">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="depositAmount">Amount</label>
+                        <div class="input-with-symbol">
+                            <input type="number" id="depositAmount" class="form-input" step="any" min="0" placeholder="0.00">
+                            <span id="depositCoinSymbol" style="display: none;">BTC</span>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-preview-card">
+                        <h4 class="preview-title">Transaction Summary</h4>
+                        <div class="preview-content">
+                            <div class="preview-row">
+                                <span class="preview-label">You will receive:</span>
+                                <span class="preview-value"><span id="previewAmount">0.00</span> <span id="previewSymbol">BTC</span></span>
+                            </div>
+                            <div class="preview-row">
+                                <span class="preview-label">Estimated value:</span>
+                                <span class="preview-value">$<span id="previewValue">0.00</span></span>
+                            </div>
+                            <div class="preview-row">
+                                <span class="preview-label">Processing time:</span>
+                                <span class="preview-value" id="processingTime">~10-60 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="depositSubmitBtn" class="submit-btn">Deposit Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pentru Withdraw -->
+    <div id="withdrawModal" class="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Withdraw Crypto</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label for="withdrawCoin">Select Coin</label>
+                        <select id="withdrawCoin" class="form-select">
+                            <option value="btc">Bitcoin (BTC)</option>
+                            <option value="eth">Ethereum (ETH)</option>
+                            <option value="orx">Orionix (ORX)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group amount-input-group">
+                        <label for="withdrawAmount">Amount</label>
+                        <div class="input-with-max">
+                            <input type="number" id="withdrawAmount" class="form-input" placeholder="0.00" min="0" step="any">
+                            <button class="max-btn">MAX</button>
+                        </div>
+                        <div class="amount-details">
+                            <span class="available">Available: <span id="availableAmount">0.00</span> <span id="coinSymbol">BTC</span></span>
+                            <span class="fee">Network Fee: ~<span id="networkFee">0.0005</span> <span id="feeSymbol">BTC</span></span>
+                        </div>
+                    </div>
+                    
+                    <button id="withdrawSubmitBtn" class="submit-btn">Withdraw Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pentru Swap -->
+    <div id="swapModal" class="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Swap Crypto</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="swap-container">
+                        <div class="swap-from">
+                            <div class="swap-input-group">
+                                <div class="coin-selector">
+                                    <select id="fromCoin" class="form-select">
+                                        <option value="btc">BTC</option>
+                                        <option value="eth">ETH</option>
+                                        <option value="orx">ORX</option>
+                                    </select>
+                                </div>
+                                <input type="number" id="fromAmount" class="form-input" placeholder="0.00" min="0" step="any">
+                            </div>
+                            <div class="amount-details">
+                                <span class="available">Available: <span id="fromAvailable">0.00</span> <span id="fromSymbol">BTC</span></span>
+                            </div>
+                        </div>
+                        
+                        <div class="swap-arrows">
+                            <button id="swapDirectionBtn"><i class="fas fa-exchange-alt"></i></button>
+                        </div>
+                        
+                        <div class="swap-to">
+                            <div class="swap-input-group">
+                                <div class="coin-selector">
+                                    <select id="toCoin" class="form-select">
+                                        <option value="eth">ETH</option>
+                                        <option value="btc">BTC</option>
+                                        <option value="orx">ORX</option>
+                                    </select>
+                                </div>
+                                <input type="number" id="toAmount" class="form-input" placeholder="0.00" min="0" step="any" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="swap-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Exchange Rate</span>
+                            <span id="exchangeRate" class="detail-value">1 BTC = 13.54 ETH</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Fee</span>
+                            <span id="swapFee" class="detail-value">0.1%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Est. Arrival</span>
+                            <span class="detail-value">~2 minutes</span>
+                        </div>
+                    </div>
+                    
+                    <button id="swapSubmitBtn" class="submit-btn">Swap Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pentru Istoric extins -->
+    <div id="historyModal" class="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Transaction History</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="history-filters">
+                    <div class="filter-group">
+                        <label for="historyType">Type</label>
+                        <select id="historyType" class="form-select">
+                            <option value="all">All Transactions</option>
+                            <option value="deposit">Deposits</option>
+                            <option value="withdraw">Withdrawals</option>
+                            <option value="swap">Swaps</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="historyCoin">Coin</label>
+                        <select id="historyCoin" class="form-select">
+                            <option value="all">All Coins</option>
+                            <option value="btc">Bitcoin (BTC)</option>
+                            <option value="eth">Ethereum (ETH)</option>
+                            <option value="orx">Orionix (ORX)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="historyDateRange">Period</label>
+                        <select id="historyDateRange" class="form-select">
+                            <option value="week">Last 7 days</option>
+                            <option value="month">Last 30 days</option>
+                            <option value="year">Last year</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="extended-transactions-list">
+                    <!-- Tranzacțiile vor fi generate dinamic prin JavaScript -->
+                </div>
+                
+                <div class="history-pagination">
+                    <button class="pagination-btn prev" disabled><i class="fas fa-chevron-left"></i></button>
+                    <span class="pagination-info">Page 1 of 1</span>
+                    <button class="pagination-btn next" disabled><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="../script.js" defer></script>
     <script src="js/wallet.js"></script>
