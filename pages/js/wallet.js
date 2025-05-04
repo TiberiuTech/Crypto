@@ -683,7 +683,7 @@ function addSwapToHistory(fromCoin, toCoin, fromAmount, toAmount) {
 // Restul funcțiilor existente
 function initializeModals() {
     // Inițializarea modalelor
-    const modals = ['depositModal', 'withdrawModal', 'swapModal', 'historyModal'];
+    const modals = ['depositModal', 'withdrawModal', 'swapModal', 'historyModal', 'cardDetailsModal', 'paymentConfirmationModal'];
     
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
@@ -1089,20 +1089,17 @@ function setupEventListeners() {
             const symbol = document.getElementById('previewSymbol').textContent;
             
             if (!amount || isNaN(amount) || amount <= 0) {
-                // Am eliminat notificarea de eroare
+                // Validare sumă
                 return;
             }
             
-            console.log(`Depozit: ${amount} ${symbol} (${coin})`);
+            console.log(`Depozit inițiat: ${amount} ${symbol} (${coin})`);
             
-            // Actualizează Your Assets folosind direct ID-ul monedei
-            updateAssetAfterDeposit(coin, amount);
-            
-            // Adaugă în istoricul tranzacțiilor
-            addTransactionToHistory(coin, amount);
-            
-            // Închide modalul fără a afișa nicio notificare
+            // Închidem modalul de depozit
             document.getElementById('depositModal').style.display = 'none';
+            
+            // Pregătim și afișăm modalul pentru detaliile cardului
+            prepareCardDetailsModal(amount, coin, symbol);
         });
     }
     
@@ -2012,4 +2009,162 @@ function initializeBalanceVisibilityToggle() {
             toggleBtn.title = 'Show Balance';
         }
     });
+}
+
+// Funcție pentru pregătirea și afișarea modalului cu detalii card
+function prepareCardDetailsModal(amount, coin, symbol) {
+    // Calculăm valoarea estimată în USD
+    const estimatedValue = amount * getCurrentPrice(coin);
+    
+    // Actualizăm sumarul plății
+    document.getElementById('cardPaymentAmount').textContent = estimatedValue.toFixed(2);
+    document.getElementById('cardPaymentCrypto').textContent = amount.toFixed(8);
+    document.getElementById('cardPaymentSymbol').textContent = symbol;
+    
+    // Adăugăm formatare pentru numărul cardului
+    const cardNumberInput = document.getElementById('cardNumber');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+            // Eliminăm toate spațiile pentru a lucra cu cifrele pure
+            let value = e.target.value.replace(/\s+/g, '');
+            
+            // Verificăm dacă conține doar cifre
+            if (/[^\d]/.test(value)) {
+                value = value.replace(/[^\d]/g, '');
+            }
+            
+            // Adăugăm spații după fiecare grup de 4 cifre
+            let formattedValue = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formattedValue += ' ';
+                }
+                formattedValue += value[i];
+            }
+            
+            // Actualizăm valoarea și menținem poziția cursorului
+            const cursorPosition = e.target.selectionStart;
+            const difference = formattedValue.length - e.target.value.length;
+            e.target.value = formattedValue;
+            
+            // Repoziționăm cursorul
+            e.target.setSelectionRange(cursorPosition + difference, cursorPosition + difference);
+        });
+    }
+    
+    // Adăugăm formatare pentru data de expirare
+    const cardExpiryInput = document.getElementById('cardExpiry');
+    if (cardExpiryInput) {
+        cardExpiryInput.addEventListener('input', function(e) {
+            // Eliminăm non-cifrele și slash-urile
+            let value = e.target.value.replace(/[^\d]/g, '');
+            
+            // Adăugăm slash după primele 2 cifre (MM/YY)
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            
+            // Limităm la formatul MM/YY (5 caractere în total)
+            if (value.length > 5) {
+                value = value.substring(0, 5);
+            }
+            
+            // Validăm luna (între 01-12)
+            if (value.length >= 2) {
+                const month = parseInt(value.substring(0, 2));
+                if (month > 12) {
+                    value = '12' + value.substring(2);
+                }
+                if (month === 0) {
+                    value = '01' + value.substring(2);
+                }
+            }
+            
+            e.target.value = value;
+        });
+    }
+    
+    // Ascultător pentru butonul de procesare
+    const processPaymentBtn = document.getElementById('processPaymentBtn');
+    if (processPaymentBtn) {
+        // Eliminăm eventlistener-ul existent pentru a evita apeluri multiple
+        const newProcessBtn = processPaymentBtn.cloneNode(true);
+        processPaymentBtn.parentNode.replaceChild(newProcessBtn, processPaymentBtn);
+        
+        // Adăugăm noul eventlistener
+        newProcessBtn.addEventListener('click', () => {
+            // Validăm datele cardului (simplificat)
+            const cardNumber = document.getElementById('cardNumber').value;
+            const cardExpiry = document.getElementById('cardExpiry').value;
+            const cardCVV = document.getElementById('cardCVV').value;
+            const cardName = document.getElementById('cardName').value;
+            
+            if (!cardNumber || !cardExpiry || !cardCVV || !cardName) {
+                // Ar trebui să afișăm eroare, dar pentru demo presupunem că datele sunt corecte
+                console.log('Validation would happen here');
+            }
+            
+            // Simulăm procesarea (de obicei ar fi un apel API)
+            newProcessBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            newProcessBtn.disabled = true;
+            
+            // După un delay, afișăm confirmarea și actualizăm portofelul
+            setTimeout(() => {
+                // Închidem modalul de detalii card
+                document.getElementById('cardDetailsModal').style.display = 'none';
+                
+                // Afișăm modalul de confirmare
+                showPaymentConfirmation(amount, estimatedValue, coin, symbol);
+                
+                // Actualizăm portofelul
+                updateAssetAfterDeposit(coin, amount);
+                
+                // Adăugăm tranzacția în istoric
+                addTransactionToHistory(coin, amount);
+            }, 2000); // Delay de 2 secunde pentru simularea procesării
+        });
+    }
+    
+    // Afișăm modalul
+    const cardDetailsModal = document.getElementById('cardDetailsModal');
+    if (cardDetailsModal) {
+        cardDetailsModal.style.display = 'block';
+        
+        // Resetăm câmpurile formularului
+        document.getElementById('cardNumber').value = '';
+        document.getElementById('cardExpiry').value = '';
+        document.getElementById('cardCVV').value = '';
+        document.getElementById('cardName').value = '';
+    }
+}
+
+// Funcție pentru afișarea confirmării plății
+function showPaymentConfirmation(amount, paymentAmount, coin, symbol) {
+    // Generăm un ID de tranzacție aleator
+    const txId = 'TX' + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+    
+    // Actualizăm detaliile confirmării
+    document.getElementById('confirmationAmount').textContent = paymentAmount.toFixed(2);
+    document.getElementById('confirmationCrypto').textContent = amount.toFixed(8);
+    document.getElementById('confirmationSymbol').textContent = symbol;
+    document.getElementById('confirmationTxId').textContent = txId;
+    
+    // Configurăm butonul Done
+    const doneBtn = document.getElementById('confirmationDoneBtn');
+    if (doneBtn) {
+        // Eliminăm eventlistener-ul existent
+        const newDoneBtn = doneBtn.cloneNode(true);
+        doneBtn.parentNode.replaceChild(newDoneBtn, doneBtn);
+        
+        // Adăugăm noul eventlistener
+        newDoneBtn.addEventListener('click', () => {
+            document.getElementById('paymentConfirmationModal').style.display = 'none';
+        });
+    }
+    
+    // Afișăm modalul de confirmare
+    const confirmationModal = document.getElementById('paymentConfirmationModal');
+    if (confirmationModal) {
+        confirmationModal.style.display = 'block';
+    }
 } 

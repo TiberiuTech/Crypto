@@ -737,6 +737,12 @@ html[data-theme="light"] .modal-header {
     gap: 1.5rem;
 }
 
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -772,6 +778,10 @@ html[data-theme="light"] .form-input {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
+.form-group.half {
+    flex: 1;
+}
+
 .submit-btn {
     background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
     color: white;
@@ -793,6 +803,58 @@ html[data-theme="light"] .form-input {
 
 .submit-btn:active {
     transform: translateY(0);
+}
+
+.confirmation-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.confirmation-icon {
+    font-size: 60px;
+    color: #10b981;
+    margin-bottom: 20px;
+}
+
+.confirmation-icon i {
+    animation: scaleCheck 0.5s ease-in-out;
+}
+
+@keyframes scaleCheck {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.confirmation-details {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    width: 100%;
+    text-align: left;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-value {
+    font-weight: 500;
 }
 
 /* Stiluri pentru QR Container */
