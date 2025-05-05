@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Inițializăm funcționalitatea de toggle pentru vizibilitatea soldului
         initializeBalanceVisibilityToggle();
+        
+        // Adăugăm fluctuația prețurilor pentru un efect mai realist
+        startPriceFluctuation();
     });
 });
 
@@ -951,7 +954,7 @@ function addNotificationStyles() {
 // Apelăm funcția pentru a adăuga stilurile când documentul este gata
 document.addEventListener('DOMContentLoaded', addNotificationStyles);
 
-// Modificăm setupEventListeners pentru a adăuga evenimentele de swap
+// Modificăm setupEventListeners pentru a adăuga evenimentele de trade în loc de history
 function setupEventListeners() {
     // Butoane pentru deschiderea modalelor
     const actionButtons = document.querySelectorAll('.action-button');
@@ -1062,8 +1065,9 @@ function setupEventListeners() {
                         });
                     }
                 });
-            } else if (action === 'history') {
-                document.getElementById('historyModal').style.display = 'block';
+            } else if (action === 'trade') {
+                // Redirecționăm utilizatorul către pagina de trade
+                window.location.href = 'trade.html';
             }
         });
     });
@@ -2166,5 +2170,111 @@ function showPaymentConfirmation(amount, paymentAmount, coin, symbol) {
     const confirmationModal = document.getElementById('paymentConfirmationModal');
     if (confirmationModal) {
         confirmationModal.style.display = 'block';
+    }
+}
+
+// Funcție pentru simularea fluctuației prețurilor
+function startPriceFluctuation() {
+    // Simulăm prețurile inițiale pentru monede principale dacă nu există date
+    if (!coinPrices.btc || coinPrices.btc === 0) coinPrices.btc = 47000 + Math.random() * 5000;
+    if (!coinPrices.eth || coinPrices.eth === 0) coinPrices.eth = 1800 + Math.random() * 500;
+    if (!coinPrices.orx || coinPrices.orx === 0) coinPrices.orx = 4.5 + Math.random() * 1;
+    
+    // Nu mai inițializăm portofelul cu active demonstrative
+    // Portofelul rămâne gol până când utilizatorul face un depozit
+    
+    // Actualizăm valorile și UI-ul la fiecare 10 secunde
+    updateUI();
+    
+    // Setăm un interval pentru actualizarea prețurilor
+    setInterval(() => {
+        // Simulăm fluctuații de preț
+        fluctuatePrices();
+        
+        // Actualizăm valorile monedelor
+        updateCoinValues();
+        
+        // Actualizăm UI-ul
+        updateUI();
+    }, 10000); // La fiecare 10 secunde
+}
+
+// Funcție pentru fluctuația prețurilor
+function fluctuatePrices() {
+    // Generăm fluctuații aleatorii pentru fiecare monedă (între -0.5% și +0.5%)
+    const btcChange = (Math.random() - 0.5) * 0.01;
+    const ethChange = (Math.random() - 0.5) * 0.01;
+    const orxChange = (Math.random() - 0.5) * 0.01;
+    
+    // Aplicăm fluctuațiile la prețurile actuale
+    coinPrices.btc = coinPrices.btc * (1 + btcChange);
+    coinPrices.eth = coinPrices.eth * (1 + ethChange);
+    coinPrices.orx = coinPrices.orx * (1 + orxChange);
+    
+    // Actualizăm ratele de schimb
+    updateExchangeRates();
+    
+    // Actualizăm și "change" în wallet.coins pentru a reflecta schimbările
+    if (wallet.coins.bitcoin) {
+        wallet.coins.bitcoin.change += btcChange * 100;
+        wallet.coins.bitcoin.change = Math.min(10, Math.max(-10, wallet.coins.bitcoin.change)); // Limităm între -10% și +10%
+    }
+    
+    if (wallet.coins.ethereum) {
+        wallet.coins.ethereum.change += ethChange * 100;
+        wallet.coins.ethereum.change = Math.min(10, Math.max(-10, wallet.coins.ethereum.change)); // Limităm între -10% și +10%
+    }
+    
+    if (wallet.coins.orx) {
+        wallet.coins.orx.change += orxChange * 100;
+        wallet.coins.orx.change = Math.min(10, Math.max(-10, wallet.coins.orx.change)); // Limităm între -10% și +10%
+    }
+    
+    // Simulăm o schimbare generală în portofel
+    wallet.change = (wallet.change || 2.45) + (Math.random() - 0.5) * 0.1;
+    wallet.change = Math.min(5, Math.max(-3, wallet.change)); // Limităm între -3% și +5%
+}
+
+// Funcție pentru actualizarea valorilor monedelor
+function updateCoinValues() {
+    // Actualizăm valoarea în USD pentru fiecare monedă
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        const price = getCurrentPrice(coinId);
+        coin.value = coin.amount * price;
+    }
+}
+
+// Funcție pentru actualizarea UI-ului
+function updateUI() {
+    // Actualizăm balanța totală
+    updateTotalBalance();
+    
+    // Actualizăm procentul de schimbare
+    const changeElement = document.querySelector('.balance-change span');
+    if (changeElement && wallet.change !== undefined) {
+        changeElement.textContent = Math.abs(wallet.change).toFixed(2) + '%';
+        
+        // Actualizăm și clasa de culoare
+        const balanceChangeEl = document.querySelector('.balance-change');
+        if (balanceChangeEl) {
+            if (wallet.change >= 0) {
+                balanceChangeEl.classList.remove('negative');
+                balanceChangeEl.classList.add('positive');
+                balanceChangeEl.querySelector('i').className = 'fas fa-caret-up';
+            } else {
+                balanceChangeEl.classList.remove('positive');
+                balanceChangeEl.classList.add('negative');
+                balanceChangeEl.querySelector('i').className = 'fas fa-caret-down';
+            }
+        }
+    }
+    
+    // Actualizăm UI-ul pentru fiecare monedă vizibilă
+    for (const coinId in wallet.coins) {
+        const assetItem = findAssetElement(coinId);
+        if (assetItem) {
+            updateAssetUI(coinId);
+        }
     }
 } 

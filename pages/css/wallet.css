@@ -193,6 +193,12 @@ html[data-theme="light"] .action-button {
     color: #8b5cf6;
 }
 
+/* Adaug stiluri pentru iconița de Trade */
+.action-icon.trade {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
 .action-button:hover .action-icon {
     transform: scale(1.1);
 }
@@ -666,7 +672,7 @@ html[data-theme="light"] .transaction-item {
 .modal-content {
     position: relative;
     background: rgba(25, 30, 45, 0.95);
-    margin: 50px auto;
+    margin: 0;
     width: 90%;
     max-width: 550px;
     border-radius: 16px;
@@ -675,16 +681,22 @@ html[data-theme="light"] .transaction-item {
     backdrop-filter: blur(10px);
     overflow: hidden;
     animation: modalFadeIn 0.3s ease forwards;
+    
+    /* Adăugăm poziționarea centrată */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 @keyframes modalFadeIn {
     from {
         opacity: 0;
-        transform: translateY(-20px);
+        transform: translate(-50%, -60%);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate(-50%, -50%);
     }
 }
 
