@@ -74,6 +74,43 @@ const COINGECKO_PROXY = 'https://cors-anywhere.herokuapp.com/';
 // Flag global pentru a indica dacă folosim date reale sau demo
 let usingRealData = false;
 
+// Mapare a intervalelor UI către formatul Binance
+const timeframeMap = {
+    '1h': {
+        binanceInterval: '1m',
+        limit: 60,
+        chartUnit: 'minute',
+        displayFormat: 'HH:mm'
+    },
+    '4h': {
+        binanceInterval: '5m',
+        limit: 48,
+        chartUnit: 'hour',
+        displayFormat: 'HH:mm'
+    },
+    '1d': {
+        binanceInterval: '15m',
+        limit: 96,
+        chartUnit: 'hour',
+        displayFormat: 'HH:mm'
+    },
+    '1w': {
+        binanceInterval: '2h',
+        limit: 84,
+        chartUnit: 'day',
+        displayFormat: 'MMM d'
+    },
+    '1m': {
+        binanceInterval: '8h',
+        limit: 90,
+        chartUnit: 'day',
+        displayFormat: 'MMM d'
+    }
+};
+
+// Interval curent activ (default: 1d)
+let currentTimeframe = '1d';
+
 // Culori pentru tema dark/light
 function getThemeColors() {
     const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -500,65 +537,171 @@ function initChartData() {
 
 // Funcție pentru schimbarea timeframe-ului
 function changeTimeframe(timeframe) {
+    if (!timeframeMap[timeframe]) {
+        console.error(`Timeframe invalid: ${timeframe}`);
+        return;
+    }
+
+    console.log(`[TIMEFRAME] Schimbare interval la ${timeframe}`);
+    currentTimeframe = timeframe;
+    
     const selectedPair = document.getElementById('tradingPair').value;
     const symbol = selectedPair.split('/')[0];
+    const binanceSymbol = binanceSymbolMap[symbol];
     
-    // Dacă avem date de la CoinGecko, le folosim, altfel generăm date aleatorii
-    if (priceChartData[symbol]) {
-        // De exemplu, vom simula schimbarea timeframe-ului prin regenerarea graficului
-        // Într-o implementare reală, am face o nouă cerere la API pentru alte intervale
-        window.priceChart.update();
-    } else {
-        const chartData = generateChartData(timeframe);
-        if (!window.priceChart) return;
-        
-        const priceChart = window.priceChart;
-        
-        // Actualizăm datele pentru graficul de linie
-        priceChart.data.datasets[0].data = chartData.map(item => ({
-            x: new Date(item.time),
-            y: item.close
-        }));
-        
-        // Actualizăm opțiunile pentru timeframe
-        const timeOptions = {
-            '1h': {
-                unit: 'minute',
-                displayFormats: {
-                    minute: 'HH:mm'
-                }
-            },
-            '4h': {
-                unit: 'hour',
-                displayFormats: {
-                    hour: 'HH:mm'
-                }
-            },
-            '1d': {
-                unit: 'hour',
-                displayFormats: {
-                    hour: 'HH:mm'
-                }
-            },
-            '1w': {
-                unit: 'day',
-                displayFormats: {
-                    day: 'MMM d'
-                }
-            },
-            '1m': {
-                unit: 'day',
-                displayFormats: {
-                    day: 'MMM d'
-                }
+    if (!binanceSymbol) {
+        console.warn(`Nu există mapare Binance pentru ${symbol}`);
+        return;
+    }
+    
+    // Arătăm indicator de loading pentru grafic
+    toggleChartLoading(true);
+    
+    // Facem fetch pentru datele istorice conform timeframe-ului selectat
+    fetchHistoricalData(binanceSymbol, timeframe)
+        .then(data => {
+            if (data && data.length > 0) {
+                // Formatul datelor primite: [[time, open, high, low, close, volume, ...], ...]
+                const prices = data.map(candle => ({
+                    x: new Date(candle[0]),
+                    y: parseFloat(candle[4]) // close price
+                }));
+                
+                // Actualizăm datele pentru grafic
+                priceChartData[symbol] = prices;
+                
+                // Actualizăm graficul
+                updateChartWithTimeframe(symbol, timeframe);
+            } else {
+                console.warn(`[TIMEFRAME] Nu s-au primit date pentru ${timeframe}`);
+                // Generăm date demo dacă nu am primit nimic
+                const chartData = generateChartData(timeframe);
+                priceChartData[symbol] = chartData.map(item => ({
+                    x: new Date(item.time),
+                    y: item.close
+                }));
+                updateChartWithTimeframe(symbol, timeframe);
             }
-        };
+        })
+        .catch(error => {
+            console.error(`[TIMEFRAME] Eroare la preluarea datelor pentru ${timeframe}:`, error);
+            // Generăm date demo în caz de eroare
+            const chartData = generateChartData(timeframe);
+            priceChartData[symbol] = chartData.map(item => ({
+                x: new Date(item.time),
+                y: item.close
+            }));
+            updateChartWithTimeframe(symbol, timeframe);
+        })
+        .finally(() => {
+            toggleChartLoading(false);
+        });
+}
+
+// Funcție pentru preluarea datelor istorice de la Binance
+async function fetchHistoricalData(binanceSymbol, timeframe) {
+    const tf = timeframeMap[timeframe];
+    
+    if (!tf) {
+        throw new Error(`Timeframe invalid: ${timeframe}`);
+    }
+    
+    const klineUrl = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${tf.binanceInterval}&limit=${tf.limit}`;
+    console.log(`[TIMEFRAME] Fetch URL: ${klineUrl}`);
+    
+    try {
+        const response = await fetch(klineUrl);
         
-        if (timeOptions[timeframe]) {
-            priceChart.options.scales.x.time = timeOptions[timeframe];
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
         }
         
-        priceChart.update();
+        const data = await response.json();
+        console.log(`[TIMEFRAME] Primite ${data.length} candle-uri pentru ${binanceSymbol} (${timeframe})`);
+        return data;
+    } catch (error) {
+        console.error(`[TIMEFRAME] Eroare fetch: ${error.message}`);
+        throw error;
+    }
+}
+
+// Funcție pentru actualizarea graficului cu noile date și timeframe
+function updateChartWithTimeframe(symbol, timeframe) {
+    if (!window.priceChart || !priceChartData[symbol]) {
+        console.warn(`[TIMEFRAME] Nu există grafic sau date pentru ${symbol}`);
+        return;
+    }
+    
+    const priceChart = window.priceChart;
+    const tf = timeframeMap[timeframe];
+    
+    // Actualizăm datele
+    priceChart.data.datasets[0].data = priceChartData[symbol];
+    
+    // Actualizăm opțiunile pentru axa X
+    priceChart.options.scales.x.time.unit = tf.chartUnit;
+    priceChart.options.scales.x.time.displayFormats = {
+        [tf.chartUnit]: tf.displayFormat
+    };
+    
+    // Actualizăm titlul
+    priceChart.data.datasets[0].label = `${symbol}/USDT (${timeframe})`;
+    
+    // Aplicăm modificările
+    priceChart.update();
+    console.log(`[TIMEFRAME] Grafic actualizat pentru ${symbol} cu intervalul ${timeframe}`);
+}
+
+// Funcție pentru afișarea/ascunderea loading-ului pe grafic
+function toggleChartLoading(show) {
+    const chartContainer = document.querySelector('.chart-container');
+    
+    if (!chartContainer) return;
+    
+    if (show) {
+        // Verificăm dacă există deja un indicator de loading
+        if (!document.getElementById('chartLoadingIndicator')) {
+            const loader = document.createElement('div');
+            loader.id = 'chartLoadingIndicator';
+            loader.innerHTML = '<div class="spinner"></div><span>Loading data...</span>';
+            loader.style.position = 'absolute';
+            loader.style.top = '50%';
+            loader.style.left = '50%';
+            loader.style.transform = 'translate(-50%, -50%)';
+            loader.style.backgroundColor = 'rgba(15, 23, 42, 0.8)';
+            loader.style.padding = '15px 20px';
+            loader.style.borderRadius = '8px';
+            loader.style.display = 'flex';
+            loader.style.alignItems = 'center';
+            loader.style.zIndex = '100';
+            
+            // Stiluri pentru spinner
+            const style = document.createElement('style');
+            style.textContent = `
+                .spinner {
+                    width: 20px;
+                    height: 20px;
+                    border: 3px solid rgba(255,255,255,0.3);
+                    border-radius: 50%;
+                    border-top-color: #10b981;
+                    animation: spin 1s ease-in-out infinite;
+                    margin-right: 10px;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            chartContainer.style.position = 'relative';
+            chartContainer.appendChild(loader);
+        }
+    } else {
+        // Eliminăm loading-ul dacă există
+        const loader = document.getElementById('chartLoadingIndicator');
+        if (loader) {
+            loader.remove();
+        }
     }
 }
 
@@ -785,7 +928,7 @@ async function fetchFromBinance() {
     }
 }
 
-// Modificăm processBinanceData pentru a face o actualizare directă și forțată
+// Modificăm processBinanceData pentru a actualiza și graficul cu timeframe-ul curent
 function processBinanceData(symbol, tickerData, klineData) {
     // Ticker data format:
     // {"symbol":"BTCUSDT","priceChange":"-1071.81000000","priceChangePercent":"-2.157","weightedAvgPrice":"49208.43443907","prevClosePrice":"49688.67000000","lastPrice":"48616.86000000",...
@@ -845,6 +988,9 @@ function processBinanceData(symbol, tickerData, klineData) {
     
     // Actualizare UI
     updateMarketValues(currentSelectedPair);
+    
+    // Actualizăm graficul cu timeframe-ul curent
+    updateChartWithTimeframe(symbol, currentTimeframe);
     
     // Indicator vizual pentru utilizator
     showDataSourceIndicator(true, `Binance: ${currentPrice.toFixed(2)} USD`);
