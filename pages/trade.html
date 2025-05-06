@@ -71,37 +71,78 @@
         <!-- Top Bar with Coin Selector and Market Info -->
         <div class="market-top-bar">
             <div class="coin-selector">
-                <select id="tradingPair" class="trading-pair-select">
-                    <option value="BTC/USDT">BTC/USDT</option>
-                    <option value="ETH/USDT">ETH/USDT</option>
-                    <option value="BNB/USDT">BNB/USDT</option>
-                    <option value="XRP/USDT">XRP/USDT</option>
-                    <option value="ADA/USDT">ADA/USDT</option>
-                    <option value="SOL/USDT">SOL/USDT</option>
-                    <option value="DOT/USDT">DOT/USDT</option>
-                    <option value="DOGE/USDT">DOGE/USDT</option>
-                </select>
+                <div class="custom-dropdown">
+                    <div class="selected-option" id="selectedPair">
+                        <span class="crypto-icon btc-icon">₿</span>
+                        <span>BTC/USDT</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-options" id="cryptoDropdownOptions">
+                        <div class="dropdown-option" data-value="BTC/USDT">
+                            <span class="crypto-icon btc-icon">₿</span>
+                            <span>BTC/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="ETH/USDT">
+                            <span class="crypto-icon eth-icon">Ξ</span>
+                            <span>ETH/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="BNB/USDT">
+                            <span class="crypto-icon bnb-icon">B</span>
+                            <span>BNB/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="XRP/USDT">
+                            <span class="crypto-icon xrp-icon">X</span>
+                            <span>XRP/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="ADA/USDT">
+                            <span class="crypto-icon ada-icon">A</span>
+                            <span>ADA/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="SOL/USDT">
+                            <span class="crypto-icon sol-icon">S</span>
+                            <span>SOL/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="DOT/USDT">
+                            <span class="crypto-icon dot-icon">D</span>
+                            <span>DOT/USDT</span>
+                        </div>
+                        <div class="dropdown-option" data-value="DOGE/USDT">
+                            <span class="crypto-icon doge-icon">Ð</span>
+                            <span>DOGE/USDT</span>
+                        </div>
+                    </div>
+                    <select id="tradingPair" class="trading-pair-select" style="display: none;">
+                        <option value="BTC/USDT">BTC/USDT</option>
+                        <option value="ETH/USDT">ETH/USDT</option>
+                        <option value="BNB/USDT">BNB/USDT</option>
+                        <option value="XRP/USDT">XRP/USDT</option>
+                        <option value="ADA/USDT">ADA/USDT</option>
+                        <option value="SOL/USDT">SOL/USDT</option>
+                        <option value="DOT/USDT">DOT/USDT</option>
+                        <option value="DOGE/USDT">DOGE/USDT</option>
+                    </select>
+                </div>
             </div>
             <div class="market-stats">
                 <div class="stat-item">
                     <span class="stat-label">Last Price</span>
-                    <span class="stat-value" id="lastPrice">$47,265.35</span>
+                    <span class="stat-value" id="lastPrice">$---.--</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">24h Change</span>
-                    <span class="stat-value positive" id="priceChange">+2.75%</span>
+                    <span class="stat-value" id="priceChange">---</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">24h High</span>
-                    <span class="stat-value" id="highPrice">$48,112.87</span>
+                    <span class="stat-value" id="highPrice">$---.--</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">24h Low</span>
-                    <span class="stat-value" id="lowPrice">$46,398.21</span>
+                    <span class="stat-value" id="lowPrice">$---.--</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">24h Volume</span>
-                    <span class="stat-value" id="volume">$32.5B</span>
+                    <span class="stat-value" id="volume">---</span>
                 </div>
             </div>
         </div>
@@ -203,8 +244,8 @@
                     <!-- Sell orders will be populated dynamically -->
                 </div>
                 <div class="price-spread">
-                    <span class="current-price" id="orderBookPrice">$47,265.35</span>
-                    <span class="spread" id="spread">$25.64 (0.05%)</span>
+                    <span class="current-price" id="orderBookPrice">$---.--</span>
+                    <span class="spread" id="spread">---</span>
                 </div>
                 <div class="buy-orders" id="buyOrders">
                     <!-- Buy orders will be populated dynamically -->

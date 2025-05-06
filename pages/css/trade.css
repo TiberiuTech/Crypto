@@ -16,6 +16,8 @@
     margin-bottom: 1.5rem;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 200;
 }
 
 html[data-theme="light"] .market-top-bar {
@@ -103,6 +105,7 @@ html[data-theme="light"] .trading-pair-select {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     position: relative;
+    z-index: 100;
 }
 
 html[data-theme="light"] .chart-section {
@@ -787,4 +790,142 @@ html[data-theme="light"] .orders-table tbody tr:hover {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(var(--accent-color-rgb), 0.7);
+}
+
+/* Stiluri pentru iconițele de criptomonede */
+.crypto-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btc-icon {
+    background-color: #F7931A;
+}
+
+.eth-icon {
+    background-color: #627EEA;
+}
+
+.bnb-icon {
+    background-color: #F3BA2F;
+    color: #000;
+}
+
+.xrp-icon {
+    background-color: #23292F;
+}
+
+.ada-icon {
+    background-color: #0033AD;
+}
+
+.sol-icon {
+    background-color: #14F195;
+    color: #000;
+}
+
+.dot-icon {
+    background-color: #E6007A;
+}
+
+.doge-icon {
+    background-color: #C2A633;
+}
+
+/* Stiluri pentru dropdown-ul personalizat cu iconițe */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+    z-index: 9999;
+}
+
+.selected-option {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    background: rgba(14, 17, 26, 0.9);
+    border: 1px solid rgba(42, 48, 69, 0.7);
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+html[data-theme="light"] .selected-option {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.selected-option:hover {
+    border-color: var(--accent-color);
+}
+
+.selected-option .fas {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.custom-dropdown.active .selected-option .fas {
+    transform: rotate(180deg);
+}
+
+.dropdown-options {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(14, 17, 26, 0.95);
+    border: 1px solid rgba(42, 48, 69, 0.7);
+    border-radius: 8px;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+}
+
+html[data-theme="light"] .dropdown-options {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.custom-dropdown.active .dropdown-options {
+    display: block;
+    animation: fadeIn 0.15s ease;
+    position: absolute;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-option {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.dropdown-option:hover {
+    background: rgba(var(--accent-color-rgb), 0.2);
+}
+
+@media (max-width: 768px) {
+    .dropdown-options {
+        max-height: 250px;
+    }
 } 

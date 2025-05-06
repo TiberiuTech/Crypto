@@ -709,9 +709,101 @@ function createChart(symbol, historicalData, percentChange) {
 
 // Funcție pentru preluarea datelor despre criptomonede de la CoinGecko
 function fetchCryptoData() {
-    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum&order=market_cap_desc&per_page=100&page=1&price_change_percentage=24h';
+    // Folosim un proxy CORS pentru a evita probleme de CORS
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_last_updated_at=true&precision=2';
     
-    fetch(url)
+    // Verificăm dacă există un timestamp pentru ultima cerere API
+    const lastApiCall = localStorage.getItem('lastApiCall');
+    const now = Date.now();
+    
+    // Dacă am făcut o cerere în ultimele 60 secunde, folosim datele din cache
+    if (lastApiCall && now - parseInt(lastApiCall) < 60000) {
+        console.log("Folosim date din cache pentru a evita rate limiting");
+        const cachedData = localStorage.getItem('cryptoData');
+        if (cachedData) {
+            try {
+                const parsedData = JSON.parse(cachedData);
+                processData(parsedData);
+                return;
+            } catch (e) {
+                console.error("Eroare la parsarea datelor din cache:", e);
+                // Continuăm cu cererea API
+            }
+        }
+    }
+    
+    // Adăugăm un controller pentru a putea anula cererea după un timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secunde timeout
+    
+    // Marcăm timpul cererii API
+    localStorage.setItem('lastApiCall', now.toString());
+    
+    console.log("Încercăm API-ul CryptoCompare");
+    
+    // Încercăm întâi CryptoCompare
+    fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH&tsyms=USD', {
+        signal: controller.signal
+    })
+    .then(response => {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Convertim datele de la CryptoCompare în formatul nostru
+        if (data.RAW) {
+            const btcData = data.RAW.BTC?.USD;
+            const ethData = data.RAW.ETH?.USD;
+            
+            const processedData = [];
+            
+            if (btcData) {
+                processedData.push({
+                    id: 'bitcoin',
+                    current_price: btcData.PRICE,
+                    image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+                    total_volume: btcData.VOLUME24HOUR,
+                    market_cap: btcData.MKTCAP,
+                    price_change_percentage_24h: ((btcData.PRICE - btcData.OPEN24HOUR) / btcData.OPEN24HOUR) * 100
+                });
+            }
+            
+            if (ethData) {
+                processedData.push({
+                    id: 'ethereum',
+                    current_price: ethData.PRICE,
+                    image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                    total_volume: ethData.VOLUME24HOUR,
+                    market_cap: ethData.MKTCAP,
+                    price_change_percentage_24h: ((ethData.PRICE - ethData.OPEN24HOUR) / ethData.OPEN24HOUR) * 100
+                });
+            }
+            
+            // Salvăm datele în cache
+            localStorage.setItem('cryptoData', JSON.stringify(processedData));
+            
+            // Procesăm datele
+            processData(processedData);
+        } else {
+            throw new Error('Format de date neașteptat de la CryptoCompare');
+        }
+    })
+    .catch(cryptocompareError => {
+        clearTimeout(timeoutId);
+        console.warn("Eroare la CryptoCompare:", cryptocompareError);
+        
+        console.log("Încercăm CoinGecko cu proxy");
+        
+        // Dacă CryptoCompare eșuează, încercăm CoinGecko prin proxy
+        fetch(proxyUrl + apiUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
         .then(response => {
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
@@ -719,64 +811,108 @@ function fetchCryptoData() {
             return response.json();
         })
         .then(data => {
-            if (!Array.isArray(data)) {
-                console.error('Data received is not an array:', data);
-                throw new Error('Invalid data format received');
+            // Convertim datele de la CoinGecko în formatul nostru
+            const processedData = [];
+            
+            if (data.bitcoin) {
+                processedData.push({
+                    id: 'bitcoin',
+                    current_price: data.bitcoin.usd,
+                    image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+                    total_volume: data.bitcoin.usd_24h_vol || 0,
+                    market_cap: 750000000000, // Aproximare
+                    price_change_percentage_24h: data.bitcoin.usd_24h_change || 0
+                });
             }
             
-            // Procesăm datele pentru Bitcoin
-            const bitcoin = data.find(coin => coin.id === 'bitcoin');
-            if (bitcoin) {
-                updateCryptoCard('btc', bitcoin);
+            if (data.ethereum) {
+                processedData.push({
+                    id: 'ethereum',
+                    current_price: data.ethereum.usd,
+                    image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                    total_volume: data.ethereum.usd_24h_vol || 0,
+                    market_cap: 265000000000, // Aproximare
+                    price_change_percentage_24h: data.ethereum.usd_24h_change || 0
+                });
             }
             
-            // Procesăm datele pentru Ethereum
-            const ethereum = data.find(coin => coin.id === 'ethereum');
-            if (ethereum) {
-                updateCryptoCard('eth', ethereum);
-            }
+            // Salvăm datele în cache
+            localStorage.setItem('cryptoData', JSON.stringify(processedData));
             
-            // Orionix este tokenul nostru personalizat ERC-20 
-            const orionixMockData = {
-                current_price: 4.48,
-                image: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX',
-                total_volume: 138300,
-                market_cap: 4480000, // 1,000,000 supply × $4.48
-                price_change_percentage_24h: 2.51
-            };
-            updateCryptoCard('orx', orionixMockData);
+            // Procesăm datele
+            processData(processedData);
         })
-        .catch(error => {
-            console.error('Error fetching crypto data:', error);
-            // În caz de eroare, afișăm date exemplificative
-            const mockBitcoin = {
-                current_price: 95940,
-                image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-                total_volume: 21900000000,
-                market_cap: 750000000000,
-                price_change_percentage_24h: -1.03
-            };
-            
-            const mockEthereum = {
-                current_price: 1825.0,
-                image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-                total_volume: 462900000,
-                market_cap: 265000000000,
-                price_change_percentage_24h: -0.47
-            };
-            
-            const orionixMockData = {
-                current_price: 4.48,
-                image: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX',
-                total_volume: 138300,
-                market_cap: 4480000, // 1,000,000 supply × $4.48
-                price_change_percentage_24h: 2.51
-            };
-            
-            updateCryptoCard('btc', mockBitcoin);
-            updateCryptoCard('eth', mockEthereum);
-            updateCryptoCard('orx', orionixMockData);
+        .catch(coingeckoError => {
+            console.error("Eroare la CoinGecko:", coingeckoError);
+            useFallbackData();
         });
+    });
+    
+    // Funcție pentru procesarea datelor
+    function processData(data) {
+        if (!Array.isArray(data)) {
+            console.error('Data received is not an array:', data);
+            useFallbackData();
+            return;
+        }
+        
+        // Procesăm datele pentru Bitcoin
+        const bitcoin = data.find(coin => coin.id === 'bitcoin');
+        if (bitcoin) {
+            updateCryptoCard('btc', bitcoin);
+        }
+        
+        // Procesăm datele pentru Ethereum
+        const ethereum = data.find(coin => coin.id === 'ethereum');
+        if (ethereum) {
+            updateCryptoCard('eth', ethereum);
+        }
+        
+        // Orionix este tokenul nostru personalizat ERC-20 
+        const orionixMockData = {
+            current_price: 4.48,
+            image: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX',
+            total_volume: 138300,
+            market_cap: 4480000, // 1,000,000 supply × $4.48
+            price_change_percentage_24h: 2.51
+        };
+        updateCryptoCard('orx', orionixMockData);
+    }
+    
+    // Funcție pentru folosirea datelor de backup în caz de eșec
+    function useFallbackData() {
+        // În caz de eroare, afișăm date exemplificative
+        const mockBitcoin = {
+            current_price: 95940,
+            image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            total_volume: 21900000000,
+            market_cap: 750000000000,
+            price_change_percentage_24h: -1.03
+        };
+        
+        const mockEthereum = {
+            current_price: 1825.0,
+            image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            total_volume: 462900000,
+            market_cap: 265000000000,
+            price_change_percentage_24h: -0.47
+        };
+        
+        const orionixMockData = {
+            current_price: 4.48,
+            image: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX',
+            total_volume: 138300,
+            market_cap: 4480000, // 1,000,000 supply × $4.48
+            price_change_percentage_24h: 2.51
+        };
+        
+        updateCryptoCard('btc', mockBitcoin);
+        updateCryptoCard('eth', mockEthereum);
+        updateCryptoCard('orx', orionixMockData);
+        
+        // Afișăm o notificare pentru utilizator
+        showCenterAlert("Nu am putut obține date actualizate de la API. Se folosesc date offline.", false, 5000);
+    }
 }
 
 // Funcție pentru actualizarea unui card crypto
