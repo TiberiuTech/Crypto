@@ -3,10 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchCoinData().then(() => {
         initializeModals();
         initializePortfolioChart();
-        initializeMiniCharts();
         initializeDepositDropdown();
         initializeSwapModal();
-        setupEventListeners();
         setupCustomNotifications();
         
         // Eliminăm complet mesajul "No assets yet" și reorganizăm spațiul
@@ -17,16 +15,38 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Adăugăm fluctuația prețurilor pentru un efect mai realist
         startPriceFluctuation();
+        
+        // Restabilim UI-ul portofelului
+        restoreWalletUI();
+        
+        // Actualizăm valorile monedelor
+        updateCoinValues();
+        
+        // Actualizăm balanța totală
+        updateTotalBalance();
+        
+        // Adăugăm evenimentele de trade în loc de history
+        setupEventListeners();
     });
 });
 
-// Inițializăm portofelul gol
-const wallet = {
+// Inițializăm portofelul gol sau cu datele din localStorage
+let wallet = {
     totalBalance: 0,
     change: 0,
     coins: {}, // Gol - va fi populat prin depozite
     transactions: [] // Gol - va fi populat prin tranzacții
 };
+
+// Încearcă să încarci din localStorage dacă există
+const savedWallet = localStorage.getItem('wallet');
+if (savedWallet) {
+    try {
+        wallet = JSON.parse(savedWallet);
+    } catch (e) {
+        console.error('Eroare la parsarea wallet-ului din localStorage:', e);
+    }
+}
 
 // Obiect pentru stocarea datelor despre monede primite de la CoinGecko
 const coinData = {};
@@ -1351,7 +1371,13 @@ function createAssetElement(coinId) {
 // Funcție pentru a inițializa un singur mini-grafic
 function initializeSingleMiniChart(chartCanvas) {
     if (!chartCanvas) return;
-    
+
+    // Distruge chart-ul existent dacă există
+    const existingChart = window.Chart && window.Chart.getChart ? window.Chart.getChart(chartCanvas) : null;
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
     const ctx = chartCanvas;
     const coin = chartCanvas.dataset.coin;
     
@@ -2277,4 +2303,95 @@ function updateUI() {
             updateAssetUI(coinId);
         }
     }
-} 
+    saveWalletToStorage();
+}
+
+function saveWalletToStorage() {
+    localStorage.setItem('wallet', JSON.stringify(wallet));
+}
+
+// ... existing code ...
+function restoreWalletUI() {
+    // Populează lista de assets
+    const assetsList = document.getElementById('assetsList');
+    if (assetsList) {
+        assetsList.innerHTML = '';
+        for (const coinId in wallet.coins) {
+            if (wallet.coins[coinId].amount > 0) {
+                const assetItem = createAssetElement(coinId);
+                assetsList.appendChild(assetItem);
+            }
+        }
+    }
+
+    // Populează istoricul de tranzacții
+    const transactionsList = document.getElementById('transactionsList');
+    if (transactionsList) {
+        transactionsList.innerHTML = '';
+        if (!wallet.transactions || wallet.transactions.length === 0) {
+            const noTransactionsMessage = document.createElement('div');
+            noTransactionsMessage.className = 'no-transactions-message';
+            noTransactionsMessage.innerHTML = '<p>No transactions yet. Your transaction history will appear here.</p>';
+            transactionsList.appendChild(noTransactionsMessage);
+        } else {
+            wallet.transactions.forEach(tx => {
+                const transactionItem = createTransactionElement(tx);
+                transactionsList.appendChild(transactionItem);
+            });
+        }
+    }
+}
+
+function createTransactionElement(tx) {
+    const div = document.createElement('div');
+    div.className = 'transaction-item';
+    let title = '';
+    let amountStr = '';
+    let valueStr = '';
+    let iconClass = '';
+    let status = tx.status || 'completed';
+    let dateStr = 'Just now';
+    if (tx.date) {
+        const d = new Date(tx.date);
+        dateStr = d.toLocaleString();
+    }
+    if (tx.type === 'swap') {
+        title = `Swapped ${tx.fromCoin.toUpperCase()} to ${tx.toCoin.toUpperCase()}`;
+        amountStr = `${tx.fromAmount} ${tx.fromCoin.toUpperCase()} → ${tx.toAmount} ${tx.toCoin.toUpperCase()}`;
+        valueStr = `$${(tx.value || 0).toFixed(2)}`;
+        iconClass = 'fa-exchange-alt';
+    } else if (tx.type === 'withdraw') {
+        title = `Withdrew ${tx.coin.toUpperCase()}`;
+        amountStr = `-${tx.amount} ${tx.coin.toUpperCase()}`;
+        valueStr = `-$${(tx.value || 0).toFixed(2)}`;
+        iconClass = 'fa-arrow-up';
+    } else if (tx.type === 'receive') {
+        title = `Received ${tx.coin.toUpperCase()}`;
+        amountStr = `+${tx.amount} ${tx.coin.toUpperCase()}`;
+        valueStr = `+$${(tx.value || 0).toFixed(2)}`;
+        iconClass = 'fa-arrow-down';
+    } else {
+        title = 'Transaction';
+        amountStr = '';
+        valueStr = '';
+        iconClass = 'fa-info-circle';
+    }
+    div.innerHTML = `
+        <div class="transaction-icon"><i class="fas ${iconClass}"></i></div>
+        <div class="transaction-details">
+            <div class="transaction-title">${title}</div>
+            <div class="transaction-date">${dateStr}</div>
+        </div>
+        <div class="transaction-amount">
+            <div class="amount">${amountStr}</div>
+            <div class="value">${valueStr}</div>
+        </div>
+        <div class="transaction-status">
+            <span class="status ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        </div>
+    `;
+    return div;
+}
+
+document.addEventListener('DOMContentLoaded', restoreWalletUI);
+// ... existing code ...

@@ -176,14 +176,14 @@
             <!-- Trading Panel -->
             <div class="trading-panel">
                 <div class="trading-tabs">
-                    <button class="tab-btn active" data-tab="spot">Spot</button>
-                    <button class="tab-btn" data-tab="margin">Margin</button>
-                    <button class="tab-btn" data-tab="futures">Futures</button>
+                    <button class="tab-btn nav-tab active" data-tab="spot" data-trade-type="spot">Spot</button>
+                    <button class="tab-btn nav-tab" data-tab="margin" data-trade-type="margin">Margin</button>
+                    <button class="tab-btn nav-tab" data-tab="futures" data-trade-type="futures">Futures</button>
                 </div>
                 
                 <div class="trading-content">
                     <div class="trading-account-info">
-                        <div class="account-balance">
+                        <div class="account-balance balance-section">
                             <span>Available Balance:</span>
                             <span id="availableBalance">$15,432.21</span>
                         </div>
@@ -224,7 +224,7 @@
                                 <input type="number" id="orderTotal" class="form-input" placeholder="0.00">
                             </div>
                             
-                            <button id="placeOrderBtn" class="place-order-btn buy">Buy BTC</button>
+                            <button class="place-order-btn buy" id="buyBtcBtn">Buy BTC</button>
                         </div>
                     </div>
                 </div>
@@ -256,7 +256,7 @@
                 <h3>Trade History</h3>
                 <div class="trade-header">
                     <span>Price (USDT)</span>
-                    <span>Amount (BTC)</span>
+                    <span id="amountHeaderLabel">Amount (<span class="coin-symbol">BTC</span>)</span>
                     <span>Time</span>
                 </div>
                 <div class="trades-list" id="tradeHistory">

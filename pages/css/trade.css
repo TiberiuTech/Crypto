@@ -527,6 +527,7 @@ html[data-theme="light"] .price-spread {
     font-size: 0.9rem;
     cursor: pointer;
     transition: background 0.2s ease;
+    position: relative;
 }
 
 .sell-order-row:hover, .buy-order-row:hover {
@@ -546,21 +547,24 @@ html[data-theme="light"] .buy-order-row:hover {
     color: var(--positive-color);
 }
 
+/* Eliminăm fundalul colorat din order depth și folosim doar un border lateral subtil */
 .order-depth {
     position: absolute;
     top: 0;
     bottom: 0;
     z-index: 0;
     height: 100%;
+    background: none !important;
+    width: 3px !important;
 }
 
 .sell-depth {
-    background: rgba(239, 68, 68, 0.1);
+    border-right: 3px solid rgba(239, 68, 68, 0.3);
     right: 0;
 }
 
 .buy-depth {
-    background: rgba(16, 185, 129, 0.1);
+    border-left: 3px solid rgba(16, 185, 129, 0.3);
     left: 0;
 }
 
