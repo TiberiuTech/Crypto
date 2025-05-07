@@ -707,19 +707,91 @@ function toggleChartLoading(show) {
     }
 }
 
-// Actualizare periodică optimizată
+// Forțăm actualizări vizibile, chiar dacă datele vin din cache
+function forceVisualUpdate() {
+    const selectedPair = document.getElementById('tradingPair').value;
+    const symbol = selectedPair.split('/')[0];
+    if (!cryptoData[symbol]) return;
+    
+    // Generăm o mică fluctuație random pentru a simula mișcare de piață
+    const data = cryptoData[symbol];
+    const volatility = 0.001; // 0.1% fluctuație maximă
+    const priceChange = data.price * volatility * (Math.random() * 2 - 1);
+    const newPrice = data.price + priceChange;
+    
+    // Actualizăm prețul și calculăm noul procent de schimbare
+    data.price = newPrice;
+    data.priceChange24h = data.priceChange24h + (priceChange / data.price) * 100;
+    
+    // Actualizăm high/low dacă e cazul
+    if (newPrice > data.high24h) data.high24h = newPrice;
+    if (newPrice < data.low24h) data.low24h = newPrice;
+    
+    // Actualizăm UI-ul cu noile valori
+    document.getElementById('lastPrice').textContent = `$${data.price.toFixed(2)}`;
+    
+    const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
+    document.getElementById('priceChange').textContent = priceChangeText;
+    document.getElementById('priceChange').className = data.priceChange24h >= 0 ? 'positive' : 'negative';
+    
+    document.getElementById('highPrice').textContent = `$${data.high24h.toFixed(2)}`;
+    document.getElementById('lowPrice').textContent = `$${data.low24h.toFixed(2)}`;
+    
+    // Aplicăm și o mică animație de fade pentru a evidenția schimbarea
+    const lastPriceEl = document.getElementById('lastPrice');
+    lastPriceEl.classList.add('price-flash');
+    setTimeout(() => {
+        lastPriceEl.classList.remove('price-flash');
+    }, 300);
+    
+    // Actualizăm prețul în orderbook
+    document.getElementById('orderBookPrice').textContent = `$${data.price.toFixed(2)}`;
+    
+    // NU mai actualizăm prețul în input - lăsăm utilizatorul să introducă ce valoare dorește
+    
+    // Verificăm și ordinele limit care poate pot fi executate cu noul preț
+    checkLimitOrders();
+}
+
+// Adăugăm stilul pentru animația de fade
+(function addPriceFlashStyle() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes price-flash {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        .price-flash {
+            animation: price-flash 0.3s ease-out;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// Modificăm funcția de actualizare periodică
 function startPriceUpdates() {
-    const UPDATE_INTERVAL = 10000;
+    const UPDATE_INTERVAL = 2000; // 2 secunde pentru update rapid
     fetchCryptoData();
+    
+    // Oprim orice interval existent
+    if (priceUpdateInterval) {
+        clearInterval(priceUpdateInterval);
+    }
+    
     priceUpdateInterval = setInterval(() => {
         const selectedPair = document.getElementById('tradingPair').value;
         const symbol = selectedPair.split('/')[0];
         if (!document.hidden) {
+            // Încercăm să obținem date noi de la API
             fetchCryptoData();
+            
+            // Forțăm actualizarea vizuală, chiar dacă datele vin din cache
+            forceVisualUpdate();
+            
+            // Actualizăm și restul UI-ului
             updateChart(symbol);
             populateOrderBook(cryptoData[symbol]?.price);
-            // Eliminăm apelul către populateTradeHistory() pentru a nu genera automat
-            // istoricul de tranzacții la fiecare actualizare
         }
     }, UPDATE_INTERVAL);
 }
