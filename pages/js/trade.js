@@ -6,9 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCustomDropdown();
     initEmptyUI(); // Doar inițializare UI fără valori
     
-    // Creăm opțiunile de leverage
-    createLeverageOptions();
-    
     // Inițializăm API-ul și forțăm actualizarea imediată a datelor
     console.log("Inițializăm API și forțăm update-ul datelor");
     initCryptoAPI();
@@ -1307,23 +1304,84 @@ function processOrder() {
     const pair = document.getElementById('tradingPair').value;
     const orderType = document.querySelector('.order-type-btn.active')?.getAttribute('data-order-type') || 'limit';
     const side = document.querySelector('.action-tab-btn.active')?.getAttribute('data-action') || 'buy';
-    const price = parseFloat(document.getElementById('orderPrice').value);
-    const amount = parseFloat(document.getElementById('orderAmount').value);
-    
+    let price = parseFloat(document.getElementById('orderPrice').value);
+    let amount = parseFloat(document.getElementById('orderAmount').value);
+    let stopPrice = null;
+    let limitPrice = null;
+
     // Determinăm tipul de tranzacționare activ
     const tradeType = document.querySelector('.nav-tab.active')?.getAttribute('data-trade-type') || 'spot';
-    
-    // Validăm datele
-    if (isNaN(price) || price <= 0) {
-        alert('Introduceți un preț valid');
-        return;
+
+    // Pentru Market, folosim prețul pieței
+    if (orderType === 'market') {
+        // Încearcă să folosești prețul din cryptoData sau marketData
+        const symbol = pair.split('/')[0];
+        if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
+            price = window.cryptoData[symbol].price;
+        } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
+            price = window.marketData[pair].lastPrice;
+        }
     }
-    
-    if (isNaN(amount) || amount <= 0) {
-        alert('Introduceți o cantitate validă');
-        return;
+
+    // Pentru Stop-Limit, citește stopPrice și limitPrice
+    if (orderType === 'stop') {
+        stopPrice = parseFloat(document.getElementById('orderStopPrice')?.value);
+        limitPrice = parseFloat(document.getElementById('orderLimitPrice')?.value);
+        // Validare
+        if (isNaN(stopPrice) || stopPrice <= 0) {
+            alert('Introduceți un Stop Price valid');
+            return;
+        }
+        if (isNaN(limitPrice) || limitPrice <= 0) {
+            alert('Introduceți un Limit Price valid');
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert('Introduceți o cantitate validă');
+            return;
+        }
+        // Simulăm: când prețul pieței ajunge la stopPrice, plasăm un limit la limitPrice
+        // Pentru demo, executăm direct limitul dacă stopPrice <= prețul pieței (buy) sau >= (sell)
+        const symbol = pair.split('/')[0];
+        let marketPrice = '';
+        if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
+            marketPrice = window.cryptoData[symbol].price.toFixed(2);
+        } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
+            marketPrice = window.marketData[pair].lastPrice.toFixed(2);
+        } else {
+            // Fallback: citește din UI
+            const lastPriceEl = document.getElementById('lastPrice');
+            if (lastPriceEl && lastPriceEl.textContent) {
+                marketPrice = lastPriceEl.textContent.replace(/[^0-9.]/g, '');
+            }
+        }
+        if (!marketPrice || marketPrice === '0' || marketPrice === '0.00') {
+            marketPrice = '1.00'; // fallback de siguranță
+        }
+        let stopTriggered = false;
+        if (side === 'buy' && marketPrice >= stopPrice) stopTriggered = true;
+        if (side === 'sell' && marketPrice <= stopPrice) stopTriggered = true;
+        if (stopTriggered) {
+            price = limitPrice;
+            // Continuă ca la un ordin limit
+        } else {
+            alert('Ordinul Stop-Limit nu a fost activat (prețul pieței nu a atins stop-ul).');
+            return;
+        }
     }
-    
+
+    // Validare pentru Limit și Market
+    if (orderType !== 'stop') {
+        if (orderType !== 'market' && (isNaN(price) || price <= 0)) {
+            alert('Introduceți un preț valid');
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert('Introduceți o cantitate validă');
+            return;
+        }
+    }
+
     // Verificăm balanța disponibilă în funcție de tipul de tranzacționare
     let balance = 15432.21; // Valoarea pentru spot
     if (tradeType === 'margin') {
@@ -1331,14 +1389,22 @@ function processOrder() {
     } else if (tradeType === 'futures') {
         balance = 77161.05; // 5x leverage
     }
-    
+    // Suprascrie cu balanța reală dacă există
+    const walletData = localStorage.getItem('wallet');
+    if (walletData) {
+        const wallet = JSON.parse(walletData);
+        balance = wallet.totalBalance || balance;
+        if (tradeType === 'margin') balance *= 3;
+        if (tradeType === 'futures') balance *= 5;
+    }
+
     const total = price * amount;
-    
+
     if (side === 'buy' && total > balance) {
         alert(`Fonduri insuficiente pentru această tranzacție (${tradeType})`);
         return;
     }
-    
+
     // Generăm texte specifice pentru fiecare tip de tranzacționare
     let actionText, typeText;
     if (tradeType === 'futures') {
@@ -1351,18 +1417,24 @@ function processOrder() {
         actionText = side === 'buy' ? 'Bought' : 'Sold';
         typeText = orderType.charAt(0).toUpperCase() + orderType.slice(1);
     }
-    
+
     // Procesăm ordinul instant (în versiunea demo)
     addOrderToHistory(actionText, typeText, pair, price, amount);
-    
+
+    // Notificare specială pentru Stop-Limit
+    let extraMsg = '';
+    if (orderType === 'stop') {
+        extraMsg = ` (Stop: $${stopPrice}, Limit: $${limitPrice})`;
+    }
+
     // Actualizăm datele și UI-ul
     const leverageText = tradeType !== 'spot' ? 
         ` cu ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
-    
+
     const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Cumpărat') : 
         (tradeType === 'futures' ? 'Short' : 'Vândut')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
-        pentru $${total.toFixed(2)}${leverageText}`;
-    
+        pentru $${total.toFixed(2)}${leverageText}${extraMsg}`;
+
     // Afișăm un mesaj de succes
     const notification = document.createElement('div');
     notification.className = 'trade-notification';
@@ -1378,15 +1450,15 @@ function processOrder() {
         </div>
         <button class="notification-close"><i class="fas fa-times"></i></button>
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Animăm notificarea
     setTimeout(() => {
         notification.style.opacity = '1';
         notification.style.transform = 'translateX(0)';
     }, 100);
-    
+
     // Închidem notificarea după 5 secunde
     setTimeout(() => {
         notification.style.opacity = '0';
@@ -1395,7 +1467,7 @@ function processOrder() {
             notification.remove();
         }, 300);
     }, 5000);
-    
+
     // Event handler pentru butonul de închidere
     notification.querySelector('.notification-close').addEventListener('click', () => {
         notification.style.opacity = '0';
@@ -1404,10 +1476,12 @@ function processOrder() {
             notification.remove();
         }, 300);
     });
-    
+
     // Resetăm formularul
     document.getElementById('orderAmount').value = '';
     document.getElementById('orderTotal').value = '';
+    if (document.getElementById('orderStopPrice')) document.getElementById('orderStopPrice').value = '';
+    if (document.getElementById('orderLimitPrice')) document.getElementById('orderLimitPrice').value = '';
 }
 
 // Configurăm event listeners
@@ -1439,12 +1513,24 @@ function setupEventListeners() {
         // Actualizăm afișarea balanței disponibile în funcție de tipul de tranzacționare
         const balanceValue = document.getElementById('availableBalance');
         if (balanceValue) {
+            const walletData = localStorage.getItem('wallet');
+            let balance = 0;
+            if (walletData) {
+                const wallet = JSON.parse(walletData);
+                balance = wallet.totalBalance || 0;
+            }
             if (tradeType === 'spot') {
-                balanceValue.textContent = '$15,432.21';
-            } else if (tradeType === 'margin') {
-                balanceValue.textContent = '$46,296.63'; // 3x leverage demo
-            } else if (tradeType === 'futures') {
-                balanceValue.textContent = '$77,161.05'; // 5x leverage demo
+                balanceValue.textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else if (tradeType === 'margin' || tradeType === 'futures') {
+                // Citește leverage-ul din slider dacă există
+                let leverage = 1;
+                const leverageSlider = document.getElementById('leverageSlider');
+                if (leverageSlider) {
+                    leverage = parseInt(leverageSlider.value) || 1;
+                } else {
+                    leverage = tradeType === 'margin' ? 3 : 5;
+                }
+                balanceValue.textContent = '$' + (balance * leverage).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
         }
         
@@ -1556,15 +1642,24 @@ function setupEventListeners() {
             orderTypeButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
-            // În funcție de tipul ordinului, dezactivăm/activăm câmpul de preț
             const orderType = this.getAttribute('data-order-type');
             const priceInput = document.getElementById('orderPrice');
+            let marketPrice = getCurrentMarketPrice();
             
             if (orderType === 'market') {
                 priceInput.disabled = true;
-                priceInput.value = marketData[document.getElementById('tradingPair').value]?.lastPrice.toFixed(2) || '';
-            } else {
+                priceInput.classList.add('locked');
+                priceInput.value = marketPrice;
+            } else if (orderType === 'stop') {
                 priceInput.disabled = false;
+                priceInput.classList.remove('locked');
+                priceInput.value = marketPrice;
+            } else if (orderType === 'limit') {
+                priceInput.disabled = false;
+                priceInput.classList.remove('locked');
+                if (!priceInput.value || priceInput.value === '0' || parseFloat(priceInput.value) === 0) {
+                    priceInput.value = marketPrice;
+                }
             }
         });
     });
@@ -2235,13 +2330,16 @@ function createLeverageOptions() {
 // Funcție pentru actualizarea balanței disponibile în funcție de leverage
 function updateLeverageBalance(leverageValue) {
     const balanceValue = document.getElementById('availableBalance');
-    const baseBalance = 15432.21; // Balanța de bază pentru spot
-    
+    let baseBalance = 0;
+    const walletData = localStorage.getItem('wallet');
+    if (walletData) {
+        const wallet = JSON.parse(walletData);
+        baseBalance = wallet.totalBalance || 0;
+    }
     if (balanceValue) {
         const tradeType = document.querySelector('.nav-tab.active')?.getAttribute('data-trade-type') || 'spot';
-        
         if (tradeType === 'spot') {
-            balanceValue.textContent = '$15,432.21';
+            balanceValue.textContent = '$' + baseBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         } else {
             // Calculăm balanța în funcție de leverage
             const newBalance = baseBalance * leverageValue;
@@ -2261,3 +2359,193 @@ function updateTradeBalance() {
         balanceElement.textContent = '$' + (wallet.totalBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 }
+
+// CSS pentru lacăt (poate fi adăugat dinamic dacă nu există deja)
+(function addLockedInputStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        input.locked {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 1a3 3 0 0 0-3 3v3H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-1V4a3 3 0 0 0-3-3zm-2 3a2 2 0 1 1 4 0v3H6V4zm-2 5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 18px 18px;
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+function getCurrentMarketPrice() {
+    const pair = document.getElementById('tradingPair').value;
+    const symbol = pair.split('/')[0];
+    let marketPrice = '';
+    if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
+        marketPrice = window.cryptoData[symbol].price.toFixed(2);
+    } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
+        marketPrice = window.marketData[pair].lastPrice.toFixed(2);
+    } else {
+        const lastPriceEl = document.getElementById('lastPrice');
+        if (lastPriceEl && lastPriceEl.textContent) {
+            marketPrice = lastPriceEl.textContent.replace(/[^0-9.]/g, '');
+        }
+    }
+    if (!marketPrice || marketPrice === '0' || marketPrice === '0.00') {
+        marketPrice = '1.00';
+    }
+    return marketPrice;
+}
+
+// === GESTIONARE ORDINE LIMIT ===
+// Array pentru ordinele deschise și istoricul de ordine
+let openOrders = JSON.parse(localStorage.getItem('openOrders') || '[]');
+let orderHistory = JSON.parse(localStorage.getItem('orderHistory') || '[]');
+
+function saveOrders() {
+    localStorage.setItem('openOrders', JSON.stringify(openOrders));
+    localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+}
+
+function renderOpenOrders() {
+    const tbody = document.getElementById('openOrders');
+    const noOrders = document.getElementById('noOpenOrders');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (openOrders.length === 0) {
+        if (noOrders) noOrders.style.display = 'flex';
+        return;
+    }
+    if (noOrders) noOrders.style.display = 'none';
+    openOrders.forEach((ord, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${ord.dateTime}</td>
+            <td>${ord.pair}</td>
+            <td>${ord.type}</td>
+            <td class="${ord.side.toLowerCase()}">${ord.side}</td>
+            <td>$${ord.price.toFixed(2)}</td>
+            <td>${ord.amount.toFixed(5)}</td>
+            <td>0</td>
+            <td>$${(ord.price * ord.amount).toFixed(2)}</td>
+            <td>Open</td>
+            <td><button class="cancel-btn" data-idx="${idx}">Cancel</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    // Cancel order
+    tbody.querySelectorAll('.cancel-btn').forEach(btn => {
+        btn.onclick = function() {
+            const idx = parseInt(this.getAttribute('data-idx'));
+            openOrders.splice(idx, 1);
+            saveOrders();
+            renderOpenOrders();
+        };
+    });
+}
+
+function renderOrderHistory() {
+    const tbody = document.getElementById('orderHistory');
+    const noOrders = document.getElementById('noOrderHistory');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (orderHistory.length === 0) {
+        if (noOrders) noOrders.style.display = 'flex';
+        return;
+    }
+    if (noOrders) noOrders.style.display = 'none';
+    orderHistory.forEach(ord => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${ord.dateTime}</td>
+            <td>${ord.pair}</td>
+            <td>${ord.type}</td>
+            <td class="${ord.side.toLowerCase()}">${ord.side}</td>
+            <td>$${ord.price.toFixed(2)}</td>
+            <td>${ord.amount.toFixed(5)}</td>
+            <td>$${(ord.price * ord.amount).toFixed(2)}</td>
+            <td>Filled</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Modific processOrder pentru Limit
+const originalProcessOrder = processOrder;
+processOrder = function() {
+    const pair = document.getElementById('tradingPair').value;
+    const orderType = document.querySelector('.order-type-btn.active')?.getAttribute('data-order-type') || 'limit';
+    const side = document.querySelector('.action-tab-btn.active')?.getAttribute('data-action') || 'buy';
+    let price = parseFloat(document.getElementById('orderPrice').value);
+    let amount = parseFloat(document.getElementById('orderAmount').value);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateTimeStr = `${dateStr} ${timeStr}`;
+    if (orderType === 'limit') {
+        // Validare
+        if (isNaN(price) || price <= 0 || isNaN(amount) || amount <= 0) {
+            alert('Introduceți un preț și o cantitate validă');
+            return;
+        }
+        // Adaug ordinul în openOrders
+        openOrders.unshift({
+            dateTime: dateTimeStr,
+            pair,
+            type: 'Limit',
+            side: side === 'buy' ? 'Buy' : 'Sell',
+            price,
+            amount
+        });
+        saveOrders();
+        renderOpenOrders();
+        // Notificare
+        const notification = document.createElement('div');
+        notification.className = 'trade-notification';
+        notification.innerHTML = `<div class="notification-icon buy"><i class="fas fa-arrow-down"></i></div><div class="notification-content"><div class="notification-title">Ordin Limit plasat</div><div class="notification-message">Ordinul tău a fost adăugat la Open Orders și va fi executat automat când prețul pieței ajunge la limita ta.</div></div><button class="notification-close"><i class="fas fa-times"></i></button>`;
+        document.body.appendChild(notification);
+        setTimeout(() => { notification.style.opacity = '1'; notification.style.transform = 'translateX(0)'; }, 100);
+        setTimeout(() => { notification.style.opacity = '0'; notification.style.transform = 'translateX(100%)'; setTimeout(() => { notification.remove(); }, 300); }, 5000);
+        notification.querySelector('.notification-close').addEventListener('click', () => { notification.style.opacity = '0'; notification.style.transform = 'translateX(100%)'; setTimeout(() => { notification.remove(); }, 300); });
+        // Reset formular
+        document.getElementById('orderAmount').value = '';
+        document.getElementById('orderTotal').value = '';
+        return;
+    }
+    // Pentru celelalte tipuri, comportament original
+    originalProcessOrder();
+};
+
+// La fiecare update de preț, execut ordinele Limit dacă e cazul
+function checkLimitOrders() {
+    const pair = document.getElementById('tradingPair').value;
+    const symbol = pair.split('/')[0];
+    let marketPrice = 0;
+    if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
+        marketPrice = window.cryptoData[symbol].price;
+    } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
+        marketPrice = window.marketData[pair].lastPrice;
+    }
+    // Parcurg ordinele deschise
+    for (let i = openOrders.length - 1; i >= 0; i--) {
+        const ord = openOrders[i];
+        if (ord.pair !== pair || ord.type !== 'Limit') continue;
+        if ((ord.side === 'Buy' && marketPrice <= ord.price) || (ord.side === 'Sell' && marketPrice >= ord.price)) {
+            // Execut ordinul
+            orderHistory.unshift({ ...ord });
+            openOrders.splice(i, 1);
+        }
+    }
+    saveOrders();
+    renderOpenOrders();
+    renderOrderHistory();
+}
+
+// Apelez checkLimitOrders la fiecare update de preț
+const originalUpdateMarketValues = updateMarketValues;
+updateMarketValues = function(pair) {
+    originalUpdateMarketValues(pair);
+    checkLimitOrders();
+};
+// Apelez și la load
+document.addEventListener('DOMContentLoaded', () => {
+    renderOpenOrders();
+    renderOrderHistory();
+});

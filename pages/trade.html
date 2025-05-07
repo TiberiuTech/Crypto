@@ -175,12 +175,6 @@
             
             <!-- Trading Panel -->
             <div class="trading-panel">
-                <div class="trading-tabs">
-                    <button class="tab-btn nav-tab active" data-tab="spot" data-trade-type="spot">Spot</button>
-                    <button class="tab-btn nav-tab" data-tab="margin" data-trade-type="margin">Margin</button>
-                    <button class="tab-btn nav-tab" data-tab="futures" data-trade-type="futures">Futures</button>
-                </div>
-                
                 <div class="trading-content">
                     <div class="trading-account-info">
                         <div class="account-balance balance-section">
@@ -269,7 +263,6 @@
         <div class="orders-section">
             <div class="orders-tabs">
                 <button class="orders-tab-btn active" data-orders-tab="open">Open Orders</button>
-                <button class="orders-tab-btn" data-orders-tab="history">Order History</button>
             </div>
             <div class="orders-content">
                 <div class="orders-table-container active" id="openOrdersTable">
@@ -295,29 +288,6 @@
                     <div class="no-orders-message" id="noOpenOrders">
                         <i class="fas fa-inbox"></i>
                         <p>No open orders</p>
-                    </div>
-                </div>
-                <div class="orders-table-container" id="orderHistoryTable">
-                    <table class="orders-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Pair</th>
-                                <th>Type</th>
-                                <th>Side</th>
-                                <th>Price</th>
-                                <th>Amount</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderHistory">
-                            <!-- Order history will be populated dynamically -->
-                        </tbody>
-                    </table>
-                    <div class="no-orders-message" id="noOrderHistory">
-                        <i class="fas fa-inbox"></i>
-                        <p>No order history</p>
                     </div>
                 </div>
             </div>
