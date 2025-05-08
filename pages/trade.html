@@ -69,6 +69,21 @@
             <h2>Trade Crypto</h2>
         </div>
         
+        <!-- Adăugat container pentru assets din wallet -->
+        <div class="wallet-assets-container">
+            <div class="wallet-assets-header">
+                <h3>Your Assets</h3>
+                <span class="wallet-total-value" id="walletTotalValue">$0.00</span>
+            </div>
+            <div class="wallet-assets-list" id="walletAssetsList">
+                <!-- Assets vor fi populate dinamic din JS -->
+                <div class="wallet-asset-placeholder">
+                    <i class="fas fa-sync-alt fa-spin"></i>
+                    <span>Loading your assets...</span>
+                </div>
+            </div>
+        </div>
+        
         <!-- Top Bar with Coin Selector and Market Info -->
         <div class="market-top-bar">
             <div class="coin-selector">
@@ -159,14 +174,6 @@
                         <button class="timeframe-btn" data-timeframe="1d">1D</button>
                         <button class="timeframe-btn" data-timeframe="1w">1W</button>
                         <button class="timeframe-btn" data-timeframe="1m">1M</button>
-                    </div>
-                    <div class="chart-controls">
-                        <button class="chart-control-btn" id="resetZoomBtn" title="Reset Zoom">
-                            <i class="fas fa-undo"></i>
-                        </button>
-                        <button class="chart-control-btn" id="fullscreenBtn" title="Fullscreen">
-                            <i class="fas fa-expand"></i>
-                        </button>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -296,6 +303,7 @@
     </main>
 
     <script src="../script.js" defer></script>
+    <script src="js/wallet.js"></script>
     <script src="js/trade.js"></script>
 </body>
 </html> 

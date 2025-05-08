@@ -932,4 +932,182 @@ html[data-theme="light"] .dropdown-options {
     .dropdown-options {
         max-height: 250px;
     }
+}
+
+/* Stilizare pentru Wallet Assets Container */
+.wallet-assets-container {
+    background: rgba(25, 30, 45, 0.5);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+
+html[data-theme="light"] .wallet-assets-container {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.wallet-assets-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.wallet-assets-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-color);
+}
+
+.wallet-total-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.wallet-assets-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.wallet-asset-item {
+    background: rgba(25, 30, 50, 0.7);
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    min-width: 180px;
+    max-width: 220px;
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.wallet-asset-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent-color);
+}
+
+html[data-theme="light"] .wallet-asset-item {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.wallet-asset-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.wallet-asset-icon.btc-icon {
+    background: rgba(247, 147, 26, 0.2);
+    color: #f7931a;
+}
+
+.wallet-asset-icon.eth-icon {
+    background: rgba(113, 128, 150, 0.2);
+    color: #718096;
+}
+
+.wallet-asset-icon.bnb-icon {
+    background: rgba(243, 186, 47, 0.2);
+    color: #f3ba2f;
+}
+
+.wallet-asset-icon.xrp-icon {
+    background: rgba(35, 53, 73, 0.2);
+    color: #233549;
+}
+
+.wallet-asset-icon.ada-icon {
+    background: rgba(0, 51, 173, 0.2);
+    color: #0033ad;
+}
+
+.wallet-asset-icon.sol-icon {
+    background: rgba(0, 99, 248, 0.2);
+    color: #0063f8;
+}
+
+.wallet-asset-icon.dot-icon {
+    background: rgba(230, 0, 122, 0.2);
+    color: #e6007a;
+}
+
+.wallet-asset-icon.doge-icon {
+    background: rgba(201, 157, 102, 0.2);
+    color: #c99d66;
+}
+
+.wallet-asset-details {
+    flex: 1;
+}
+
+.wallet-asset-name {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.wallet-asset-amount {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    display: block;
+}
+
+.wallet-asset-value {
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    display: block;
+    margin-top: 2px;
+}
+
+.wallet-asset-placeholder {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    color: var(--secondary-text-color);
+}
+
+.wallet-asset-placeholder i {
+    margin-right: 10px;
+}
+
+/* Media queries pentru responsive */
+@media (max-width: 768px) {
+    .wallet-assets-list {
+        justify-content: center;
+    }
+    
+    .wallet-asset-item {
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wallet-asset-item {
+        min-width: 140px;
+        padding: 8px 12px;
+    }
+    
+    .wallet-asset-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+        margin-right: 8px;
+    }
 } 

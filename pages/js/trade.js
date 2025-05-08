@@ -1,6 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM încărcat, inițializăm componentele");
     
+    // Corectăm valorile XRP înainte de orice altă operație
+    if (typeof fixXRPValue === 'function') {
+        console.log("Apelăm fixXRPValue() pentru a asigura consistența valorilor");
+        fixXRPValue();
+    } else {
+        console.warn("Funcția fixXRPValue nu a fost găsită, este posibil ca valorile XRP să nu fie afișate corect");
+        // Definim o funcție temporară pentru a evita erori
+        window.fixXRPValue = function() {
+            console.log("fixXRPValue dummy function");
+        };
+    }
+    
     // Inițializăm interfața fără a actualiza valorile încă
     setupChart();
     initCustomDropdown();
@@ -17,6 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
     startPriceUpdates();
     
     updateTradeBalance();
+    
+    // Actualizăm afișajul wallet assets
+    setTimeout(updateWalletAssetsDisplay, 500);
+    
+    // Verificăm existența și creăm tabelul de Order History dacă nu există
+    setupOrderHistory();
 });
 
 // Date de market demo cu valori neutre
@@ -496,45 +514,6 @@ function initChartData() {
     
     // Salvăm referința la chart pentru actualizări viitoare
     window.priceChart = priceChart;
-    
-    // Inițializăm butonul de reset zoom
-    const resetZoomBtn = document.getElementById('resetZoomBtn');
-    if (resetZoomBtn) {
-        resetZoomBtn.addEventListener('click', function() {
-            priceChart.resetZoom();
-        });
-    }
-    
-    // Inițializăm butonul de fullscreen
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', function() {
-            const chartSection = document.querySelector('.chart-section');
-            if (!document.fullscreenElement) {
-                if (chartSection.requestFullscreen) {
-                    chartSection.requestFullscreen();
-                } else if (chartSection.mozRequestFullScreen) {
-                    chartSection.mozRequestFullScreen();
-                } else if (chartSection.webkitRequestFullscreen) {
-                    chartSection.webkitRequestFullscreen();
-                } else if (chartSection.msRequestFullscreen) {
-                    chartSection.msRequestFullscreen();
-                }
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        });
-    }
 }
 
 // Funcție pentru schimbarea timeframe-ului
@@ -1250,16 +1229,20 @@ function populateOrderBook(basePrice) {
     document.getElementById('spread').textContent = `$${spread.toFixed(2)} (${spreadPercent.toFixed(2)}%)`;
 }
 
-// Populăm istoricul tranzacțiilor cu date demo
+// Populăm istoricul tranzacțiilor
 function populateTradeHistory() {
     const tradeHistory = document.getElementById('tradeHistory');
     if (!tradeHistory) return;
     
-    // Curățăm conținutul existent
-    tradeHistory.innerHTML = '';
+    // Verificăm dacă există deja tranzacții în istoric
+    if (tradeHistory.querySelector('.trade-row')) {
+        // Avem deja tranzacții, nu ștergem istoricul
+        return;
+    }
     
-    // Nu mai generăm date demo, lăsăm istoricul gol la început
-    // Tranzacțiile vor fi adăugate doar când utilizatorul face Buy/Sell
+    // Doar dacă nu există nicio tranzacție, afișăm mesajul
+    // Curățăm conținutul existent (în caz că există alt conținut decât tranzacții)
+    tradeHistory.innerHTML = '';
     
     // Adăugăm un mesaj pentru utilizator
     const emptyMessage = document.createElement('div');
@@ -1290,13 +1273,20 @@ function populateTradeHistory() {
             opacity: 0.7;
         }
     `;
-    document.head.appendChild(style);
+    
+    // Verificăm dacă stilul a fost deja adăugat
+    if (!document.getElementById('empty-trades-style')) {
+        style.id = 'empty-trades-style';
+        document.head.appendChild(style);
+    }
 }
 
 // Adăugăm o tranzacție nouă în istoricul de tranzacții
 function addTradeToHistory(price, amount, isBuy) {
     const tradeHistory = document.getElementById('tradeHistory');
     if (!tradeHistory) return;
+    
+    console.log(`Adăugare tranzacție în istoric: ${isBuy ? 'Buy' : 'Sell'} ${amount} la prețul $${price}`);
     
     // Verificăm dacă există mesajul de tranzacții goale și îl ștergem
     const emptyMessage = tradeHistory.querySelector('.empty-trades-message');
@@ -1318,6 +1308,22 @@ function addTradeToHistory(price, amount, isBuy) {
         <span class="amount">${amount.toFixed(5)} ${symbol}</span>
         <span class="time">${timeStr}</span>
     `;
+    
+    // Animație pentru noua tranzacție
+    tradeRow.style.animation = 'highlight-new-trade 1.5s ease-out';
+    
+    // Adăugăm stilul pentru animație dacă nu există
+    if (!document.getElementById('highlight-trade-style')) {
+        const style = document.createElement('style');
+        style.id = 'highlight-trade-style';
+        style.textContent = `
+            @keyframes highlight-new-trade {
+                0% { background-color: var(--positive-color-transparent); }
+                100% { background-color: transparent; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
     // Adăugăm tranzacția nouă la începutul listei
     if (tradeHistory.firstChild) {
@@ -1412,34 +1418,6 @@ function processOrder() {
             alert('Introduceți o cantitate validă');
             return;
         }
-        // Simulăm: când prețul pieței ajunge la stopPrice, plasăm un limit la limitPrice
-        // Pentru demo, executăm direct limitul dacă stopPrice <= prețul pieței (buy) sau >= (sell)
-        const symbol = pair.split('/')[0];
-        let marketPrice = '';
-        if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
-            marketPrice = window.cryptoData[symbol].price.toFixed(2);
-        } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
-            marketPrice = window.marketData[pair].lastPrice.toFixed(2);
-        } else {
-            // Fallback: citește din UI
-            const lastPriceEl = document.getElementById('lastPrice');
-            if (lastPriceEl && lastPriceEl.textContent) {
-                marketPrice = lastPriceEl.textContent.replace(/[^0-9.]/g, '');
-            }
-        }
-        if (!marketPrice || marketPrice === '0' || marketPrice === '0.00') {
-            marketPrice = '1.00'; // fallback de siguranță
-        }
-        let stopTriggered = false;
-        if (side === 'buy' && marketPrice >= stopPrice) stopTriggered = true;
-        if (side === 'sell' && marketPrice <= stopPrice) stopTriggered = true;
-        if (stopTriggered) {
-            price = limitPrice;
-            // Continuă ca la un ordin limit
-        } else {
-            alert('Ordinul Stop-Limit nu a fost activat (prețul pieței nu a atins stop-ul).');
-            return;
-        }
     }
 
     // Validare pentru Limit și Market
@@ -1461,10 +1439,12 @@ function processOrder() {
     } else if (tradeType === 'futures') {
         balance = 77161.05; // 5x leverage
     }
+    
     // Suprascrie cu balanța reală dacă există
     const walletData = localStorage.getItem('wallet');
+    let wallet = null;
     if (walletData) {
-        const wallet = JSON.parse(walletData);
+        wallet = JSON.parse(walletData);
         balance = wallet.totalBalance || balance;
         if (tradeType === 'margin') balance *= 3;
         if (tradeType === 'futures') balance *= 5;
@@ -1472,7 +1452,26 @@ function processOrder() {
 
     const total = price * amount;
 
-    if (side === 'buy' && total > balance) {
+    // Pentru tranzacții de vânzare, verificăm dacă utilizatorul are suficiente monede
+    const isBuy = side.toLowerCase().includes('buy') || side.toLowerCase().includes('long') || side.toLowerCase().includes('bought');
+    if (!isBuy && tradeType === 'spot') {
+        const symbol = pair.split('/')[0];
+        const coinId = getCoinIdFromSymbol(symbol);
+        
+        // Verificăm dacă utilizatorul are moneda și cantitatea suficientă
+        if (wallet && wallet.coins && wallet.coins[coinId]) {
+            const availableAmount = wallet.coins[coinId].amount || 0;
+            if (amount > availableAmount) {
+                alert(`Nu aveți suficient ${symbol} pentru această tranzacție. Disponibil: ${availableAmount.toFixed(8)} ${symbol}`);
+                return;
+            }
+        } else {
+            alert(`Nu aveți ${symbol} în portofel pentru a vinde.`);
+            return;
+        }
+    }
+
+    if (isBuy && total > balance) {
         alert(`Fonduri insuficiente pentru această tranzacție (${tradeType})`);
         return;
     }
@@ -1490,38 +1489,109 @@ function processOrder() {
         typeText = orderType.charAt(0).toUpperCase() + orderType.slice(1);
     }
 
-    // Procesăm ordinul instant (în versiunea demo)
-    addOrderToHistory(actionText, typeText, pair, price, amount);
+    // Obținem timestamp-ul curent pentru ordin
+    const now = new Date();
+    const dateStr = now.toLocaleDateString();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateTimeStr = `${dateStr} ${timeStr}`;
 
-    // Notificare specială pentru Stop-Limit
-    let extraMsg = '';
-    if (orderType === 'stop') {
-        extraMsg = ` (Stop: $${stopPrice}, Limit: $${limitPrice})`;
+    // Pentru ordine Market, le executăm imediat
+    if (orderType === 'market') {
+        // Procesăm ordinul instant (în versiunea demo)
+        // Adăugăm explicit ordinul în istoricul de ordine
+        addOrderToHistory(actionText, typeText, pair, price, amount);
+        
+        // Adăugăm explicit tranzacția în istoricul de tranzacții
+        addTradeToHistory(price, amount, isBuy);
+        
+        // Actualizăm portofelul dacă este trading spot
+        if (tradeType === 'spot') {
+            if (isBuy) {
+                // Pentru cumpărare, adăugăm moneda în portofel
+                updateWalletAfterPurchase(pair, amount, price);
+            } else {
+                // Pentru vânzare, scădem moneda din portofel
+                updateWalletAfterSell(pair, amount, price);
+            }
+        }
+    } else {
+        // Pentru ordine Limit și Stop-Limit, le adăugăm în openOrders
+        // și vor fi executate când prețul atinge valoarea țintă
+        
+        const newOrder = {
+            dateTime: dateTimeStr,
+            pair: pair,
+            type: orderType === 'stop' ? 'Stop-Limit' : 'Limit',
+            side: actionText,
+            price: orderType === 'stop' ? limitPrice : price,
+            stopPrice: orderType === 'stop' ? stopPrice : null,
+            amount: amount,
+            filled: 0,
+            status: 'Open',
+            tradeType: tradeType,
+            isBuy: isBuy
+        };
+        
+        // Adăugăm ordinul în lista de ordine deschise
+        openOrders.unshift(newOrder);
+        saveOrders();
+        renderOpenOrders();
+        
+        // Notificare specială
+        let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
+        let priceStr = orderType === 'stop' ? 
+            `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
+            `$${price.toFixed(2)}`;
+        
+        // Mesaj pentru notificare
+        let notificationTitle = `Ordin ${typeStr} plasat`;
+        let notificationMessage = `Ordinul tău ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} la ${priceStr} a fost adăugat la Open Orders și va fi executat automat când prețul pieței atinge limita setată.`;
     }
-
-    // Actualizăm datele și UI-ul
-    const leverageText = tradeType !== 'spot' ? 
-        ` cu ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
-
-    const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Cumpărat') : 
-        (tradeType === 'futures' ? 'Short' : 'Vândut')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
-        pentru $${total.toFixed(2)}${leverageText}${extraMsg}`;
 
     // Afișăm un mesaj de succes
     const notification = document.createElement('div');
     notification.className = 'trade-notification';
-    notification.innerHTML = `
-        <div class="notification-icon ${side === 'buy' ? 'buy' : 'sell'}">
-            <i class="fas fa-${side === 'buy' ? 'arrow-down' : 'arrow-up'}"></i>
-        </div>
-        <div class="notification-content">
-            <div class="notification-title">${side === 'buy' ? 
-                (tradeType === 'futures' ? 'Long' : 'Cumpărare') : 
-                (tradeType === 'futures' ? 'Short' : 'Vânzare')} reușită (${tradeType.charAt(0).toUpperCase() + tradeType.slice(1)})</div>
-            <div class="notification-message">${successMsg}</div>
-        </div>
-        <button class="notification-close"><i class="fas fa-times"></i></button>
-    `;
+    
+    // Conținutul notificării diferă în funcție de tipul de ordin
+    if (orderType === 'market') {
+        // Notificare pentru ordinele executate imediat (Market)
+        const leverageText = tradeType !== 'spot' ? 
+            ` cu ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
+    
+        const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Cumpărat') : 
+            (tradeType === 'futures' ? 'Short' : 'Vândut')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
+            pentru $${total.toFixed(2)}${leverageText}`;
+            
+        notification.innerHTML = `
+            <div class="notification-icon ${side === 'buy' ? 'buy' : 'sell'}">
+                <i class="fas fa-${side === 'buy' ? 'arrow-down' : 'arrow-up'}"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${side === 'buy' ? 
+                    (tradeType === 'futures' ? 'Long' : 'Cumpărare') : 
+                    (tradeType === 'futures' ? 'Short' : 'Vânzare')} reușită (${tradeType.charAt(0).toUpperCase() + tradeType.slice(1)})</div>
+                <div class="notification-message">${successMsg}</div>
+            </div>
+            <button class="notification-close"><i class="fas fa-times"></i></button>
+        `;
+    } else {
+        // Notificare pentru ordinele plasate dar neexecutate încă (Limit, Stop-Limit)
+        let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
+        let priceStr = orderType === 'stop' ? 
+            `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
+            `$${price.toFixed(2)}`;
+        
+        notification.innerHTML = `
+            <div class="notification-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">Ordin ${typeStr} plasat</div>
+                <div class="notification-message">Ordinul tău ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} la ${priceStr} a fost adăugat la Open Orders și va fi executat automat când prețul pieței atinge limita setată.</div>
+            </div>
+            <button class="notification-close"><i class="fas fa-times"></i></button>
+        `;
+    }
 
     document.body.appendChild(notification);
 
@@ -2428,7 +2498,21 @@ function updateTradeBalance() {
     const walletData = localStorage.getItem('wallet');
     if (walletData && balanceElement) {
         const wallet = JSON.parse(walletData);
-        balanceElement.textContent = '$' + (wallet.totalBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const balance = wallet.totalBalance || 0;
+        balanceElement.textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+        // Actualizăm și valoarea butonului 100% pentru a reflecta noua balanță
+        const sliderButtons = document.querySelectorAll('.slider-btn');
+        sliderButtons.forEach(button => {
+            if (button.getAttribute('data-percent') === '100') {
+                // Recalculăm valoarea maximă pe care o poate cumpăra utilizatorul
+                const price = parseFloat(document.getElementById('orderPrice').value) || 0;
+                if (price > 0) {
+                    const maxAmount = balance / price;
+                    button.setAttribute('data-max-amount', maxAmount.toFixed(5));
+                }
+            }
+        });
     }
 }
 
@@ -2587,24 +2671,162 @@ processOrder = function() {
 
 // La fiecare update de preț, execut ordinele Limit dacă e cazul
 function checkLimitOrders() {
-    const pair = document.getElementById('tradingPair').value;
-    const symbol = pair.split('/')[0];
-    let marketPrice = 0;
-    if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
-        marketPrice = window.cryptoData[symbol].price;
-    } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
-        marketPrice = window.marketData[pair].lastPrice;
-    }
-    // Parcurg ordinele deschise
+    // Dacă nu există ordine deschise, nu facem nimic
+    if (!openOrders || openOrders.length === 0) return;
+    
+    console.log("Verificare ordine deschise...");
+    
+    // Pentru fiecare pereche de trading, obținem prețul curent
+    const pairPrices = {};
+    
+    // Parcurgem ordinele deschise
     for (let i = openOrders.length - 1; i >= 0; i--) {
         const ord = openOrders[i];
-        if (ord.pair !== pair || ord.type !== 'Limit') continue;
-        if ((ord.side === 'Buy' && marketPrice <= ord.price) || (ord.side === 'Sell' && marketPrice >= ord.price)) {
-            // Execut ordinul
-            orderHistory.unshift({ ...ord });
+        const pair = ord.pair;
+        const symbol = pair.split('/')[0];
+        
+        // Obținem prețul curent al perechii (dacă nu l-am obținut deja)
+        if (!pairPrices[pair]) {
+            let currentPrice = 0;
+            if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
+                currentPrice = window.cryptoData[symbol].price;
+            } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
+                currentPrice = window.marketData[pair].lastPrice;
+            } else {
+                // Fallback: citim din UI
+                const lastPriceEl = document.getElementById('lastPrice');
+                if (lastPriceEl && lastPriceEl.textContent) {
+                    currentPrice = parseFloat(lastPriceEl.textContent.replace(/[^0-9.]/g, ''));
+                }
+            }
+            pairPrices[pair] = currentPrice;
+        }
+        
+        const currentPrice = pairPrices[pair];
+        if (!currentPrice) continue;
+        
+        // Flag pentru a urmări dacă ordinul trebuie executat
+        let shouldExecute = false;
+        
+        // Verificăm condițiile în funcție de tipul ordinului (Limit sau Stop-Limit)
+        if (ord.type === 'Limit') {
+            // Pentru ordine Limit: 
+            // - Buy: executăm când prețul <= prețul limit
+            // - Sell: executăm când prețul >= prețul limit
+            if (ord.side === 'Buy' || ord.side === 'Long' || ord.side === 'Bought (Margin)') {
+                shouldExecute = currentPrice <= ord.price;
+                
+                if (shouldExecute) {
+                    console.log(`Executăm ordin Limit Buy pentru ${ord.pair} la prețul ${currentPrice} <= ${ord.price}`);
+                }
+            } else {
+                shouldExecute = currentPrice >= ord.price;
+                
+                if (shouldExecute) {
+                    console.log(`Executăm ordin Limit Sell pentru ${ord.pair} la prețul ${currentPrice} >= ${ord.price}`);
+                }
+            }
+        } else if (ord.type === 'Stop-Limit') {
+            // Pentru ordine Stop-Limit, verificăm întâi dacă stop-ul a fost atins
+            let stopTriggered = false;
+            
+            if (ord.side === 'Buy' || ord.side === 'Long' || ord.side === 'Bought (Margin)') {
+                // Pentru Buy: stop se activează când prețul >= stop price
+                stopTriggered = currentPrice >= ord.stopPrice;
+                
+                // Apoi verificăm dacă putem executa la prețul limit
+                shouldExecute = stopTriggered && currentPrice <= ord.price;
+                
+                if (stopTriggered && !shouldExecute) {
+                    console.log(`Stop activat pentru ${ord.pair} Buy Stop-Limit, dar prețul ${currentPrice} > ${ord.price}`);
+                } else if (shouldExecute) {
+                    console.log(`Executăm ordin Stop-Limit Buy pentru ${ord.pair} la prețul ${currentPrice}`);
+                }
+            } else {
+                // Pentru Sell: stop se activează când prețul <= stop price
+                stopTriggered = currentPrice <= ord.stopPrice;
+                
+                // Apoi verificăm dacă putem executa la prețul limit
+                shouldExecute = stopTriggered && currentPrice >= ord.price;
+                
+                if (stopTriggered && !shouldExecute) {
+                    console.log(`Stop activat pentru ${ord.pair} Sell Stop-Limit, dar prețul ${currentPrice} < ${ord.price}`);
+                } else if (shouldExecute) {
+                    console.log(`Executăm ordin Stop-Limit Sell pentru ${ord.pair} la prețul ${currentPrice}`);
+                }
+            }
+            
+            // Actualizăm statusul ordinului dacă stop-ul a fost activat dar nu s-a executat încă
+            if (stopTriggered && !shouldExecute && ord.status === 'Open') {
+                ord.status = 'Stop Triggered';
+                saveOrders();
+                renderOpenOrders();
+            }
+        }
+        
+        // Dacă ordinul trebuie executat, îl procesăm și îl scoatem din lista de ordine deschise
+        if (shouldExecute) {
+            // Adăugăm în istoricul de ordine
+            orderHistory.unshift({
+                dateTime: new Date().toLocaleString(),
+                pair: ord.pair,
+                type: ord.type,
+                side: ord.side,
+                price: currentPrice, // Folosim prețul curent de execuție
+                amount: ord.amount,
+                status: 'Filled'
+            });
+            
+            // Adăugăm în istoricul de tranzacții
+            addTradeToHistory(currentPrice, ord.amount, ord.isBuy);
+            
+            // Actualizăm portofelul dacă este tranzacție spot
+            if (ord.tradeType === 'spot') {
+                if (ord.isBuy) {
+                    updateWalletAfterPurchase(ord.pair, ord.amount, currentPrice);
+                } else {
+                    updateWalletAfterSell(ord.pair, ord.amount, currentPrice);
+                }
+            }
+            
+            // Afișăm notificare de executare
+            const symbol = ord.pair.split('/')[0];
+            const actionText = ord.isBuy ? 'Cumpărat' : 'Vândut';
+            const notification = document.createElement('div');
+            notification.className = 'trade-notification';
+            notification.innerHTML = `
+                <div class="notification-icon ${ord.isBuy ? 'buy' : 'sell'}">
+                    <i class="fas fa-${ord.isBuy ? 'arrow-down' : 'arrow-up'}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">Ordin ${ord.type} executat</div>
+                    <div class="notification-message">${actionText} ${ord.amount.toFixed(5)} ${symbol} la prețul $${currentPrice.toFixed(2)}</div>
+                </div>
+                <button class="notification-close"><i class="fas fa-times"></i></button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Animăm notificarea
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Închidem notificarea după 5 secunde
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 5000);
+            
+            // Eliminăm ordinul din lista de ordine deschise
             openOrders.splice(i, 1);
         }
     }
+    
+    // Salvăm și actualizăm UI-ul
     saveOrders();
     renderOpenOrders();
     renderOrderHistory();
@@ -2621,3 +2843,534 @@ document.addEventListener('DOMContentLoaded', () => {
     renderOpenOrders();
     renderOrderHistory();
 });
+
+// === AFIȘARE ASSETS DIN WALLET ===
+function updateWalletAssetsDisplay() {
+    const walletData = localStorage.getItem('wallet');
+    const assetsList = document.getElementById('walletAssetsList');
+    const walletTotalValue = document.getElementById('walletTotalValue');
+    
+    if (!assetsList) return;
+    
+    // Golim lista existentă
+    assetsList.innerHTML = '';
+    
+    if (!walletData) {
+        // Nu există wallet, afișăm mesaj
+        const emptyWallet = document.createElement('div');
+        emptyWallet.className = 'wallet-asset-placeholder';
+        emptyWallet.innerHTML = `
+            <i class="fas fa-wallet"></i>
+            <span>No assets found in your wallet</span>
+        `;
+        assetsList.appendChild(emptyWallet);
+        if (walletTotalValue) walletTotalValue.textContent = '$0.00';
+        return;
+    }
+    
+    // Parsăm datele din wallet
+    const wallet = JSON.parse(walletData);
+    
+    // Verificăm dacă sunt monede în wallet
+    if (!wallet.coins || Object.keys(wallet.coins).length === 0) {
+        const emptyWallet = document.createElement('div');
+        emptyWallet.className = 'wallet-asset-placeholder';
+        emptyWallet.innerHTML = `
+            <i class="fas fa-wallet"></i>
+            <span>No assets found in your wallet</span>
+        `;
+        assetsList.appendChild(emptyWallet);
+        if (walletTotalValue) walletTotalValue.textContent = '$0.00';
+        return;
+    }
+    
+    // Afișăm valoarea totală a portofelului, folosind valoarea exactă din wallet
+    if (walletTotalValue) {
+        walletTotalValue.textContent = '$' + (wallet.totalBalance || 0).toLocaleString('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        });
+    }
+    
+    // Mapare între ID-urile din wallet și cele din cryptoData
+    const coinIdToSymbol = {
+        'bitcoin': 'BTC',
+        'ethereum': 'ETH',
+        'binancecoin': 'BNB',
+        'ripple': 'XRP',
+        'cardano': 'ADA',
+        'solana': 'SOL',
+        'polkadot': 'DOT',
+        'dogecoin': 'DOGE'
+    };
+    
+    // Afișăm fiecare asset din wallet
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        if (!coin || coin.amount <= 0) continue;
+        
+        // Obținem simbolul pentru cryptoData
+        const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase();
+        
+        // IMPORTANT: Folosim direct valoarea din wallet pentru a menține consecvența
+        const value = coin.valueUSD || (coin.price * coin.amount);
+        
+        // Extragem procentul de schimbare, dacă există
+        const changePercent = coin.changePercent || 0;
+        const isPositiveChange = changePercent >= 0;
+        
+        // Creare element asset în stil similar cu wallet.html
+        const assetItem = document.createElement('div');
+        assetItem.className = 'wallet-asset-item';
+        assetItem.innerHTML = `
+            <div class="wallet-asset-icon ${coinId.toLowerCase()}-icon">${getIconContent(coinId)}</div>
+            <div class="wallet-asset-details">
+                <div class="wallet-asset-name-row">
+                    <span class="wallet-asset-name">${getCoinName(coinId)}</span>
+                    <span class="wallet-asset-symbol">${symbol}</span>
+                </div>
+                <div class="wallet-asset-amount-row">
+                    <span class="wallet-asset-amount">${coin.amount.toFixed(4)} ${symbol}</span>
+                    <span class="wallet-asset-value">$${value.toLocaleString('en-US', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    })}</span>
+                </div>
+                <div class="wallet-asset-change ${isPositiveChange ? 'positive' : 'negative'}">
+                    <i class="fas fa-caret-${isPositiveChange ? 'up' : 'down'}"></i>
+                    <span>${Math.abs(changePercent).toFixed(1)}%</span>
+                </div>
+            </div>
+        `;
+        
+        assetsList.appendChild(assetItem);
+    }
+}
+
+// Adăugăm stiluri CSS pentru a îmbunătăți afișarea
+(function addWalletAssetStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .wallet-asset-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .wallet-asset-item:hover {
+            background-color: var(--hover-bg);
+        }
+        
+        .wallet-asset-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 16px;
+            background: var(--accent-gradient);
+            color: white;
+        }
+        
+        .wallet-asset-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .wallet-asset-name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .wallet-asset-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .wallet-asset-symbol {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        
+        .wallet-asset-amount-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .wallet-asset-amount {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .wallet-asset-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .wallet-asset-change {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .wallet-asset-change.positive {
+            color: var(--positive-color);
+        }
+        
+        .wallet-asset-change.negative {
+            color: var(--negative-color);
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// Funcție pentru a obține conținutul iconițelor
+function getIconContent(coinId) {
+    const icons = {
+        'bitcoin': '₿',
+        'ethereum': 'Ξ',
+        'binancecoin': 'B',
+        'ripple': 'X',
+        'cardano': 'A',
+        'solana': 'S',
+        'polkadot': 'D',
+        'dogecoin': 'Ð'
+    };
+    
+    return icons[coinId.toLowerCase()] || coinId.substring(0, 1).toUpperCase();
+}
+
+// Funcție pentru a obține numele afișabil al monedei
+function getCoinName(coinId) {
+    const names = {
+        'bitcoin': 'Bitcoin',
+        'ethereum': 'Ethereum',
+        'binancecoin': 'Binance Coin',
+        'ripple': 'XRP',
+        'cardano': 'Cardano',
+        'solana': 'Solana',
+        'polkadot': 'Polkadot',
+        'dogecoin': 'Dogecoin'
+    };
+    
+    return names[coinId.toLowerCase()] || coinId;
+}
+
+// Asigurăm actualizarea UI-ului pentru wallet assets când se face o tranzacție
+// Verificăm dacă originalProcessOrder este deja definit
+if (typeof originalOrderProcessor === 'undefined') {
+    const originalOrderProcessor = processOrder;
+    processOrder = function() {
+        // Apelăm funcția originală
+        originalOrderProcessor.apply(this, arguments);
+        
+        // Actualizăm afișajul de wallet assets după procesarea ordinului
+        setTimeout(updateWalletAssetsDisplay, 500);
+    };
+}
+
+// Actualizăm periodic afișajul de wallet assets (la fiecare update de preț)
+if (typeof originalVisualUpdater === 'undefined') {
+    const originalVisualUpdater = forceVisualUpdate;
+    forceVisualUpdate = function() {
+        originalVisualUpdater.apply(this, arguments);
+        
+        // Actualizăm și afișajul de wallet assets
+        updateWalletAssetsDisplay();
+    };
+}
+
+// La încărcarea paginii, inițializăm afișajul cu asseturile din wallet
+document.addEventListener('DOMContentLoaded', () => {
+    // Funcțiile existente
+    // ...
+    // Adăugăm inițializarea afișajului de wallet assets
+    updateWalletAssetsDisplay();
+});
+
+// Funcție pentru configurarea și inițializarea Order History
+function setupOrderHistory() {
+    // Verificăm existența containerului pentru Order History
+    let ordersSection = document.querySelector('.orders-section');
+    
+    if (!ordersSection) {
+        console.warn("Container-ul pentru Order History nu există în DOM, îl vom crea");
+        
+        // Creăm container-ul pentru Order History
+        ordersSection = document.createElement('div');
+        ordersSection.className = 'orders-section';
+        
+        // Adăugăm tabs pentru Open Orders și Order History
+        ordersSection.innerHTML = `
+            <div class="orders-tabs">
+                <button class="orders-tab-btn active" data-orders-tab="open">Open Orders</button>
+                <button class="orders-tab-btn" data-orders-tab="history">Order History</button>
+            </div>
+            <div class="orders-content">
+                <div class="orders-table-container active" id="openOrdersTable">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Pair</th>
+                                <th>Type</th>
+                                <th>Side</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Filled</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="openOrders">
+                            <!-- Open orders will be populated dynamically -->
+                        </tbody>
+                    </table>
+                    <div class="no-orders-message" id="noOpenOrders">
+                        <i class="fas fa-inbox"></i>
+                        <p>No open orders</p>
+                    </div>
+                </div>
+                <div class="orders-table-container" id="historyOrdersTable">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Pair</th>
+                                <th>Type</th>
+                                <th>Side</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderHistory">
+                            <!-- Order history will be populated dynamically -->
+                        </tbody>
+                    </table>
+                    <div class="no-orders-message" id="noOrderHistory">
+                        <i class="fas fa-inbox"></i>
+                        <p>No order history</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Adăugăm container-ul la DOM
+        const main = document.querySelector('.trade-container');
+        if (main) {
+            main.appendChild(ordersSection);
+        } else {
+            console.error("Nu s-a găsit container-ul principal (.trade-container)");
+            document.body.appendChild(ordersSection);
+        }
+        
+        // Adăugăm event listeners pentru tab-uri
+        const orderTabButtons = ordersSection.querySelectorAll('.orders-tab-btn');
+        orderTabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                orderTabButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Schimbăm conținutul vizibil
+                const tabId = this.getAttribute('data-orders-tab');
+                const containers = document.querySelectorAll('.orders-table-container');
+                containers.forEach(container => {
+                    container.classList.remove('active');
+                });
+                
+                const activeContainer = document.getElementById(tabId + 'OrdersTable');
+                if (activeContainer) {
+                    activeContainer.classList.add('active');
+                }
+            });
+        });
+    }
+    
+    // Ne asigurăm că există elementele necesare pentru tabele
+    if (!document.getElementById('openOrders')) {
+        console.error("Elementul #openOrders nu există în DOM");
+    }
+    
+    if (!document.getElementById('orderHistory')) {
+        console.error("Elementul #orderHistory nu există în DOM");
+    }
+    
+    // Inițializăm tabelele cu datele existente
+    renderOpenOrders();
+    renderOrderHistory();
+    
+    console.log("Order History configurat și inițializat cu succes");
+}
+
+// Funcție pentru actualizarea portofelului după o cumpărare
+function updateWalletAfterPurchase(pair, amount, price) {
+    console.log(`Actualizare portofel după cumpărare: ${amount} ${pair.split('/')[0]} la prețul $${price}`);
+    
+    // Extragem simbolul monedei din perechea de trading (ex: "BTC" din "BTC/USDT")
+    const symbol = pair.split('/')[0];
+    const coinId = getCoinIdFromSymbol(symbol);
+    
+    if (!coinId) {
+        console.error(`Nu s-a putut determina coinId pentru simbolul ${symbol}`);
+        return;
+    }
+    
+    // Calculăm valoarea în USD a monedei cumpărate
+    const valueUSD = amount * price;
+    
+    // Încărcăm portofelul din localStorage
+    let wallet = JSON.parse(localStorage.getItem('wallet') || '{"totalBalance":0,"coins":{}}');
+    
+    // Inițializăm obiectul wallet dacă nu există
+    if (!wallet) {
+        wallet = {
+            totalBalance: 0,
+            change: 0,
+            coins: {}
+        };
+    }
+    
+    // Inițializăm proprietatea coins dacă nu există
+    if (!wallet.coins) {
+        wallet.coins = {};
+    }
+    
+    // Verificăm dacă moneda există deja în portofel
+    if (!wallet.coins[coinId]) {
+        // Adăugăm moneda nouă în portofel
+        wallet.coins[coinId] = {
+            amount: amount,
+            price: price,
+            value: valueUSD,
+            valueUSD: valueUSD,
+            changePercent: cryptoData[symbol]?.priceChange24h || 0
+        };
+    } else {
+        // Actualizăm cantitatea existentă
+        const existingAmount = wallet.coins[coinId].amount || 0;
+        const newAmount = existingAmount + amount;
+        
+        // Recalculăm prețul mediu ponderat
+        const existingValue = wallet.coins[coinId].value || 0;
+        const newValue = existingValue + valueUSD;
+        const newAvgPrice = newValue / newAmount;
+        
+        wallet.coins[coinId].amount = newAmount;
+        wallet.coins[coinId].price = newAvgPrice;
+        wallet.coins[coinId].value = newValue;
+        wallet.coins[coinId].valueUSD = newValue;
+        wallet.coins[coinId].changePercent = cryptoData[symbol]?.priceChange24h || wallet.coins[coinId].changePercent || 0;
+    }
+    
+    // Recalculăm balanța totală
+    let totalBalance = 0;
+    for (const id in wallet.coins) {
+        totalBalance += wallet.coins[id].value || 0;
+    }
+    wallet.totalBalance = totalBalance;
+    
+    // Salvăm portofelul actualizat în localStorage
+    localStorage.setItem('wallet', JSON.stringify(wallet));
+    
+    console.log(`Portofel actualizat: ${amount} ${symbol} adăugat, total ${wallet.coins[coinId].amount} ${symbol}`);
+    
+    // Actualizăm UI-ul de assets
+    setTimeout(updateWalletAssetsDisplay, 500);
+    
+    // Actualizăm și balanța disponibilă
+    updateTradeBalance();
+}
+
+// Funcție pentru a determina coinId din simbolul monedei
+function getCoinIdFromSymbol(symbol) {
+    // Mapare inversă pentru a obține coinId din symbol
+    const symbolToCoinId = {
+        'BTC': 'bitcoin',
+        'ETH': 'ethereum',
+        'BNB': 'binancecoin',
+        'XRP': 'ripple',
+        'ADA': 'cardano',
+        'SOL': 'solana',
+        'DOT': 'polkadot',
+        'DOGE': 'dogecoin'
+    };
+    
+    return symbolToCoinId[symbol] || symbol.toLowerCase();
+}
+
+// Funcție pentru actualizarea portofelului după o vânzare
+function updateWalletAfterSell(pair, amount, price) {
+    console.log(`Actualizare portofel după vânzare: ${amount} ${pair.split('/')[0]} la prețul $${price}`);
+    
+    // Extragem simbolul monedei din perechea de trading (ex: "BTC" din "BTC/USDT")
+    const symbol = pair.split('/')[0];
+    const coinId = getCoinIdFromSymbol(symbol);
+    
+    if (!coinId) {
+        console.error(`Nu s-a putut determina coinId pentru simbolul ${symbol}`);
+        return;
+    }
+    
+    // Calculăm valoarea în USD a monedei vândute
+    const valueUSD = amount * price;
+    
+    // Încărcăm portofelul din localStorage
+    let wallet = JSON.parse(localStorage.getItem('wallet'));
+    
+    if (!wallet || !wallet.coins || !wallet.coins[coinId]) {
+        console.error(`Moneda ${symbol} nu există în portofel`);
+        return;
+    }
+    
+    // Actualizăm cantitatea existentă
+    const existingAmount = wallet.coins[coinId].amount || 0;
+    const newAmount = existingAmount - amount;
+    
+    // Verificăm dacă mai rămâne cantitate după vânzare
+    if (newAmount <= 0) {
+        // Dacă nu mai rămâne nimic, eliminăm moneda din portofel
+        delete wallet.coins[coinId];
+        console.log(`Moneda ${symbol} a fost eliminată din portofel (cantitate epuizată)`);
+    } else {
+        // Actualizăm cantitatea și valoarea
+        const existingPrice = wallet.coins[coinId].price || price;
+        const newValue = newAmount * existingPrice;
+        
+        wallet.coins[coinId].amount = newAmount;
+        wallet.coins[coinId].value = newValue;
+        wallet.coins[coinId].valueUSD = newValue;
+    }
+    
+    // Recalculăm balanța totală
+    let totalBalance = 0;
+    for (const id in wallet.coins) {
+        totalBalance += wallet.coins[id].value || 0;
+    }
+    wallet.totalBalance = totalBalance;
+    
+    // Salvăm portofelul actualizat în localStorage
+    localStorage.setItem('wallet', JSON.stringify(wallet));
+    
+    console.log(`Portofel actualizat după vânzare: ${amount} ${symbol} vândut, nou sold: ${newAmount > 0 ? newAmount : 0} ${symbol}`);
+    
+    // Actualizăm UI-ul de assets
+    setTimeout(updateWalletAssetsDisplay, 500);
+    
+    // Actualizăm și balanța disponibilă
+    updateTradeBalance();
+}

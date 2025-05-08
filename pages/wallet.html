@@ -11,6 +11,13 @@
           const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
           const theme = savedTheme || (prefersDark ? 'dark' : 'light');
           document.documentElement.setAttribute('data-theme', theme);
+          
+          // Adăugăm o funcție pentru a reseta portofelul când apare problema XRP
+          window.resetWallet = function() {
+            localStorage.removeItem('wallet');
+            alert('Wallet reset successful! Please refresh the page.');
+            location.reload();
+          };
         } catch (e) {
           console.warn('Could not apply theme from localStorage', e);
         }
@@ -22,6 +29,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Debug reset button - ascuns vizual dar accesibil via console -->
+    <button id="resetWalletBtn" onclick="resetWallet()" style="position:fixed; bottom:5px; right:5px; opacity:0.1; z-index:9999; font-size:10px; padding:5px; background-color:red; color:white; border:none; border-radius:4px;">Reset Wallet</button>
     <nav class="navbar">
         <a href="../index.html" class="logo">Crypto-Platform</a>
         <button class="hamburger">

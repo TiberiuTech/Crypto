@@ -7,7 +7,7 @@
 }
 
 .form-container {
-    background-color: var(--card-bg);
+    background-color: var(--card-background);
     padding: 30px 40px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -65,7 +65,7 @@ html[data-theme="dark"] .form-group input {
 .form-submit-btn {
     width: 100%;
     padding: 12px 20px;
-    background-color: var(--primary-color);
+    background-color: var(--accent-color);
     color: white;
     border: none;
     border-radius: 5px;
@@ -78,6 +78,7 @@ html[data-theme="dark"] .form-group input {
 
 .form-submit-btn:hover {
     opacity: 0.9;
+    background-color: var(--accent-color-darker);
 }
 
 .form-submit-btn:active {
