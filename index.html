@@ -150,20 +150,6 @@
             font-weight: bold;
             border-radius: 8px;
         }
-        
-        /* Adăugăm un tag de simulare pentru interfață */
-        .simulation-tag {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background-color: #3b82f6;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 9999;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
     </style>
 </head>
 <body>
@@ -234,7 +220,7 @@
                 
                 <div class="crypto-card" id="orionix-card">
                     <div class="crypto-icon">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyOCIgZmlsbD0iIzNiODJmNiIvPjx0ZXh0IHg9IjMwIiB5PSIzOCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+T1JYPC90ZXh0Pjwvc3ZnPg==" alt="Orionix" id="orx-icon">
+                        <img src="assets/orionix.jpg?v=1" alt="Orionix" id="orx-icon">
                     </div>
                     <div class="crypto-name">Orionix</div>
                     
@@ -285,6 +271,63 @@
         </div>
     </main>
 
+    <section class="features-section">
+        <div class="container">
+            <h2 class="features-heading">Platformă Completă pentru Crypto</h2>
+            <p class="features-subheading">Tot ce ai nevoie pentru a intra în lumea criptomonedelor</p>
+            
+            <div class="features-container">
+                <div class="feature-box" data-feature="wallet">
+                    <div class="feature-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h3>Wallet Securizat</h3>
+                    <p>Păstrează-ți activele în siguranță cu portofelul nostru digital, protejat prin criptare avansată și autentificare multi-factor.</p>
+                    <a href="pages/wallet.html" class="feature-link">
+                        <span>Explorează Wallet</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="feature-box" data-feature="news">
+                    <div class="feature-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <h3>Știri Crypto</h3>
+                    <p>Rămâi informat cu ultimele știri și analize din lumea crypto pentru a lua decizii inteligente de investiții.</p>
+                    <a href="pages/news.html" class="feature-link">
+                        <span>Citește Știrile</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="feature-box" data-feature="trade">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Tranzacționare Simplă</h3>
+                    <p>Cumpără și vinde criptomonede cu o interfață intuitivă, comisioane mici și execuție rapidă a tranzacțiilor.</p>
+                    <a href="pages/trade.html" class="feature-link">
+                        <span>Începe Tranzacționarea</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="feature-box" data-feature="orionix">
+                    <div class="feature-icon orionix-icon">
+                        <img src="assets/orionix.jpg" alt="Orionix">
+                    </div>
+                    <h3>Moneda Orionix</h3>
+                    <p>Descoperă tokenul nostru nativ cu utilitate, creștere sustenabilă și tehnologie blockchain avansată.</p>
+                    <a href="pages/orionix.html" class="feature-link">
+                        <span>Despre Orionix</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="compare-section" class="compare-section">
         <div class="container">
             <h2 class="compare-heading">Compare Cryptocurrencies</h2>
@@ -294,7 +337,7 @@
                 <div class="crypto-compare-card">
                     <div class="crypto-header">
                         <div class="crypto-icon">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyOCIgZmlsbD0iIzNiODJmNiIvPjx0ZXh0IHg9IjMwIiB5PSIzOCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2ZmZmZmZiI+T1JYPC90ZXh0Pjwvc3ZnPg==" alt="Orionix">
+                            <img src="assets/orionix.jpg" alt="Orionix">
                         </div>
                         <div class="crypto-name">
                             <h3>Orionix</h3>
@@ -411,7 +454,7 @@
             }
         });
     </script>
-    <!-- Script special pentru inițializarea directă a graficelor de comparare -->
+    <!-- Script pentru inițializarea directă a graficelor de comparare -->
     <script src="Orionix/orionix-interface.js"></script>
     <script>
     (function() {
@@ -528,21 +571,6 @@
             });
         }
     })();
-    </script>
-    <!-- Script pentru a afișa un indicator de simulare -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Verificăm după încărcarea paginii dacă suntem în modul simulare
-            if (typeof window.orionixInfo !== 'undefined' && window.orionixInfo.simulationMode) {
-                // Creăm un element pentru a indica modul de simulare
-                const simulationTag = document.createElement('div');
-                simulationTag.className = 'simulation-tag';
-                simulationTag.innerHTML = 'MOD SIMULARE';
-                document.body.appendChild(simulationTag);
-                
-                console.log('Aplicația rulează în modul simulare. Toate tranzacțiile sunt simulate, nu reale.');
-            }
-        });
     </script>
 </body>
 </html> 

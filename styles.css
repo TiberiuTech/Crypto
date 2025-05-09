@@ -23,6 +23,8 @@
     --positive-bg: rgba(16, 185, 129, 0.1);
     --negative-bg: rgba(239, 68, 68, 0.1);
     --bg-color: #0a0d14;
+    --accent-color-rgb: 74, 144, 226;
+    --card-background-rgb: 21, 25, 34;
 }
 
 html[data-theme="light"] {
@@ -42,6 +44,8 @@ html[data-theme="light"] {
     --positive-bg: rgba(16, 185, 129, 0.1);
     --negative-bg: rgba(239, 68, 68, 0.1);
     --bg-color: #f8f9fa;
+    --accent-color-rgb: 59, 130, 246;
+    --card-background-rgb: 255, 255, 255;
 }
 
 body {
@@ -709,6 +713,7 @@ html[data-theme="light"] body::before {
     padding: 80px 20px;
     position: relative;
     overflow: hidden;
+    height: 100vh;
 }
 
 .hero-section::before {
@@ -1371,556 +1376,266 @@ html[data-theme="light"] .feature-item {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(167, 139, 250, 0.05) 100%);
-    z-index: -1;
+    height: 5px;
+    background: linear-gradient(to right, var(--accent-color), var(--accent-color-darker));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
 }
 
 .feature-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    will-change: transform, box-shadow;
 }
 
-.feature-item i {
-    font-size: 3rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 1.5rem;
-    display: inline-block;
-    transition: transform 0.3s ease;
+.feature-item:hover::before {
+    transform: scaleX(1);
 }
 
-.feature-item:hover i {
-    transform: scale(1.1);
+.feature-item[data-feature="wallet"]::before {
+    background: linear-gradient(to right, #3b82f6, #2563eb);
 }
 
-.feature-item h3 {
-    font-size: 1.4rem;
-    margin-bottom: 1.2rem;
-    color: var(--text-color);
-    font-weight: 700;
+.feature-item[data-feature="news"]::before {
+    background: linear-gradient(to right, #8b5cf6, #6d28d9);
 }
 
-.feature-item p {
-    font-size: 1rem;
-    color: var(--secondary-text-color);
-    line-height: 1.7;
+.feature-item[data-feature="trade"]::before {
+    background: linear-gradient(to right, #10b981, #059669);
 }
 
-.token-details {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2.5rem;
+.feature-item[data-feature="orionix"]::before {
+    background: linear-gradient(to right, #f59e0b, #d97706);
 }
 
-.detail-card, .wallet-info-card {
-    background: rgba(25, 30, 45, 0.5);
-    border-radius: 16px;
-    padding: 2rem;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.feature-item:nth-child(1) {
+    --animation-order: 1;
 }
 
-html[data-theme="light"] .detail-card,
-html[data-theme="light"] .wallet-info-card,
-html[data-theme="light"] .action-card,
-html[data-theme="light"] .transaction-history {
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+.feature-item:nth-child(2) {
+    --animation-order: 2;
 }
 
-.detail-card:hover, 
-.wallet-info-card:hover,
-.action-card:hover,
-.transaction-history:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+.feature-item:nth-child(3) {
+    --animation-order: 3;
 }
 
-.detail-card h3, 
-.wallet-info-card h3, 
-.action-card h3, 
-.transaction-history h3 {
-    font-size: 1.4rem;
-    margin: 0 0 1.5rem;
-    color: var(--text-color);
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-weight: 700;
+.feature-item:nth-child(4) {
+    --animation-order: 4;
 }
 
-html[data-theme="light"] .detail-card h3,
-html[data-theme="light"] .wallet-info-card h3,
-html[data-theme="light"] .action-card h3,
-html[data-theme="light"] .transaction-history h3 {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-html[data-theme="light"] .detail-row {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.detail-row:last-child {
-    margin-bottom: 0;
-    border-bottom: none;
-}
-
-.detail-row span:first-child {
-    color: var(--secondary-text-color);
-    font-weight: 500;
-}
-
-.detail-row span:last-child {
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.contract-address span:last-child {
-    font-size: 0.85rem;
-    word-break: break-all;
-    font-family: monospace;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    display: inline-block;
-    margin-top: 0.5rem;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-html[data-theme="light"] .contract-address span:last-child {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.wallet-connect {
-    margin-bottom: 1.8rem;
-}
-
-.connect-btn {
-    display: block;
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.connect-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.7s ease;
-}
-
-.connect-btn:hover::before {
-    left: 100%;
-}
-
-.connect-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
-}
-
-.connect-btn:active {
-    transform: translateY(1px);
-}
-
-.connect-btn.connected {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-.token-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2.5rem;
-}
-
-.action-card {
-    background: rgba(25, 30, 45, 0.5);
-    border-radius: 16px;
-    padding: 2rem;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-#mint-card {
-    background: linear-gradient(135deg, rgba(25, 30, 45, 0.5) 0%, rgba(31, 41, 55, 0.5) 100%);
-    border: 1px solid rgba(79, 70, 229, 0.2);
-}
-
-html[data-theme="light"] #mint-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(243, 244, 246, 0.8) 100%);
-    border: 1px solid rgba(79, 70, 229, 0.2);
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.8rem;
-    font-size: 1rem;
-    color: var(--secondary-text-color);
-    font-weight: 500;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    color: var(--text-color);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-html[data-theme="light"] .form-group input {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.form-group input:focus {
-    border-color: var(--accent-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-}
-
-.amount-input {
-    display: flex;
-    align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-}
-
-html[data-theme="light"] .amount-input {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.amount-input input {
-    flex: 1;
-    border: none;
-    padding: 1rem;
-    background: transparent;
-    color: var(--text-color);
-}
-
-.amount-input input:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-.amount-input span {
-    padding: 1rem 1.2rem;
-    background: rgba(59, 130, 246, 0.2);
-    color: var(--accent-color);
-    font-weight: 600;
-    font-size: 1rem;
-}
-
-html[data-theme="light"] .amount-input span {
-    background: rgba(59, 130, 246, 0.1);
-}
-
-.action-btn {
-    display: block;
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    position: relative;
-    overflow: hidden;
-}
-
-.action-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.7s ease;
-}
-
-.action-btn:hover::before {
-    left: 100%;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
-}
-
-.action-btn:active {
-    transform: translateY(1px);
-}
-
-.status-message {
-    margin-top: 1rem;
-    padding: 0.7rem 1rem;
-    font-size: 0.9rem;
-    color: var(--secondary-text-color);
-    min-height: 3em;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.1);
-}
-
-html[data-theme="light"] .status-message {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.transaction-history {
-    background: rgba(25, 30, 45, 0.5);
-    border-radius: 16px;
-    padding: 2rem;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.transaction-list {
-    min-height: 200px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 0.5rem;
-}
-
-.transaction-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.transaction-list::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-}
-
-.transaction-list::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.3);
-    border-radius: 10px;
-}
-
-.transaction-list::-webkit-scrollbar-thumb:hover {
-    background: rgba(59, 130, 246, 0.5);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem 0;
-    color: var(--secondary-text-color);
-    font-size: 1rem;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    margin: 1rem 0;
-}
-
-html[data-theme="light"] .empty-state {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.transaction-item {
-    display: flex;
-    align-items: center;
-    padding: 1.2rem;
-    border-radius: 12px;
-    margin-bottom: 0.8rem;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-html[data-theme="light"] .transaction-item {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.transaction-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.transaction-icon {
-    margin-right: 1.2rem;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(59, 130, 246, 0.15);
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-}
-
-.transaction-icon i {
-    font-size: 1.1rem;
+    margin-bottom: 25px;
+    font-size: 30px;
+    background: rgba(var(--accent-color-rgb, 74, 144, 226), 0.15);
     color: var(--accent-color);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    will-change: transform;
 }
 
-.transaction-details {
-    flex: 1;
+.feature-box:hover .feature-icon {
+    transform: scale(1.1) rotate(5deg);
 }
 
-.transaction-type {
-    font-size: 1rem;
-    font-weight: 600;
+.feature-box[data-feature="wallet"] .feature-icon {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.feature-box[data-feature="news"] .feature-icon {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.feature-box[data-feature="trade"] .feature-icon {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.feature-box[data-feature="orionix"] .feature-icon {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.feature-icon.orionix-icon {
+    padding: 10px;
+}
+
+.feature-icon.orionix-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.feature-box h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
     color: var(--text-color);
-    margin-bottom: 0.3rem;
+    position: relative;
 }
 
-.transaction-address {
-    font-size: 0.9rem;
+.feature-box p {
+    font-size: 1.05rem;
+    line-height: 1.7;
     color: var(--secondary-text-color);
-    font-family: monospace;
-    padding: 0.2rem 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    display: inline-block;
+    margin-bottom: 25px;
+    flex-grow: 1;
 }
 
-html[data-theme="light"] .transaction-address {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.transaction-amount {
-    font-size: 1rem;
+.feature-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--accent-color);
     font-weight: 600;
-    color: var(--text-color);
-    margin-right: 1.2rem;
+    font-size: 1.05rem;
+    transition: transform 0.3s ease;
+    margin-top: auto;
+    position: relative;
+    overflow: hidden;
+    padding: 8px 12px;
+    border-radius: 8px;
+    z-index: 1;
 }
 
-.transaction-time {
-    font-size: 0.9rem;
-    color: var(--secondary-text-color);
-    background: rgba(0, 0, 0, 0.2);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+.feature-box[data-feature="wallet"] .feature-link {
+    color: #3b82f6;
 }
 
-html[data-theme="light"] .transaction-time {
-    background: rgba(0, 0, 0, 0.1);
+.feature-box[data-feature="news"] .feature-link {
+    color: #8b5cf6;
 }
 
-/* Responsive pentru secțiunea Orionix */
-@media (max-width: 900px) {
-    .features-grid {
-        grid-template-columns: 1fr 1fr;
+.feature-box[data-feature="trade"] .feature-link {
+    color: #10b981;
+}
+
+.feature-box[data-feature="orionix"] .feature-link {
+    color: #f59e0b;
+}
+
+.feature-link i {
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+}
+
+.feature-link:hover {
+    transform: translateX(5px);
+}
+
+.feature-link:hover i {
+    transform: translateX(5px);
+}
+
+/* Stiluri pentru efectul de ripple */
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    width: 100px;
+    height: 100px;
+    transform: scale(0);
+    animation: ripple-animation 0.6s ease-out;
+    z-index: -1;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Media Queries pentru secțiunea de Features */
+@media (max-width: 1100px) {
+    .features-heading {
+        font-size: 2.8rem;
     }
     
-    .about-orionix h2 {
-        font-size: 2.2rem;
-    }
-    
-    .orionix-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .orionix-logo {
-        margin-right: 0;
-        margin-bottom: 1.5rem;
+    .features-container {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .token-details, 
-    .token-actions {
-        grid-template-columns: 1fr;
+    .features-section {
+        padding: 0 20px;
     }
     
-    .detail-card, 
-    .wallet-info-card,
-    .action-card,
-    .transaction-history {
-        padding: 1.5rem;
+    .features-heading {
+        font-size: 2.4rem;
+    }
+    
+    .features-subheading {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+    
+    .features-container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
-@media (max-width: 600px) {
-    .features-grid {
-        grid-template-columns: 1fr;
+@media (max-width: 480px) {
+    .features-heading {
+        font-size: 2rem;
     }
     
-    .about-orionix h2 {
-        font-size: 1.8rem;
-    }
-    
-    .about-orionix p {
+    .features-subheading {
         font-size: 1rem;
+        margin-bottom: 20px;
     }
     
-    .orionix-section {
-        padding: 60px 15px;
-    }
-    
-    .transaction-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .transaction-icon {
-        margin-right: 0;
-        margin-bottom: 1rem;
-    }
-    
-    .transaction-amount,
-    .transaction-time {
-        margin-top: 0.8rem;
-        margin-right: 0;
+    .feature-box {
+        padding: 30px 20px;
     }
 }
 
-/* Stiluri pentru secțiunea de comparare */
+/* Ajustări pentru scroll-snap pentru toate secțiunile principale */
+html {
+    scroll-behavior: smooth;
+}
+
+.hero-section {
+    height: 100vh;
+}
+
+/* Modificăm secțiunea compare pentru a fi full-screen */
 .compare-section {
-    padding: 80px 20px;
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     background-color: var(--background-color);
     position: relative;
     overflow: hidden;
+    padding: 0 20px;
 }
 
 .compare-section::before {
@@ -1942,6 +1657,12 @@ html[data-theme="light"] .transaction-time {
     margin: 0 auto;
     position: relative;
     z-index: 1;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
 }
 
 .compare-heading {
@@ -1961,6 +1682,7 @@ html[data-theme="light"] .transaction-time {
     align-items: center;
     gap: 1.5rem;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 .crypto-compare-card {
@@ -2205,34 +1927,349 @@ html[data-theme="light"] .crypto-select {
     }
 }
 
-/* Stil global pentru titlurile de pagină în stilul about-orionix */
-.about-title {
-    margin-bottom: 3rem;
-    text-align: center;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 1rem 1.5rem;
+/* Stiluri pentru secțiunea Features */
+.features-section {
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-color);
+    position: relative;
+    overflow: hidden;
+    padding: 0 20px;
 }
 
-.about-title h2 {
-    font-size: 2.8rem;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
+.features-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 75% 25%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 25% 75%, rgba(79, 70, 229, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.features-section .container {
+    max-width: 1300px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.features-heading {
+    font-size: 3.2rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #4a90e2 0%, #a78bfa 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    font-weight: 800;
+    position: relative;
+    z-index: 1;
 }
 
-@media (max-width: 900px) {
-    .about-title h2 {
-        font-size: 2.2rem;
+.features-subheading {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--secondary-text-color);
+    text-align: center;
+    margin-bottom: 50px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.features-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    margin-top: 0;
+}
+
+.feature-box {
+    background: rgba(var(--card-background-rgb, 21, 25, 34), 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 40px 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transform: translateY(40px);
+    opacity: 0;
+    animation: fadeInUp 0.8s forwards;
+    animation-delay: calc(var(--animation-order, 0) * 0.1s);
+    will-change: transform, opacity;
+}
+
+html[data-theme="light"] .feature-box {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feature-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, var(--accent-color), var(--accent-color-darker));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+}
+
+.feature-box:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    will-change: transform, box-shadow;
+}
+
+.feature-box:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-box[data-feature="wallet"]::before {
+    background: linear-gradient(to right, #3b82f6, #2563eb);
+}
+
+.feature-box[data-feature="news"]::before {
+    background: linear-gradient(to right, #8b5cf6, #6d28d9);
+}
+
+.feature-box[data-feature="trade"]::before {
+    background: linear-gradient(to right, #10b981, #059669);
+}
+
+.feature-box[data-feature="orionix"]::before {
+    background: linear-gradient(to right, #f59e0b, #d97706);
+}
+
+.feature-box:nth-child(1) {
+    --animation-order: 1;
+}
+
+.feature-box:nth-child(2) {
+    --animation-order: 2;
+}
+
+.feature-box:nth-child(3) {
+    --animation-order: 3;
+}
+
+.feature-box:nth-child(4) {
+    --animation-order: 4;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-@media (max-width: 600px) {
-    .about-title h2 {
-        font-size: 1.8rem;
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    font-size: 30px;
+    background: rgba(var(--accent-color-rgb, 74, 144, 226), 0.15);
+    color: var(--accent-color);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    will-change: transform;
+}
+
+.feature-box:hover .feature-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.feature-box[data-feature="wallet"] .feature-icon {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
+.feature-box[data-feature="news"] .feature-icon {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
+}
+
+.feature-box[data-feature="trade"] .feature-icon {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.feature-box[data-feature="orionix"] .feature-icon {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.feature-icon.orionix-icon {
+    padding: 10px;
+}
+
+.feature-icon.orionix-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.feature-box h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--text-color);
+    position: relative;
+}
+
+.feature-box p {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--secondary-text-color);
+    margin-bottom: 25px;
+    flex-grow: 1;
+}
+
+.feature-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 1.05rem;
+    transition: transform 0.3s ease;
+    margin-top: auto;
+    position: relative;
+    overflow: hidden;
+    padding: 8px 12px;
+    border-radius: 8px;
+    z-index: 1;
+}
+
+.feature-box[data-feature="wallet"] .feature-link {
+    color: #3b82f6;
+}
+
+.feature-box[data-feature="news"] .feature-link {
+    color: #8b5cf6;
+}
+
+.feature-box[data-feature="trade"] .feature-link {
+    color: #10b981;
+}
+
+.feature-box[data-feature="orionix"] .feature-link {
+    color: #f59e0b;
+}
+
+.feature-link i {
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+}
+
+.feature-link:hover {
+    transform: translateX(5px);
+}
+
+.feature-link:hover i {
+    transform: translateX(5px);
+}
+
+/* Stiluri pentru efectul de ripple */
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    width: 100px;
+    height: 100px;
+    transform: scale(0);
+    animation: ripple-animation 0.6s ease-out;
+    z-index: -1;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Media Queries pentru secțiunea de Features */
+@media (max-width: 1100px) {
+    .features-heading {
+        font-size: 2.8rem;
+    }
+    
+    .features-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .features-section {
+        padding: 0 20px;
+    }
+    
+    .features-heading {
+        font-size: 2.4rem;
+    }
+    
+    .features-subheading {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+    
+    .features-container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .features-heading {
+        font-size: 2rem;
+    }
+    
+    .features-subheading {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+    
+    .feature-box {
+        padding: 30px 20px;
     }
 }

@@ -475,6 +475,124 @@ function initCryptoCards() {
             window.location.href = 'pages/orionix.html';
         });
     }
+    
+    // Inițializăm secțiunea de features
+    initFeaturesSection();
+}
+
+// Funcție pentru inițializarea secțiunii de features cu animații
+function initFeaturesSection() {
+    // Verificăm dacă secțiunea de features există
+    const featuresSection = document.querySelector('.features-section');
+    if (!featuresSection) return;
+    
+    // Adăugăm un observer pentru a anima cardurile când ajung în viewport
+    const featureBoxes = document.querySelectorAll('.feature-box');
+    
+    if ('IntersectionObserver' in window) {
+        const appearOptions = {
+            threshold: 0.15,
+            rootMargin: "0px 0px -100px 0px"
+        };
+        
+        const appearOnScroll = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Calculăm un delay bazat pe poziția elementului
+                    const box = entry.target;
+                    const delay = parseInt(box.getAttribute('data-animation-order') || box.dataset.animationOrder || '0');
+                    
+                    // Adăugăm o scurtă întârziere bazată pe poziție
+                    setTimeout(() => {
+                        box.style.opacity = "1";
+                        box.style.transform = "translateY(0)";
+                    }, delay * 100);
+                    
+                    // Oprim observarea după ce elementul a fost animat
+                    observer.unobserve(box);
+                }
+            });
+        }, appearOptions);
+        
+        featureBoxes.forEach((box, index) => {
+            // Setăm ordinea animației ca atribut data
+            box.setAttribute('data-animation-order', index + 1);
+            
+            // Resetăm stilurile pentru a pregăti animația
+            box.style.opacity = "0";
+            box.style.transform = "translateY(40px)";
+            
+            // Începem observarea
+            appearOnScroll.observe(box);
+        });
+    } else {
+        // Fallback pentru browsere care nu suportă IntersectionObserver
+        featureBoxes.forEach(box => {
+            box.style.opacity = "1";
+            box.style.transform = "translateY(0)";
+        });
+    }
+    
+    // Adăugăm efecte de hover pentru carduri
+    featureBoxes.forEach(box => {
+        box.addEventListener('mouseenter', function() {
+            const icon = this.querySelector('.feature-icon');
+            if (icon) {
+                icon.style.transform = 'scale(1.1) rotate(5deg)';
+            }
+        });
+        
+        box.addEventListener('mouseleave', function() {
+            const icon = this.querySelector('.feature-icon');
+            if (icon) {
+                icon.style.transform = 'scale(1) rotate(0)';
+            }
+        });
+        
+        // Adăugăm efect de tilt 3D la mișcarea mouse-ului
+        box.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left; // poziția X a mouse-ului în element
+            const y = e.clientY - rect.top;  // poziția Y a mouse-ului în element
+            
+            // Calculăm valorile de rotație în funcție de poziția mouse-ului
+            const xRotation = ((y - rect.height / 2) / rect.height) * 5; // max 5 grade
+            const yRotation = ((x - rect.width / 2) / rect.width) * -5;  // max 5 grade
+            
+            // Aplicăm transformarea
+            this.style.transform = `perspective(1000px) rotateX(${xRotation}deg) rotateY(${yRotation}deg) scale(1.02)`;
+        });
+        
+        // Resetăm la ieșire
+        box.addEventListener('mouseleave', function() {
+            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        });
+    });
+    
+    // Adăugăm efect de undă la click-uri pe link-urile din carduri
+    const featureLinks = document.querySelectorAll('.feature-link');
+    featureLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Creăm elementul de undă
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple-effect');
+            
+            // Obținem poziția și dimensiunea link-ului
+            const rect = this.getBoundingClientRect();
+            
+            // Poziționăm unda la poziția clicului relative la link
+            ripple.style.left = `${e.clientX - rect.left}px`;
+            ripple.style.top = `${e.clientY - rect.top}px`;
+            
+            // Adăugăm unda ca copil al link-ului
+            this.appendChild(ripple);
+            
+            // Eliminăm unda după ce animația s-a terminat
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
 }
 
 // Funcție pentru generarea datelor istorice pentru grafic
@@ -871,7 +989,7 @@ function fetchCryptoData() {
         // Orionix este tokenul nostru personalizat ERC-20 
         const orionixMockData = {
             current_price: 4.48,
-            image: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX',
+            image: 'assets/orionix.jpg?v=1',
             total_volume: 138300,
             market_cap: 4480000, // 1,000,000 supply × $4.48
             price_change_percentage_24h: 2.51
@@ -900,7 +1018,7 @@ function fetchCryptoData() {
         
         const orionixMockData = {
             current_price: 4.48,
-            image: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX',
+            image: 'assets/orionix.jpg?v=1',
             total_volume: 138300,
             market_cap: 4480000, // 1,000,000 supply × $4.48
             price_change_percentage_24h: 2.51
@@ -1000,7 +1118,7 @@ function initCryptoCompare() {
             volume: '138.32M',
             marketCap: '147,000,000',
             color: '#10b981',
-            icon: 'https://via.placeholder.com/60/3b82f6/FFFFFF?text=ORX'
+            icon: 'assets/orionix.jpg?v=1'
         },
         bitcoin: {
             name: 'Bitcoin',
