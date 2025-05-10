@@ -1855,7 +1855,7 @@ html[data-theme="light"] .crypto-chart-container {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--crypto-card-background);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 0.5rem 2rem 0.5rem 1rem;
@@ -1889,6 +1889,11 @@ html[data-theme="light"] .crypto-select {
     border-right: 5px solid transparent;
     border-top: 5px solid var(--text-color);
     pointer-events: none;
+}
+
+.crypto-select option {
+    background: var(--crypto-card-background);
+    color: var(--text-color);
 }
 
 /* Responsive styles for compare section */
