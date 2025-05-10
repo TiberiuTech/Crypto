@@ -251,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizează UI-ul
         renderCarouselWithPosition(currentPosition);
         renderTable();
+        checkPriceAlerts();
         renderPagination();
     }
 
@@ -894,6 +895,15 @@ document.addEventListener('DOMContentLoaded', () => {
             themeObserver.disconnect();
             modal.remove();
         };
+        // Adaug update la datele monedelor după setarea unei alerte
+        const setAlertBtn = modal.querySelector('.set-alert-btn');
+        if (setAlertBtn) {
+            const originalSetAlert = setAlertBtn.onclick;
+            setAlertBtn.onclick = function() {
+                if (originalSetAlert) originalSetAlert();
+                fetchAllCoinData(true); // Forțează update la datele monedelor
+            };
+        }
     };
 
     // Începem inițializarea aplicației cu un mic delay pentru a permite browserului să termine renderizarea inițială
@@ -1499,5 +1509,38 @@ document.addEventListener('DOMContentLoaded', () => {
             alertDiv.style.opacity = '1';
             alertDiv.style.transform = 'translate(-50%, -50%) scale(1)';
         }, 10);
+    }
+
+    // Actualizare automată la revenirea pe tab
+    if (typeof fetchAllCoinData === 'function') {
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                fetchAllCoinData(true);
+            }
+        });
+    }
+
+    function checkPriceAlerts() {
+        const alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
+        let triggered = false;
+        alerts.forEach(alert => {
+            // Găsește moneda în tableData (datele reale)
+            const coin = tableData.find(c => c.symbol === alert.symbol);
+            if (!coin) return;
+            if (alert.triggered) return; // Nu declanșa de două ori
+            if (
+                (alert.condition === 'above' && coin.price >= alert.price) ||
+                (alert.condition === 'below' && coin.price <= alert.price)
+            ) {
+                showCenterAlert(`Alerta ta pentru ${coin.name} (${coin.symbol}) a fost declanșată! Prețul a ajuns la $${coin.price.toFixed(2)} (${alert.condition === 'above' ? 'peste' : 'sub'} $${alert.price})`);
+                alert.triggered = true;
+                alert.lastTriggered = Date.now();
+                triggered = true;
+            }
+        });
+        if (triggered) {
+            localStorage.setItem('cryptoAlerts', JSON.stringify(alerts));
+            if (typeof updateAlertBadgeAndDropdown === 'function') updateAlertBadgeAndDropdown();
+        }
     }
 }); 
