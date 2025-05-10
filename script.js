@@ -138,93 +138,91 @@ window.addEventListener('storage', () => {
     updateAlertBadgeAndDropdown();
 });
 
-// Funcție globală pentru alertă centrală, folosită pe orice pagină
-window.showCenterAlert = function(message, isHtml = false, duration = 8000) {
-    const existingAlert = document.getElementById('centerScreenAlert');
-    if (existingAlert) existingAlert.remove();
-    const alertDiv = document.createElement('div');
-    alertDiv.id = 'centerScreenAlert';
-    alertDiv.style.position = 'fixed';
-    alertDiv.style.top = '50%';
-    alertDiv.style.left = '50%';
-    alertDiv.style.transform = 'translate(-50%, -50%)';
-    alertDiv.style.background = 'var(--card-background)';
-    alertDiv.style.color = 'var(--text-color)';
-    alertDiv.style.padding = '24px 32px';
-    alertDiv.style.borderRadius = '12px';
-    alertDiv.style.fontSize = '1.1rem';
-    alertDiv.style.zIndex = '9999';
-    alertDiv.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
-    alertDiv.style.textAlign = 'left';
-    alertDiv.style.minWidth = '320px';
-    alertDiv.style.maxWidth = '90vw';
-    alertDiv.style.pointerEvents = 'auto';
-    alertDiv.style.border = '1px solid var(--border-color)';
-    alertDiv.style.fontFamily = 'inherit';
-    alertDiv.style.opacity = '1';
-    alertDiv.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-    alertDiv.style.backdropFilter = 'blur(8px)';
+// --- showCenterAlert global ---
+window.showCenterAlert = function(message) {
+    let alertDiv = document.getElementById('centerScreenAlert');
+    if (!alertDiv) {
+        alertDiv = document.createElement('div');
+        alertDiv.id = 'centerScreenAlert';
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '50%';
+        alertDiv.style.left = '50%';
+        alertDiv.style.transform = 'translate(-50%, -50%)';
+        alertDiv.style.background = 'var(--card-background, #23242a)';
+        alertDiv.style.color = 'var(--text-color, #fff)';
+        alertDiv.style.padding = '24px 32px';
+        alertDiv.style.borderRadius = '12px';
+        alertDiv.style.fontSize = '1.1rem';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
+        alertDiv.style.textAlign = 'center';
+        alertDiv.style.minWidth = '300px';
+        alertDiv.style.maxWidth = '90vw';
+        alertDiv.style.pointerEvents = 'auto';
+        alertDiv.style.border = '1px solid var(--border-color, #333)';
+        alertDiv.style.fontFamily = 'inherit';
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        alertDiv.style.backdropFilter = 'blur(8px)';
+        alertDiv.style.display = 'flex';
+        alertDiv.style.alignItems = 'center';
+        alertDiv.style.gap = '16px';
+        document.body.appendChild(alertDiv);
+    }
+    alertDiv.innerHTML = `<span>${message}</span>`;
     alertDiv.style.display = 'flex';
-    alertDiv.style.alignItems = 'flex-start';
-    alertDiv.style.gap = '16px';
-    alertDiv.style.maxHeight = '80vh';
-    alertDiv.style.overflowY = 'auto';
-    
-    // Icon de alertă
-    const icon = document.createElement('div');
-    icon.innerHTML = '<i class="fas fa-bell" style="color: var(--accent-color); font-size: 1.5rem; margin-top: 4px;"></i>';
-    
-    // Buton X
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-    closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '12px';
-    closeBtn.style.right = '12px';
-    closeBtn.style.background = 'transparent';
-    closeBtn.style.border = 'none';
-    closeBtn.style.color = 'var(--secondary-text-color)';
-    closeBtn.style.fontSize = '1rem';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.padding = '4px';
-    closeBtn.style.borderRadius = '50%';
-    closeBtn.style.transition = 'all 0.2s ease';
-    closeBtn.onmouseover = () => {
-        closeBtn.style.color = 'var(--accent-color)';
-        closeBtn.style.transform = 'rotate(90deg)';
-    };
-    closeBtn.onmouseout = () => {
-        closeBtn.style.color = 'var(--secondary-text-color)';
-        closeBtn.style.transform = 'rotate(0deg)';
-    };
-    closeBtn.onclick = () => {
+    setTimeout(() => {
+        alertDiv.style.opacity = '1';
+        alertDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+    }, 10);
+    setTimeout(() => {
         alertDiv.style.opacity = '0';
         alertDiv.style.transform = 'translate(-50%, -50%) scale(0.95)';
-        setTimeout(() => alertDiv.remove(), 300);
-    };
-    alertDiv.appendChild(closeBtn);
-    alertDiv.appendChild(icon);
-    
-    // Mesajul
-    const msgSpan = document.createElement('span');
-    if (isHtml) {
-        msgSpan.innerHTML = message;
-    } else {
-        msgSpan.textContent = message;
-    }
-    msgSpan.style.flex = '1';
-    alertDiv.appendChild(msgSpan);
-    document.body.appendChild(alertDiv);
-    
-    // Dacă durata este mai mare de 0, dispare automat
-    if (duration > 0) {
-        setTimeout(() => {
-            if (document.body.contains(alertDiv)) {
-                alertDiv.style.opacity = '0';
-                setTimeout(() => alertDiv.remove(), 300);
-            }
-        }, duration);
-    }
+        setTimeout(() => { alertDiv.style.display = 'none'; }, 300);
+    }, 5000);
 };
+
+// --- checkPriceAlertsGlobal ---
+async function checkPriceAlertsGlobal() {
+    const alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
+    if (!alerts.length) return;
+    const symbols = [...new Set(alerts.filter(a => !a.triggered).map(a => a.symbol))];
+    if (!symbols.length) return;
+    const symbolToId = {
+        BTC: 'bitcoin', ETH: 'ethereum', BNB: 'binancecoin', XRP: 'ripple', ADA: 'cardano', SOL: 'solana', DOT: 'polkadot', DOGE: 'dogecoin', AVAX: 'avalanche-2', MATIC: 'matic-network', LINK: 'chainlink', UNI: 'uniswap', ATOM: 'cosmos', LTC: 'litecoin', ETC: 'ethereum-classic', XLM: 'stellar', ALGO: 'algorand', VET: 'vechain', MANA: 'decentraland', SAND: 'the-sandbox'
+    };
+    const ids = symbols.map(s => symbolToId[s] || s.toLowerCase()).join(',');
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`;
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    try {
+        const resp = await fetch(proxyUrl + encodeURIComponent(url));
+        if (!resp.ok) return;
+        const data = await resp.json();
+        let triggered = false;
+        alerts.forEach(alert => {
+            if (alert.triggered) return;
+            const coin = data.find(c => c.symbol.toUpperCase() === alert.symbol);
+            if (!coin) return;
+            if (
+                (alert.condition === 'above' && coin.current_price >= alert.price) ||
+                (alert.condition === 'below' && coin.current_price <= alert.price)
+            ) {
+                window.showCenterAlert(`Alerta ta pentru ${coin.name} (${coin.symbol.toUpperCase()}) a fost declanșată! Prețul a ajuns la $${coin.current_price} (${alert.condition === 'above' ? 'peste' : 'sub'} $${alert.price})`);
+                alert.triggered = true;
+                alert.lastTriggered = Date.now();
+                triggered = true;
+            }
+        });
+        if (triggered) {
+            localStorage.setItem('cryptoAlerts', JSON.stringify(alerts));
+        }
+    } catch (e) {
+        // Ignorăm erorile de rețea
+    }
+}
+
+// Pornim intervalul global pe orice pagină
+setInterval(checkPriceAlertsGlobal, 15000);
 
 // --- ALERTĂ PREȚ GLOBALĂ PE TOATE PAGINILE ---
 function fetchAndCheckAlerts() {
@@ -252,8 +250,9 @@ function fetchAndCheckAlerts() {
     // Pentru producție, înlocuiește cu cheia API validă
     const coinIds = activeAlerts.map(a => a.symbol.toLowerCase()).join(',');
     const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}`;
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
     
-    fetch(url)
+    fetch(proxyUrl + encodeURIComponent(url))
         .then(response => {
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
