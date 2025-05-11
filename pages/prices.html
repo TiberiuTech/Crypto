@@ -33,7 +33,6 @@
             <a href="orionix.html" class="nav-item">Orionix</a>
             <a href="wallet.html" class="nav-item">Wallet</a>
             <a href="trade.html" class="nav-item">Trade</a>
-            
             <div class="auth-buttons mobile">
                 <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
                 <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
@@ -49,9 +48,14 @@
             <button id="themeToggleBtn" class="theme-toggle-btn">
                 <i class="fas fa-moon"></i>
             </button>
-            <div class="auth-buttons desktop">
+            <div class="auth-buttons desktop" style="display:flex; gap:0.5rem;">
                 <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
                 <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+            <div id="user-info-desktop" class="user-info-desktop" style="display:none; align-items:center; gap:10px;">
+                <img id="user-photo-desktop" src="" alt="User Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:none;">
+                <span id="user-name-desktop" style="font-weight:600;"></span>
+                <button id="logoutBtnDesktop" class="auth-btn" style="display:none;">Logout</button>
             </div>
         </div>
     </nav>
@@ -244,6 +248,10 @@
             </div>
         </div>
     </div>
+    
+    <!-- Firebase Scripts -->
+    <!-- Implementare simplificată pentru autentificare -->
+    <script src="js/firebase-config.js"></script>
     
     <script src="../script.js" defer></script>
     <script src="js/prices.js"></script>

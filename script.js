@@ -96,17 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupBtn = document.getElementById('signupBtn');
     const loginBtnMobile = document.getElementById('loginBtnMobile');
     const signupBtnMobile = document.getElementById('signupBtnMobile');
-    if(loginBtn) loginBtn.classList.remove('active');
-    if(loginBtnMobile) loginBtnMobile.classList.remove('active');
-    if(signupBtn) signupBtn.classList.remove('active');
-    if(signupBtnMobile) signupBtnMobile.classList.remove('active');
-    if (currentPagePath.includes('login.html')) {
-        if(loginBtn) loginBtn.classList.add('active');
-        if(loginBtnMobile) loginBtnMobile.classList.add('active');
-    } else if (currentPagePath.includes('signup.html')) {
-        if(signupBtn) signupBtn.classList.add('active');
-        if(signupBtnMobile) signupBtnMobile.classList.add('active');
-    }
 
     setupPasswordToggle('login-password', 'toggle-login-password');
     setupPasswordToggle('signup-password', 'toggle-signup-password');
@@ -130,6 +119,73 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Adăugăm un timeout pentru a ne asigura că toate elementele sunt încărcate complet
         setTimeout(fixInitCompareCharts, 500);
+    }
+
+    // --- LOGICA AUTENTIFICARE FIREBASE ---
+    // Asigurăm-ne că inițializăm autentificarea după ce DOM-ul este complet încărcat
+    setTimeout(() => {
+        if (typeof window.firebaseAuth !== 'undefined') {
+            console.log("Firebase Auth detectat - inițializăm logica de autentificare");
+            
+            // Verificăm starea de autentificare la încărcarea paginii
+            window.firebaseAuth.onAuthStateChanged(function(user) {
+                console.log("Starea de autentificare s-a schimbat:", user ? "utilizator logat" : "utilizator nelogat");
+                updateUIForAuthState(user);
+            });
+        } else {
+            console.warn("Firebase Auth nu este disponibil încă, încercăm din nou în 500ms");
+            
+            // Încercăm din nou după 500ms
+            setTimeout(() => {
+                if (typeof window.firebaseAuth !== 'undefined') {
+                    console.log("Firebase Auth detectat (a doua încercare)");
+                    window.firebaseAuth.onAuthStateChanged(function(user) {
+                        updateUIForAuthState(user);
+                    });
+                } else {
+                    console.error("Firebase Auth nu a putut fi inițializat după mai multe încercări");
+                }
+            }, 500);
+        }
+    }, 100);
+
+    // Determinăm calea corectă în funcție de locația curentă
+    const isInPagesDir = window.location.pathname.includes('/pages/');
+    const loginPath = isInPagesDir ? 'login.html' : 'pages/login.html';
+    const signupPath = isInPagesDir ? 'signup.html' : 'pages/signup.html';
+
+    // Pentru butoanele desktop
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function(e) {
+            if (!window.location.pathname.includes('login.html')) {
+                window.location.href = loginPath;
+            }
+        });
+    }
+
+    if (signupBtn) {
+        signupBtn.addEventListener('click', function(e) {
+            if (!window.location.pathname.includes('signup.html')) {
+                window.location.href = signupPath;
+            }
+        });
+    }
+
+    // Pentru butoanele mobile
+    if (loginBtnMobile) {
+        loginBtnMobile.addEventListener('click', function(e) {
+            if (!window.location.pathname.includes('login.html')) {
+                window.location.href = loginPath;
+            }
+        });
+    }
+
+    if (signupBtnMobile) {
+        signupBtnMobile.addEventListener('click', function(e) {
+            if (!window.location.pathname.includes('signup.html')) {
+                window.location.href = signupPath;
+            }
+        });
     }
 });
 
@@ -1544,4 +1600,118 @@ function fixInitCompareCharts() {
     updateCompareChart('compare-coin-chart', btcData, '#f7931a');
     
     console.log("Graficele au fost inițializate");
+}
+
+// Funcție separată pentru actualizarea UI în funcție de starea autentificării
+function updateUIForAuthState(user) {
+    console.log("Actualizare UI pentru starea de autentificare:", user ? "utilizator logat" : "utilizator nelogat");
+    
+    // --- DESKTOP ---
+    const userInfo = document.getElementById('user-info-desktop');
+    const userPhoto = document.getElementById('user-photo-desktop');
+    const userName = document.getElementById('user-name-desktop');
+    let logoutBtn = document.getElementById('logoutBtnDesktop');
+    const authBtns = document.querySelector('.auth-buttons.desktop');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    
+    // --- MOBILE ---
+    // Disable mobile user info section to prevent duplication
+    const authBtnsMobile = document.querySelector('.auth-buttons.mobile');
+    const loginBtnMobile = document.getElementById('loginBtnMobile');
+    const signupBtnMobile = document.getElementById('signupBtnMobile');
+    
+    // Verificăm dacă suntem pe pagina de login sau signup
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath.includes('login.html') || currentPath.includes('signup.html');
+    
+    if (user) {
+        // Utilizator logat
+        console.log("Utilizator logat:", user.email, "DisplayName:", user.displayName);
+        
+        // Desktop
+        if (userInfo) {
+            userInfo.style.display = "flex";
+            console.log("User info display set to flex");
+        }
+        if (userName) {
+            userName.textContent = user.displayName || user.email.split('@')[0];
+            console.log("User name set to:", userName.textContent);
+        }
+        if (userPhoto) {
+            userPhoto.src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email.split('@')[0])}&background=random`;
+            userPhoto.style.display = "block";
+            console.log("User photo src set to:", userPhoto.src);
+        }
+        if (logoutBtn) {
+            // Eliminăm orice event listener existent pentru a evita duplicarea
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            logoutBtn = newLogoutBtn;
+            logoutBtn.style.display = "block";
+            
+            logoutBtn.addEventListener('click', function() {
+                if (window.firebaseAuth) {
+                    window.firebaseAuth.signOut().then(() => {
+                        window.showCenterAlert('Ai fost delogat cu succes!');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    });
+                } else {
+                    console.error("firebaseAuth nu este disponibil");
+                }
+            });
+            console.log("Logout button displayed and event listener added");
+        }
+        if (authBtns) {
+            authBtns.style.display = "none";
+            console.log("Auth buttons hidden");
+        }
+        
+        // Hide mobile auth buttons when user is logged in
+        if (authBtnsMobile) authBtnsMobile.style.display = "none";
+        
+        // Dacă suntem pe pagina de login sau signup, redirecționăm către pagina principală
+        if (isAuthPage) {
+            console.log("Suntem pe o pagină de autentificare dar utilizatorul este deja autentificat, redirecționăm...");
+            setTimeout(() => {
+                window.location.href = currentPath.includes('/pages/') ? '../index.html' : 'index.html';
+            }, 500);
+        }
+    } else {
+        // Utilizator nelogat
+        console.log("Niciun utilizator logat");
+        
+        // Desktop
+        if (userInfo) userInfo.style.display = "none";
+        if (userPhoto) userPhoto.style.display = "none";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        // Forțăm afișarea butoanelor de autentificare pe toate paginile
+        if (authBtns) {
+            authBtns.style.display = "flex";
+            // Asigurăm-ne că butoanele individual sunt vizibile
+            if (loginBtn) loginBtn.style.display = "inline-block";
+            if (signupBtn) signupBtn.style.display = "inline-block";
+        }
+        
+        // Show mobile auth buttons when user is logged out
+        if (authBtnsMobile) {
+            authBtnsMobile.style.display = "flex";
+            // Asigurăm-ne că butoanele individual sunt vizibile
+            if (loginBtnMobile) loginBtnMobile.style.display = "inline-block";
+            if (signupBtnMobile) signupBtnMobile.style.display = "inline-block";
+        }
+    }
+    
+    // Păstrăm butoanele vizibile pe paginile de login și signup
+    if (isAuthPage && !user) {
+        if (authBtns) authBtns.setAttribute('style', 'display: flex !important');
+        if (loginBtn) loginBtn.setAttribute('style', 'display: inline-block !important');
+        if (signupBtn) signupBtn.setAttribute('style', 'display: inline-block !important');
+        
+        if (authBtnsMobile) authBtnsMobile.setAttribute('style', 'display: flex !important');
+        if (loginBtnMobile) loginBtnMobile.setAttribute('style', 'display: inline-block !important');
+        if (signupBtnMobile) signupBtnMobile.setAttribute('style', 'display: inline-block !important');
+    }
 }

@@ -164,10 +164,10 @@
             <a href="pages/orionix.html" class="nav-item">Orionix</a>
             <a href="pages/wallet.html" class="nav-item">Wallet</a>
             <a href="pages/trade.html" class="nav-item">Trade</a>
-
-            <div class="auth-buttons mobile">
-                <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='pages/login.html'">Login</button>
-                <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='pages/signup.html'">Sign Up</button>
+            <div id="user-info-mobile" class="user-info mobile" style="display: none;">
+                <img id="user-photo-mobile" class="user-avatar" src="" alt="User avatar">
+                <span id="user-name-mobile" class="user-name"></span>
+                <button id="logoutBtnMobile" class="logout-btn">Logout</button>
             </div>
             <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
                 <i class="fas fa-moon"></i>
@@ -176,14 +176,18 @@
         <div class="controls-desktop">
             <button id="notificationBtn" class="notification-btn">
                 <i class="fas fa-bell"></i>
-                <span class="alert-badge"></span>
             </button>
             <button id="themeToggleBtn" class="theme-toggle-btn">
                 <i class="fas fa-moon"></i>
             </button>
+            <div id="user-info-desktop" class="user-info" style="display: none;">
+                <img id="user-photo-desktop" class="user-avatar" src="" alt="User avatar">
+                <span id="user-name-desktop" class="user-name"></span>
+                <button id="logoutBtnDesktop" class="logout-btn">Logout</button>
+            </div>
             <div class="auth-buttons desktop">
-                <button id="loginBtn" class="auth-btn" onclick="window.location.href='pages/login.html'">Login</button>
-                <button id="signupBtn" class="auth-btn" onclick="window.location.href='pages/signup.html'">Sign Up</button>
+                <button id="loginBtn" class="auth-btn">Login</button>
+                <button id="signupBtn" class="auth-btn">Sign Up</button>
             </div>
         </div>
     </nav>
@@ -572,5 +576,13 @@
         }
     })();
     </script>
+
+    <!-- Firebase Scripts -->
+    <!-- Am înlocuit Firebase-ul real cu o implementare simplificată -->
+    <script src="pages/js/firebase-config.js"></script>
+    
+    <!-- Main Script -->
+    <script src="script.js"></script>
+
 </body>
 </html> 

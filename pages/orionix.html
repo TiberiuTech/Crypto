@@ -33,11 +33,11 @@
             <a href="orionix.html" class="nav-item active">Orionix</a>
             <a href="wallet.html" class="nav-item">Wallet</a>
             <a href="trade.html" class="nav-item">Trade</a>
-        
             <div class="auth-buttons mobile">
                 <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
                 <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
             </div>
+        
             <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
                 <i class="fas fa-moon"></i>
             </button>
@@ -50,9 +50,14 @@
             <button id="themeToggleBtn" class="theme-toggle-btn">
                 <i class="fas fa-moon"></i>
             </button>
-            <div class="auth-buttons desktop">
+            <div class="auth-buttons desktop" style="display:flex; gap:0.5rem;">
                 <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
                 <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+            <div id="user-info-desktop" class="user-info-desktop" style="display:none; align-items:center; gap:10px;">
+                <img id="user-photo-desktop" src="" alt="User Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:none;">
+                <span id="user-name-desktop" style="font-weight:600;"></span>
+                <button id="logoutBtnDesktop" class="auth-btn" style="display:none;">Logout</button>
             </div>
         </div>
     </nav>
@@ -155,7 +160,11 @@
         </div>
     </section>
 
-    <script src="../script.js" defer></script>
+    <!-- Firebase Scripts -->
+    <!-- Implementare simplificată pentru autentificare -->
+    <script src="js/firebase-config.js"></script>
+    
+    <script src="../script.js"></script>
     <script src="../Orionix/orionix-interface.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -233,103 +242,17 @@
                         showDetailsBtn.addEventListener('click', function(e) {
                             e.preventDefault();
                             window.showCenterAlert(`
-                                <h3 style="margin-top:0">Detalii eroare</h3>
-                                <p>Biblioteca ethers.js nu a putut fi încărcată din următoarele motive posibile:</p>
-                                <ul style="text-align:left; padding-left:20px;">
-                                    <li>Conexiune la internet instabilă</li>
-                                    <li>Blocarea scripturilor de către extensii browser (Ad-Blocker, Privacy Blockers)</li>
-                                    <li>Politici de securitate restrictive ale browser-ului</li>
-                                    <li>Server CDN indisponibil temporar</li>
-                                </ul>
-                                <p style="margin-bottom:0">Recomandări:</p>
-                                <ol style="text-align:left; padding-left:20px;">
-                                    <li>Reîncărcați pagina (F5 sau Ctrl+R)</li>
-                                    <li>Dezactivați temporar extensiile de blocare a scripturilor</li>
-                                    <li>Folosiți un browser modern actualizat (Chrome, Firefox, Edge)</li>
-                                    <li>Verificați conexiunea la internet</li>
-                                </ol>
-                            `, true, 0);
+                                Nu s-a putut încărca biblioteca necesară. Posibile soluții:
+                                <br><br>1. Verificați conexiunea la internet
+                                <br>2. Dezactivați Ad-Blocker sau alte extensii care blochează scripturile
+                                <br>3. Folosiți un browser actualizat (Chrome, Firefox, Edge)
+                                <br>4. Reîncărcați pagina și încercați din nou
+                            `, true);
                         });
                     }
                 }
-                
-                // Adăugăm event listener pentru butonul de transfer
-                const transferBtn = document.getElementById('transfer-btn');
-                if (transferBtn) {
-                    transferBtn.addEventListener('click', async function() {
-                        const statusElement = document.getElementById('transfer-status');
-                        statusElement.textContent = '';
-                        
-                        try {
-                            if (!tokenManager.isConnected) {
-                                throw new Error("Portofelul nu este conectat");
-                            }
-                            
-                            const recipientAddress = document.getElementById('recipient-address').value;
-                            const amount = document.getElementById('transfer-amount').value;
-                            
-                            if (!recipientAddress || !amount) {
-                                throw new Error("Completați adresa destinatarului și suma");
-                            }
-                            
-                            if (!ethers.utils.isAddress(recipientAddress)) {
-                                throw new Error("Adresa destinatarului nu este validă");
-                            }
-                            
-                            statusElement.textContent = "Se procesează transferul...";
-                            const tx = await tokenManager.transferTokens(recipientAddress, amount);
-                            
-                            statusElement.textContent = `Transfer realizat cu succes! Hash tranzacție: ${tx.transactionHash.substring(0, 10)}...`;
-                            document.getElementById('recipient-address').value = '';
-                            document.getElementById('transfer-amount').value = '';
-                            
-                            // Actualizăm soldul și istoricul tranzacțiilor
-                            tokenManager.updateUI();
-                            addTransactionToHistory('transfer', recipientAddress, amount);
-                        } catch (error) {
-                            statusElement.textContent = `Eroare: ${error.message}`;
-                            console.error(error);
-                        }
-                    });
-                }
             }
-            
-            // Funcție pentru adăugarea unei tranzacții în istoric
-            window.addTransactionToHistory = function(type, address, amount) {
-                const list = document.getElementById('transaction-list');
-                if (!list) return;
-                
-                const emptyState = list.querySelector('.empty-state');
-                
-                if (emptyState) {
-                    list.removeChild(emptyState);
-                }
-                
-                const item = document.createElement('div');
-                item.className = 'transaction-item';
-                
-                const typeIcon = type === 'transfer' ? 'fa-paper-plane' : 'fa-plus-circle';
-                const typeText = type === 'transfer' ? 'Transfer către' : 'Emitere către';
-                
-                item.innerHTML = `
-                    <div class="transaction-icon">
-                        <i class="fas ${typeIcon}"></i>
-                    </div>
-                    <div class="transaction-details">
-                        <div class="transaction-type">${typeText}</div>
-                        <div class="transaction-address">${address.substring(0, 10)}...${address.substring(38)}</div>
-                    </div>
-                    <div class="transaction-amount">
-                        ${type === 'transfer' ? '-' : '+'} ${amount} ORX
-                    </div>
-                    <div class="transaction-time">
-                        ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                `;
-                
-                list.insertBefore(item, list.firstChild);
-            };
         });
     </script>
 </body>
-</html> 
+</html>

@@ -32,14 +32,6 @@
             <a href="orionix.html" class="nav-item">Orionix</a>
             <a href="wallet.html" class="nav-item">Wallet</a>
             <a href="trade.html" class="nav-item">Trade</a>
-            
-            <div class="auth-buttons mobile">
-                <button id="loginBtnMobile" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
-                <button id="signupBtnMobile" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
-            </div>
-            <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
-                <i class="fas fa-moon"></i>
-            </button>
         </div>
         <div class="controls-desktop">
             <button id="notificationBtn" class="notification-btn">
@@ -48,9 +40,9 @@
             <button id="themeToggleBtn" class="theme-toggle-btn">
                 <i class="fas fa-moon"></i>
             </button>
-            <div class="auth-buttons desktop">
-                <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
-                <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            <div class="auth-buttons desktop" style="display:flex !important; gap:0.5rem;">
+                <button id="loginBtn" class="auth-btn" style="display:inline-block !important;">Login</button>
+                <button id="signupBtn" class="auth-btn" style="display:inline-block !important;">Sign Up</button>
             </div>
         </div>
         <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
@@ -90,6 +82,9 @@
         </div>
     </main>
 
+    <!-- Firebase Scripts -->
+    <!-- Am înlocuit Firebase-ul real cu o implementare simplificată -->
+    <script src="js/firebase-config.js"></script>
     <script src="../script.js"></script>
     <script src="js/signup.js"></script>
 </body>
