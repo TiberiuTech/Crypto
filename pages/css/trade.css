@@ -262,7 +262,7 @@ html[data-theme="light"] .trading-account-info {
 .account-balance {
     position: relative;
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     font-size: 0.95rem;
     color: var(--text-color);
 }
@@ -271,9 +271,9 @@ html[data-theme="light"] .trading-account-info {
     margin-right: auto;
 }
 
-.account-balance #availableBalance {
+.account-balance .balance-value {
     font-weight: 600;
-    text-align: right;
+    margin-right: 10px;
 }
 
 /* Ascundem complet textul prețului din Available Balance */
@@ -1149,5 +1149,74 @@ button[data-coin-id],
 .swap-form,
 .swap-info,
 .swap-fee-info {
+    display: none !important;
+}
+
+.wallet-asset-value-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 2px;
+}
+
+.wallet-asset-amount-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.wallet-asset-amount {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.wallet-asset-value {
+    font-weight: 600;
+    font-size: 15px;
+    color: #3b82f6;
+}
+
+.wallet-asset-change {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+}
+
+/* Stiluri pentru balanța disponibilă și icoana de ochi */
+.trading-panel .trading-account-info .account-balance {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.trading-panel .trading-account-info .account-balance #availableBalance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Stilizare pentru butonul de toggle */
+.toggle-balance-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Stiluri pentru iconița ochi stânga și dreapta */
+.account-balance .fas.fa-eye-slash,
+.account-balance .fas.fa-eye {
+    margin-left: 0; /* Eliminăm marja pentru a preveni spațiu gol */
+}
+
+/* Ascundem iconița secundară care apare în stânga */
+.account-balance i.fa-eye-slash:not(#toggleBalanceBtn),
+.account-balance i.fa-eye:not(#toggleBalanceBtn) {
     display: none !important;
 } 

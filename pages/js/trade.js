@@ -37,8 +37,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateTradeBalance();
     
-    // Actualizăm afișajul wallet assets
-    setTimeout(updateWalletAssetsDisplay, 500);
+    // Inițializăm funcționalitatea de toggle pentru solduri
+    initializeBalanceVisibilityToggle();
+    
+    // Forțăm o actualizare imediată a wallet assets pentru a avea prețuri corecte
+    setTimeout(() => {
+        // Facem un fetch pentru a avea date actualizate
+        fetchCryptoData().then(() => {
+            console.log("Date fetch actualizate, actualizăm wallet assets");
+            updateWalletAssetsDisplay();
+        }).catch(err => {
+            console.warn("Eroare la actualizarea datelor pentru wallet assets:", err);
+            updateWalletAssetsDisplay(); // Actualizăm oricum cu ce avem
+        });
+    }, 500);
+    
+    // Configurăm actualizarea periodică a wallet assets
+    setInterval(() => {
+        updateWalletAssetsDisplay();
+    }, 30000); // Actualizăm la fiecare 30 secunde
     
     // Verificăm existența și creăm tabelul de Order History dacă nu există
     setupOrderHistory();
@@ -890,10 +907,16 @@ async function fetchCryptoData() {
         const success = await fetchFromBinance();
         if (!success) throw new Error('Binance nu a returnat date');
         lastAPICall = now;
+        
+        // După ce obținem date reale, actualizăm și wallet-ul
+        updateWalletWithRealData();
+        
+        return true;
     } catch (error) {
         console.error('Eroare la preluarea datelor:', error);
         useFallbackData();
         showAPIErrorMessage();
+        return false;
     }
 }
 
@@ -2510,12 +2533,32 @@ function updateLeverageBalance(leverageValue) {
 
 function updateTradeBalance() {
     const balanceElement = document.getElementById('availableBalance');
+    const toggleBtn = document.getElementById('toggleBalanceBtn');
+    
     const walletData = localStorage.getItem('wallet');
     if (walletData && balanceElement) {
         const wallet = JSON.parse(walletData);
         const balance = wallet.totalBalance || 0;
-        balanceElement.textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        balanceElement.setAttribute('data-eye-toggle', 'true');
+        
+        // Verificăm dacă balanceElement afișează în prezent valoarea ascunsă
+        const isHidden = toggleBtn && toggleBtn.innerHTML.includes('fa-eye-slash');
+        
+        if (isHidden) {
+            // Păstrăm starea ascunsă
+            balanceElement.textContent = '$•••••';
+        } else {
+            // Actualizăm direct valoarea balanței
+            balanceElement.textContent = '$' + balance.toLocaleString('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+        }
+        
+        // Salvăm valoarea reală ca atribut pentru a putea fi utilizată când utilizatorul face toggle
+        balanceElement.setAttribute('data-real-value', '$' + balance.toLocaleString('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        }));
         
         // Actualizăm și valoarea butonului 100% pentru a reflecta noua balanță
         const sliderButtons = document.querySelectorAll('.slider-btn');
@@ -2928,14 +2971,35 @@ function updateWalletAssetsDisplay() {
         // Obținem simbolul pentru cryptoData
         const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase();
         
-        // IMPORTANT: Folosim direct valoarea din wallet pentru a menține consecvența
-        const value = coin.valueUSD || (coin.price * coin.amount);
+        // Verificăm dacă avem preț din CryptoData
+        let currentPrice = 0;
+        let changePercent = 0;
         
-        // Extragem procentul de schimbare, dacă există
-        const changePercent = coin.changePercent || 0;
+        // Încercăm să obținem prețul actual din cryptoData
+        if (cryptoData && cryptoData[symbol]) {
+            currentPrice = cryptoData[symbol].price || 0;
+            changePercent = cryptoData[symbol].priceChange24h || 0;
+        } else {
+            // Folosim datele din wallet ca backup
+            currentPrice = coin.price || 0;
+            changePercent = coin.changePercent || 0;
+        }
+        
+        // Calculăm valoarea în USD a monedei
+        const value = currentPrice * coin.amount;
+        
+        // Asigurăm-ne că avem valori valide numeric pentru afișare
+        const displayValue = !isNaN(value) && isFinite(value) ? 
+            value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 
+            '0.00';
+        
+        const displayPercent = !isNaN(changePercent) && isFinite(changePercent) ? 
+            Math.abs(changePercent).toFixed(1) : 
+            '0.0';
+        
         const isPositiveChange = changePercent >= 0;
         
-        // Creare element asset în stil similar cu wallet.html
+        // Creare element asset în stil similar cu wallet.html, dar cu poziții modificate
         const assetItem = document.createElement('div');
         assetItem.className = 'wallet-asset-item';
         assetItem.innerHTML = `
@@ -2947,14 +3011,13 @@ function updateWalletAssetsDisplay() {
                 </div>
                 <div class="wallet-asset-amount-row">
                     <span class="wallet-asset-amount">${coin.amount.toFixed(4)} ${symbol}</span>
-                    <span class="wallet-asset-value">$${value.toLocaleString('en-US', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
-                    })}</span>
+                    <span class="wallet-asset-change ${isPositiveChange ? 'positive' : 'negative'}">
+                        <i class="fas fa-caret-${isPositiveChange ? 'up' : 'down'}"></i>
+                        <span>${displayPercent}%</span>
+                    </span>
                 </div>
-                <div class="wallet-asset-change ${isPositiveChange ? 'positive' : 'negative'}">
-                    <i class="fas fa-caret-${isPositiveChange ? 'up' : 'down'}"></i>
-                    <span>${Math.abs(changePercent).toFixed(1)}%</span>
+                <div class="wallet-asset-value-row">
+                    <span class="wallet-asset-value">$${displayValue}</span>
                 </div>
             </div>
         `;
@@ -3435,4 +3498,134 @@ function updateWalletAfterSell(pair, amount, price) {
     
     // Actualizăm și balanța disponibilă
     updateTradeBalance();
+}
+
+// Funcție pentru a verifica și actualiza valorile din wallet cu date reale
+function updateWalletWithRealData() {
+    const walletData = localStorage.getItem('wallet');
+    if (!walletData) return;
+    
+    try {
+        const wallet = JSON.parse(walletData);
+        if (!wallet.coins) return;
+        
+        let updated = false;
+        
+        // Mapare între ID-urile din wallet și cele din cryptoData
+        const coinIdToSymbol = {
+            'bitcoin': 'BTC',
+            'ethereum': 'ETH',
+            'binancecoin': 'BNB',
+            'ripple': 'XRP',
+            'cardano': 'ADA',
+            'solana': 'SOL',
+            'polkadot': 'DOT',
+            'dogecoin': 'DOGE'
+        };
+        
+        // Pentru fiecare monedă, actualizăm prețul curent și procentajul
+        for (const coinId in wallet.coins) {
+            const coin = wallet.coins[coinId];
+            const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase();
+            
+            // Verificăm dacă avem date pentru această monedă
+            if (cryptoData && cryptoData[symbol]) {
+                const realPrice = cryptoData[symbol].price;
+                const realChangePercent = cryptoData[symbol].priceChange24h;
+                
+                // Actualizăm datele din wallet dacă sunt disponibile și valide
+                if (realPrice && !isNaN(realPrice) && isFinite(realPrice)) {
+                    coin.price = realPrice;
+                    updated = true;
+                }
+                
+                if (realChangePercent !== undefined && !isNaN(realChangePercent) && isFinite(realChangePercent)) {
+                    coin.changePercent = realChangePercent;
+                    updated = true;
+                }
+                
+                // Recalculăm valoarea în USD
+                if (coin.amount && coin.price) {
+                    coin.valueUSD = coin.amount * coin.price;
+                    updated = true;
+                }
+            }
+        }
+        
+        // Recalculăm totalBalance dacă am făcut actualizări
+        if (updated) {
+            let totalBalance = 0;
+            for (const coinId in wallet.coins) {
+                const coin = wallet.coins[coinId];
+                if (coin.valueUSD) {
+                    totalBalance += coin.valueUSD;
+                }
+            }
+            wallet.totalBalance = totalBalance;
+            
+            // Salvăm wallet-ul actualizat
+            localStorage.setItem('wallet', JSON.stringify(wallet));
+            console.log("Wallet actualizat cu prețuri reale");
+        }
+    } catch (error) {
+        console.error("Eroare la actualizarea wallet-ului:", error);
+    }
+}
+
+// Modificăm funcția fetchCryptoData pentru a actualiza și wallet-ul
+async function fetchCryptoData() {
+    const now = Date.now();
+    if (now - lastAPICall < API_CALL_DELAY) return;
+    try {
+        const success = await fetchFromBinance();
+        if (!success) throw new Error('Binance nu a returnat date');
+        lastAPICall = now;
+        
+        // După ce obținem date reale, actualizăm și wallet-ul
+        updateWalletWithRealData();
+        
+        return true;
+    } catch (error) {
+        console.error('Eroare la preluarea datelor:', error);
+        useFallbackData();
+        showAPIErrorMessage();
+        return false;
+    }
+}
+
+// Funcție pentru inițializarea funcționalității de toggle pentru vizibilitatea soldului
+function initializeBalanceVisibilityToggle() {
+    const toggleBtn = document.getElementById('toggleBalanceBtn');
+    const balanceElement = document.getElementById('availableBalance');
+    
+    if (!toggleBtn || !balanceElement) {
+        console.error('Nu s-au găsit elementele necesare pentru toggle-ul de vizibilitate al soldului');
+        return;
+    }
+    
+    // Creăm un element pentru afișarea balanței ascunse
+    const hiddenBalanceText = '•••••';
+    let isVisible = true;
+    
+    // Adăugăm event listener pentru buton
+    toggleBtn.addEventListener('click', function(e) {
+        // Prevenim propagarea evenimentului pentru a evita comportamente nedorite
+        e.preventDefault();
+        e.stopPropagation();
+        
+        isVisible = !isVisible;
+        
+        if (isVisible) {
+            // Arătăm soldul - folosim valoarea reală salvată în atribut
+            const realValue = balanceElement.getAttribute('data-real-value');
+            balanceElement.textContent = realValue || balanceElement.textContent;
+            toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            toggleBtn.title = 'Hide Balance';
+        } else {
+            // Ascundem soldul
+            balanceElement.textContent = '$' + hiddenBalanceText;
+            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            toggleBtn.title = 'Show Balance';
+        }
+    });
 }
