@@ -730,30 +730,25 @@ function forceVisualUpdate() {
     if (newPrice > data.high24h) data.high24h = newPrice;
     if (newPrice < data.low24h) data.low24h = newPrice;
     
-    // Actualizăm UI-ul cu noile valori
-    document.getElementById('lastPrice').textContent = `$${data.price.toFixed(2)}`;
+    // Folosim funcția centralizată pentru a sincroniza toate prețurile
+    syncAllPrices(newPrice, symbol);
     
+    // Actualizăm indicatorul de schimbare a prețului
     const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
-    document.getElementById('priceChange').textContent = priceChangeText;
-    document.getElementById('priceChange').className = data.priceChange24h >= 0 ? 'positive' : 'negative';
-    
-    document.getElementById('highPrice').textContent = `$${data.high24h.toFixed(2)}`;
-    document.getElementById('lowPrice').textContent = `$${data.low24h.toFixed(2)}`;
+    const priceChangeEl = document.getElementById('priceChange');
+    if (priceChangeEl) {
+        priceChangeEl.textContent = priceChangeText;
+        priceChangeEl.className = data.priceChange24h >= 0 ? 'positive' : 'negative';
+    }
     
     // Aplicăm și o mică animație de fade pentru a evidenția schimbarea
     const lastPriceEl = document.getElementById('lastPrice');
-    lastPriceEl.classList.add('price-flash');
-    setTimeout(() => {
-        lastPriceEl.classList.remove('price-flash');
-    }, 300);
-    
-    // Actualizăm prețul în orderbook
-    document.getElementById('orderBookPrice').textContent = `$${data.price.toFixed(2)}`;
-    
-    // NU mai actualizăm prețul în input - lăsăm utilizatorul să introducă ce valoare dorește
-    
-    // Verificăm și ordinele limit care poate pot fi executate cu noul preț
-    checkLimitOrders();
+    if (lastPriceEl) {
+        lastPriceEl.classList.add('price-flash');
+        setTimeout(() => {
+            lastPriceEl.classList.remove('price-flash');
+        }, 300);
+    }
 }
 
 // Adăugăm stilul pentru animația de fade
@@ -1055,20 +1050,47 @@ function processBinanceData(symbol, tickerData, klineData) {
     // Setăm flag-ul de date reale
     usingRealData = true;
     
-    // *** ACTUALIZARE FORȚATĂ DIRECTĂ ***
-    // Actualizăm direct elementele din UI pentru a evita orice probleme de sincronizare
-    document.getElementById('lastPrice').textContent = `$${currentPrice.toFixed(2)}`;
+    // Formatăm prețul pentru a fi folosit consecvent
+    const formattedPrice = currentPrice.toFixed(2);
+    const formattedPriceWithDollar = `$${formattedPrice}`;
     
+    // Actualizăm toate elementele de preț din interfață cu aceeași valoare
+    const elementsToUpdate = [
+        { id: 'lastPrice', format: formattedPriceWithDollar },
+        { id: 'orderBookPrice', format: formattedPriceWithDollar },
+        { id: 'orderPrice', format: formattedPrice, isInput: true },
+        { id: 'highPrice', format: `$${high24h.toFixed(2)}` },
+        { id: 'lowPrice', format: `$${low24h.toFixed(2)}` }
+    ];
+    
+    // Actualizăm toate elementele din listă
+    elementsToUpdate.forEach(element => {
+        const el = document.getElementById(element.id);
+        if (el) {
+            if (element.isInput) {
+                el.value = element.format;
+            } else {
+                el.textContent = element.format;
+            }
+        }
+    });
+    
+    // Folosim funcția centralizată pentru sincronizarea prețurilor
+    syncAllPrices(currentPrice, symbol);
+    
+    // Actualizăm indicatorul de schimbare
     const priceChangeText = (priceChangePercent >= 0 ? '+' : '') + priceChangePercent.toFixed(2) + '%';
-    document.getElementById('priceChange').textContent = priceChangeText;
-    document.getElementById('priceChange').className = priceChangePercent >= 0 ? 'positive' : 'negative';
+    const priceChangeEl = document.getElementById('priceChange');
+    if (priceChangeEl) {
+        priceChangeEl.textContent = priceChangeText;
+        priceChangeEl.className = priceChangePercent >= 0 ? 'positive' : 'negative';
+    }
     
-    document.getElementById('highPrice').textContent = `$${high24h.toFixed(2)}`;
-    document.getElementById('lowPrice').textContent = `$${low24h.toFixed(2)}`;
-    document.getElementById('volume').textContent = formatVolume(volume24h * currentPrice);
-    
-    document.getElementById('orderPrice').value = currentPrice.toFixed(2);
-    document.getElementById('orderBookPrice').textContent = `$${currentPrice.toFixed(2)}`;
+    // Actualizăm volumul
+    const volumeEl = document.getElementById('volume');
+    if (volumeEl) {
+        volumeEl.textContent = formatVolume(volume24h * currentPrice);
+    }
     
     // Actualizare UI
     updateMarketValues(currentSelectedPair);
@@ -2381,30 +2403,30 @@ function updateInterfaceWithCoinData() {
     if (cryptoData[symbol]) {
         const data = cryptoData[symbol];
         
-        // Actualizăm valorile în interfață
-        document.getElementById('lastPrice').textContent = `$${data.price.toFixed(2)}`;
+        // Folosim funcția centralizată pentru sincronizarea prețurilor
+        syncAllPrices(data.price, symbol);
         
+        // Actualizăm indicatorul de schimbare
+        const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
         const priceChangeEl = document.getElementById('priceChange');
-        priceChangeEl.textContent = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
-        priceChangeEl.className = 'stat-value ' + (data.priceChange24h >= 0 ? 'positive' : 'negative');
+        if (priceChangeEl) {
+            priceChangeEl.textContent = priceChangeText;
+            priceChangeEl.className = 'stat-value ' + (data.priceChange24h >= 0 ? 'positive' : 'negative');
+        }
         
-        document.getElementById('highPrice').textContent = `$${data.high24h.toFixed(2)}`;
-        document.getElementById('lowPrice').textContent = `$${data.low24h.toFixed(2)}`;
-        document.getElementById('volume').textContent = data.volume;
-        
-        // Actualizăm prețul în formularul de tranzacționare
-        document.getElementById('orderPrice').value = data.price.toFixed(2);
-        
-        // Actualizăm prețul în orderbook
-        document.getElementById('orderBookPrice').textContent = `$${data.price.toFixed(2)}`;
+        // Actualizăm volumul
+        const volumeEl = document.getElementById('volume');
+        if (volumeEl) {
+            volumeEl.textContent = data.volume;
+        }
         
         // Actualizăm spread-ul aproximativ (bazat pe o valoare de 0.05% din preț)
         const spread = data.price * 0.0005;
         const spreadPercent = 0.05;
-        document.getElementById('spread').textContent = `$${spread.toFixed(2)} (${spreadPercent.toFixed(2)}%)`;
-        
-        // Re-populăm orderbook-ul cu valorile actualizate
-        populateOrderBook(data.price);
+        const spreadEl = document.getElementById('spread');
+        if (spreadEl) {
+            spreadEl.textContent = `$${spread.toFixed(2)} (${spreadPercent.toFixed(2)}%)`;
+        }
     }
 }
 
@@ -3628,4 +3650,63 @@ function initializeBalanceVisibilityToggle() {
             toggleBtn.title = 'Show Balance';
         }
     });
+}
+
+// Adăugăm o funcție de utilitate pentru a sincroniza toate prețurile din interfață
+function syncAllPrices(price, symbol) {
+    if (!price || isNaN(price)) {
+        console.warn('Încercare de sincronizare cu un preț invalid:', price);
+        return false;
+    }
+    
+    // Verificăm dacă avem obiectul de date pentru simbol
+    if (!cryptoData[symbol]) {
+        console.warn(`Nu avem date pentru simbolul ${symbol}`);
+        return false;
+    }
+    
+    const data = cryptoData[symbol];
+    
+    // Formatăm prețul pentru a fi folosit consecvent
+    const formattedPrice = parseFloat(price).toFixed(2);
+    const formattedPriceWithDollar = `$${formattedPrice}`;
+    
+    // Actualizăm toate elementele de preț din interfață cu aceeași valoare
+    const elementsToUpdate = [
+        { id: 'lastPrice', format: formattedPriceWithDollar },
+        { id: 'orderBookPrice', format: formattedPriceWithDollar },
+        { id: 'orderPrice', format: formattedPrice, isInput: true },
+        { id: 'highPrice', format: `$${data.high24h.toFixed(2)}` },
+        { id: 'lowPrice', format: `$${data.low24h.toFixed(2)}` }
+    ];
+    
+    // Actualizăm toate elementele din listă cu verificări pentru null
+    elementsToUpdate.forEach(element => {
+        const el = document.getElementById(element.id);
+        if (el) {
+            if (element.isInput) {
+                el.value = element.format;
+            } else {
+                el.textContent = element.format;
+            }
+        }
+    });
+    
+    // Actualizăm și celelalte componente dependente de preț
+    try {
+        // Recalculăm totalul în orice formular de tranzacționare activ
+        if (typeof calculateTotal === 'function') calculateTotal();
+        
+        // Actualizăm orderbook-ul și graficul cu valorile sincronizate
+        if (typeof updateChart === 'function') updateChart(symbol);
+        if (typeof populateOrderBook === 'function') populateOrderBook(parseFloat(price));
+        
+        // Actualizăm portofelul cu noile prețuri
+        if (typeof updateWalletWithRealData === 'function') updateWalletWithRealData();
+    } catch (error) {
+        console.error('Eroare la sincronizarea prețurilor:', error);
+        return false;
+    }
+    
+    return true;
 }
