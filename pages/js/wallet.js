@@ -313,13 +313,11 @@ function updateDepositPreview() {
 
 // Modificăm funcția pentru inițializarea swap-ului
 function initializeSwapModal() {
-    const fromCoinSelect = document.getElementById('fromCoin');
-    const toCoinSelect = document.getElementById('toCoin');
-    const fromAmount = document.getElementById('fromAmount');
-    const toAmount = document.getElementById('toAmount');
-    const fromAvailable = document.getElementById('fromAvailable');
-    const fromSymbol = document.getElementById('fromSymbol');
-    const exchangeRate = document.getElementById('exchangeRate');
+    const swapModal = document.getElementById('swapModal');
+    let fromCoinSelect = document.getElementById('fromCoin');
+    let toCoinSelect = document.getElementById('toCoin');
+    let fromAmount = document.getElementById('fromAmount');
+    let toAmount = document.getElementById('toAmount');
     const swapDirectionBtn = document.getElementById('swapDirectionBtn');
     const swapSubmitBtn = document.getElementById('swapSubmitBtn');
     
@@ -327,27 +325,150 @@ function initializeSwapModal() {
         fromCoinSelect: !!fromCoinSelect,
         toCoinSelect: !!toCoinSelect,
         fromAmount: !!fromAmount,
+        toAmount: !!toAmount,
+        swapDirectionBtn: !!swapDirectionBtn, 
         swapSubmitBtn: !!swapSubmitBtn
     });
     
-    // Populăm dropdown-urile cu monedele disponibile
-    if (fromCoinSelect && toCoinSelect) {
-        populateSwapCoinDropdowns(fromCoinSelect, toCoinSelect);
+    // Verificăm dacă elementele necesare există și le creăm dacă nu există
+    if (!swapModal) {
+        console.log("Creez modalul de swap");
+        const modal = document.createElement('div');
+        modal.id = 'swapModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Swap Crypto</h2>
+                    <span class="modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="swap-container">
+                        <div class="swap-form">
+                            <div class="swap-row">
+                                <div class="swap-label">De la:</div>
+                                <div class="swap-inputs">
+                                    <select id="fromCoin" class="swap-select"></select>
+                                    <input type="number" id="fromAmount" class="swap-input" placeholder="0.00" min="0" step="any">
+                                </div>
+                            </div>
+                            <div class="swap-info">
+                                <div>Disponibil: <span id="fromAvailable">0.00</span> <span id="fromSymbol">BTC</span></div>
+                            </div>
+                            <div class="swap-direction">
+                                <button id="swapDirectionBtn" class="swap-direction-btn">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                            </div>
+                            <div class="swap-row">
+                                <div class="swap-label">La:</div>
+                                <div class="swap-inputs">
+                                    <select id="toCoin" class="swap-select"></select>
+                                    <input type="number" id="toAmount" class="swap-input" placeholder="0.00" readonly>
+                                </div>
+                            </div>
+                            <div class="swap-info">
+                                <div>Rata de schimb: <span id="exchangeRate">1 BTC = 13.54 ETH</span></div>
+                            </div>
+                            <div class="swap-fee-info">
+                                <div>Taxa de swap: 0.1%</div>
+                            </div>
+                        </div>
+                        <button id="swapSubmitBtn" class="submit-btn">Swap Acum</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Actualizăm referințele către elementele nou create
+        fromCoinSelect = document.getElementById('fromCoin');
+        toCoinSelect = document.getElementById('toCoin');
+        fromAmount = document.getElementById('fromAmount');
+        toAmount = document.getElementById('toAmount');
+        
+        // Adăugăm event listener pentru închiderea modalului
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+        }
+        
+        // Închide modalul când se face click în afara conținutului
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    } else if (!fromCoinSelect || !toCoinSelect) {
+        // Dacă modalul există dar lipsesc elementele din interior
+        console.log("Modalul există dar lipsesc elementele din interior");
+        
+        const modalBody = swapModal.querySelector('.modal-body');
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <div class="swap-container">
+                    <div class="swap-form">
+                        <div class="swap-row">
+                            <div class="swap-label">De la:</div>
+                            <div class="swap-inputs">
+                                <select id="fromCoin" class="swap-select"></select>
+                                <input type="number" id="fromAmount" class="swap-input" placeholder="0.00" min="0" step="any">
+                            </div>
+                        </div>
+                        <div class="swap-info">
+                            <div>Disponibil: <span id="fromAvailable">0.00</span> <span id="fromSymbol">BTC</span></div>
+                        </div>
+                        <div class="swap-direction">
+                            <button id="swapDirectionBtn" class="swap-direction-btn">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                        </div>
+                        <div class="swap-row">
+                            <div class="swap-label">La:</div>
+                            <div class="swap-inputs">
+                                <select id="toCoin" class="swap-select"></select>
+                                <input type="number" id="toAmount" class="swap-input" placeholder="0.00" readonly>
+                            </div>
+                        </div>
+                        <div class="swap-info">
+                            <div>Rata de schimb: <span id="exchangeRate">1 BTC = 13.54 ETH</span></div>
+                        </div>
+                        <div class="swap-fee-info">
+                            <div>Taxa de swap: 0.1%</div>
+                        </div>
+                    </div>
+                    <button id="swapSubmitBtn" class="submit-btn">Swap Acum</button>
+                </div>
+            `;
+            
+            // Actualizăm referințele către elementele nou create
+            fromCoinSelect = document.getElementById('fromCoin');
+            toCoinSelect = document.getElementById('toCoin');
+            fromAmount = document.getElementById('fromAmount');
+            toAmount = document.getElementById('toAmount');
+        }
     }
+    
+    // Verificăm din nou dacă elementele există după ce am încercat să le creăm
+    if (!fromCoinSelect || !toCoinSelect) {
+        console.error("Elementele esențiale lipsă în initializeSwapModal: fromCoinSelect sau toCoinSelect");
+        return;
+    }
+    
+    // Populăm dropdown-urile cu monedele disponibile
+    populateSwapCoinDropdowns(fromCoinSelect, toCoinSelect);
     
     // Actualizare la schimbarea monedei "From"
-    if (fromCoinSelect) {
-        fromCoinSelect.addEventListener('change', function() {
-            updateSwapInfo();
-        });
-    }
+    fromCoinSelect.addEventListener('change', function() {
+        updateSwapInfo();
+    });
     
     // Actualizare la schimbarea monedei "To"
-    if (toCoinSelect) {
-        toCoinSelect.addEventListener('change', function() {
-            updateSwapInfo();
-        });
-    }
+    toCoinSelect.addEventListener('change', function() {
+        updateSwapInfo();
+    });
     
     // Actualizare la schimbarea sumei și prevenirea valorilor negative
     if (fromAmount) {
@@ -378,9 +499,15 @@ function initializeSwapModal() {
     }
     
     // Butonul pentru executarea swap-ului
-    if (swapSubmitBtn) {
-        swapSubmitBtn.onclick = function() {
+    const newSwapSubmitBtn = document.getElementById('swapSubmitBtn');
+    if (newSwapSubmitBtn) {
+        newSwapSubmitBtn.onclick = function() {
             console.log("Swap button clicked");
+            
+            if (!fromCoinSelect || !toCoinSelect || !fromAmount || !toAmount) {
+                console.error("Elemente lipsă pentru swap");
+                return false;
+            }
             
             const fromCoin = fromCoinSelect.value;
             const toCoin = toCoinSelect.value;
@@ -410,7 +537,10 @@ function initializeSwapModal() {
             executeSwap(fromCoin, toCoin, fromAmountValue, toAmountValue);
             
             // Închidem modalul
-            document.getElementById('swapModal').style.display = 'none';
+            const swapModal = document.getElementById('swapModal');
+            if (swapModal) {
+                swapModal.style.display = 'none';
+            }
             
             console.log("Swap completed successfully");
             return false;
@@ -495,11 +625,20 @@ function populateSwapCoinDropdowns(fromSelect, toSelect) {
 
 // Funcție pentru actualizarea informațiilor de swap
 function updateSwapInfo() {
-    const fromCoin = document.getElementById('fromCoin').value;
-    const toCoin = document.getElementById('toCoin').value;
+    const fromCoinSelect = document.getElementById('fromCoin');
+    const toCoinSelect = document.getElementById('toCoin');
     const fromAvailable = document.getElementById('fromAvailable');
     const fromSymbol = document.getElementById('fromSymbol');
     const exchangeRateElement = document.getElementById('exchangeRate');
+    
+    // Verificăm dacă elementele există în DOM
+    if (!fromCoinSelect || !toCoinSelect) {
+        console.error("Elemente lipsă în DOM: fromCoin sau toCoin");
+        return;
+    }
+    
+    const fromCoin = fromCoinSelect.value;
+    const toCoin = toCoinSelect.value;
     
     // Evită swap între aceeași monedă
     if (fromCoin === toCoin) {
@@ -559,10 +698,20 @@ function calculateExchangeRate(fromCoin, toCoin) {
 
 // Funcție pentru actualizarea sumei rezultate în swap
 function updateToAmount() {
-    const fromCoin = document.getElementById('fromCoin').value;
-    const toCoin = document.getElementById('toCoin').value;
-    const fromAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+    const fromCoinSelect = document.getElementById('fromCoin');
+    const toCoinSelect = document.getElementById('toCoin');
+    const fromAmountInput = document.getElementById('fromAmount');
     const toAmount = document.getElementById('toAmount');
+    
+    // Verificăm dacă elementele există în DOM
+    if (!fromCoinSelect || !toCoinSelect || !fromAmountInput || !toAmount) {
+        console.error("Elemente lipsă în DOM pentru updateToAmount");
+        return;
+    }
+    
+    const fromCoin = fromCoinSelect.value;
+    const toCoin = toCoinSelect.value;
+    const fromAmount = parseFloat(fromAmountInput.value) || 0;
     
     // Obținem rata de schimb
     const rate = calculateExchangeRate(fromCoin, toCoin);
@@ -574,9 +723,7 @@ function updateToAmount() {
     // Calculăm suma finală
     const calculatedAmount = amountAfterFee * rate;
     
-    if (toAmount) {
-        toAmount.value = calculatedAmount.toFixed(6);
-    }
+    toAmount.value = calculatedAmount.toFixed(6);
 }
 
 // Funcție pentru executarea swap-ului
@@ -2040,10 +2187,67 @@ function removeNoAssetsMessage() {
 
 // Funcție pentru inițializarea funcționalității de toggle pentru vizibilitatea soldului
 function initializeBalanceVisibilityToggle() {
-    const toggleBtn = document.getElementById('toggleBalanceBtn');
-    const balanceAmount = document.getElementById('balanceAmount');
-    const hiddenBalance = document.getElementById('hiddenBalance');
+    let toggleBtn = document.getElementById('toggleBalanceBtn');
+    let balanceAmount = document.getElementById('balanceAmount');
+    let hiddenBalance = document.getElementById('hiddenBalance');
     
+    // Verificăm dacă elementele există și le creăm dacă lipsesc
+    const balanceSection = document.querySelector('.balance-section') || document.querySelector('.wallet-balance');
+    
+    if (balanceSection) {
+        if (!balanceAmount) {
+            // Verificăm dacă există un element de tip balance-amount dar cu alt ID
+            balanceAmount = balanceSection.querySelector('.balance-amount') || balanceSection.querySelector('.amount');
+            
+            if (balanceAmount) {
+                // Setăm ID-ul corect
+                balanceAmount.id = 'balanceAmount';
+            } else {
+                // Creăm elementul balanceAmount dacă nu există
+                const balanceContainer = balanceSection.querySelector('.balance-main') || balanceSection;
+                if (balanceContainer) {
+                    balanceAmount = document.createElement('div');
+                    balanceAmount.id = 'balanceAmount';
+                    balanceAmount.className = 'balance-amount';
+                    balanceAmount.innerHTML = `<span class="currency">$</span><span class="amount">${wallet.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+                    balanceContainer.appendChild(balanceAmount);
+                }
+            }
+        }
+        
+        if (!hiddenBalance) {
+            // Creăm elementul hiddenBalance dacă nu există
+            const balanceContainer = balanceSection.querySelector('.balance-main') || balanceSection;
+            if (balanceContainer) {
+                hiddenBalance = document.createElement('div');
+                hiddenBalance.id = 'hiddenBalance';
+                hiddenBalance.className = 'balance-amount hidden';
+                hiddenBalance.innerHTML = '<span class="currency">$</span><span class="amount">•••••</span>';
+                hiddenBalance.style.display = 'none';
+                balanceContainer.appendChild(hiddenBalance);
+            }
+        }
+        
+        if (!toggleBtn) {
+            // Creăm butonul de toggle dacă nu există
+            const balanceHeader = balanceSection.querySelector('.balance-header') || balanceSection;
+            if (balanceHeader) {
+                toggleBtn = document.createElement('button');
+                toggleBtn.id = 'toggleBalanceBtn';
+                toggleBtn.className = 'toggle-balance-btn';
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                toggleBtn.title = 'Hide Balance';
+                toggleBtn.style.background = 'transparent';
+                toggleBtn.style.border = 'none';
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.fontSize = '18px';
+                toggleBtn.style.color = 'var(--text-color, #fff)';
+                balanceHeader.appendChild(toggleBtn);
+            }
+        }
+    }
+    
+    // Verificăm din nou dacă elementele există după ce am încercat să le creăm
     if (!toggleBtn || !balanceAmount || !hiddenBalance) {
         console.error('Nu s-au găsit elementele necesare pentru toggle-ul de vizibilitate al soldului');
         return;

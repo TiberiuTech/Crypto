@@ -1,6 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM încărcat, inițializăm componentele");
     
+    // Eliminăm codul care ar putea crea modalul de swap
+    const swapModal = document.getElementById('swapModal');
+    if (swapModal) {
+        swapModal.remove();
+        console.log("Modalul de swap a fost eliminat din DOM");
+    }
+    
     // Corectăm valorile XRP înainte de orice altă operație
     if (typeof fixXRPValue === 'function') {
         console.log("Apelăm fixXRPValue() pentru a asigura consistența valorilor");
@@ -1887,6 +1894,14 @@ function setupEventListeners() {
             }
         });
     });
+    
+    // Eliminăm orice event listener asociat cu butonul de swap în această pagină
+    const swapButtons = document.querySelectorAll('.swap-btn');
+    if (swapButtons.length > 0) {
+        swapButtons.forEach(btn => {
+            btn.style.display = 'none';
+        });
+    }
 }
 
 // Calculează totalul bazat pe preț și cantitate
@@ -2500,6 +2515,7 @@ function updateTradeBalance() {
         const wallet = JSON.parse(walletData);
         const balance = wallet.totalBalance || 0;
         balanceElement.textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        balanceElement.setAttribute('data-eye-toggle', 'true');
         
         // Actualizăm și valoarea butonului 100% pentru a reflecta noua balanță
         const sliderButtons = document.querySelectorAll('.slider-btn');
@@ -3102,78 +3118,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Funcție pentru configurarea și inițializarea Order History
 function setupOrderHistory() {
-    // Verificăm existența containerului pentru Order History
+    console.log("Se configurează Order History...");
+    
+    // Verificăm dacă secțiunea de ordine există deja
     let ordersSection = document.querySelector('.orders-section');
     
     if (!ordersSection) {
-        console.warn("Container-ul pentru Order History nu există în DOM, îl vom crea");
+        console.log("Creăm secțiunea de ordine");
         
-        // Creăm container-ul pentru Order History
+        // Creăm secțiunea principală pentru ordine
         ordersSection = document.createElement('div');
         ordersSection.className = 'orders-section';
         
-        // Adăugăm tabs pentru Open Orders și Order History
+        // Adăugăm tab-urile
         ordersSection.innerHTML = `
             <div class="orders-tabs">
-                <button class="orders-tab-btn active" data-orders-tab="open">Open Orders</button>
-                <button class="orders-tab-btn" data-orders-tab="history">Order History</button>
+                <button class="orders-tab-btn active" data-orders-tab="open">Ordine deschise</button>
+                <button class="orders-tab-btn" data-orders-tab="history">Istoric ordine</button>
             </div>
             <div class="orders-content">
-                <div class="orders-table-container active" id="openOrdersTable">
+                <div id="openOrdersTable" class="orders-table-container active">
                     <table class="orders-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Pair</th>
-                                <th>Type</th>
-                                <th>Side</th>
-                                <th>Price</th>
-                                <th>Amount</th>
-                                <th>Filled</th>
+                                <th>Pereche</th>
+                                <th>Tip</th>
+                                <th>Parte</th>
+                                <th>Preț</th>
+                                <th>Cantitate</th>
                                 <th>Total</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th>Acțiuni</th>
                             </tr>
                         </thead>
                         <tbody id="openOrders">
-                            <!-- Open orders will be populated dynamically -->
+                            <tr class="no-orders-message">
+                                <td colspan="7">Nu aveți ordine deschise</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <div class="no-orders-message" id="noOpenOrders">
-                        <i class="fas fa-inbox"></i>
-                        <p>No open orders</p>
-                    </div>
                 </div>
-                <div class="orders-table-container" id="historyOrdersTable">
+                <div id="historyOrdersTable" class="orders-table-container">
                     <table class="orders-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Pair</th>
-                                <th>Type</th>
-                                <th>Side</th>
-                                <th>Price</th>
-                                <th>Amount</th>
+                                <th>Dată</th>
+                                <th>Pereche</th>
+                                <th>Tip</th>
+                                <th>Parte</th>
+                                <th>Preț</th>
+                                <th>Cantitate</th>
                                 <th>Total</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="orderHistory">
-                            <!-- Order history will be populated dynamically -->
+                            <tr class="no-orders-message">
+                                <td colspan="8">Nu aveți ordine în istoric</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <div class="no-orders-message" id="noOrderHistory">
-                        <i class="fas fa-inbox"></i>
-                        <p>No order history</p>
-                    </div>
                 </div>
             </div>
         `;
         
-        // Adăugăm container-ul la DOM
-        const main = document.querySelector('.trade-container');
-        if (main) {
-            main.appendChild(ordersSection);
+        // Adăugăm la container-ul principal
+        const tradeContainer = document.querySelector('.trade-container');
+        if (tradeContainer) {
+            tradeContainer.appendChild(ordersSection);
         } else {
             console.error("Nu s-a găsit container-ul principal (.trade-container)");
             document.body.appendChild(ordersSection);
@@ -3201,13 +3212,64 @@ function setupOrderHistory() {
         });
     }
     
-    // Ne asigurăm că există elementele necesare pentru tabele
+    // Verificăm dacă există elementele necesare pentru tabele
     if (!document.getElementById('openOrders')) {
         console.error("Elementul #openOrders nu există în DOM");
+        // Cream elementul care lipsește
+        const openOrdersTable = document.getElementById('openOrdersTable');
+        if (openOrdersTable) {
+            const table = document.createElement('table');
+            table.className = 'orders-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Pereche</th>
+                        <th>Tip</th>
+                        <th>Parte</th>
+                        <th>Preț</th>
+                        <th>Cantitate</th>
+                        <th>Total</th>
+                        <th>Acțiuni</th>
+                    </tr>
+                </thead>
+                <tbody id="openOrders">
+                    <tr class="no-orders-message">
+                        <td colspan="7">Nu aveți ordine deschise</td>
+                    </tr>
+                </tbody>
+            `;
+            openOrdersTable.appendChild(table);
+        }
     }
     
     if (!document.getElementById('orderHistory')) {
         console.error("Elementul #orderHistory nu există în DOM");
+        // Cream elementul care lipsește
+        const historyOrdersTable = document.getElementById('historyOrdersTable');
+        if (historyOrdersTable) {
+            const table = document.createElement('table');
+            table.className = 'orders-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Dată</th>
+                        <th>Pereche</th>
+                        <th>Tip</th>
+                        <th>Parte</th>
+                        <th>Preț</th>
+                        <th>Cantitate</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="orderHistory">
+                    <tr class="no-orders-message">
+                        <td colspan="8">Nu aveți ordine în istoric</td>
+                    </tr>
+                </tbody>
+            `;
+            historyOrdersTable.appendChild(table);
+        }
     }
     
     // Inițializăm tabelele cu datele existente

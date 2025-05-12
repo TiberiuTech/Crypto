@@ -260,10 +260,29 @@ html[data-theme="light"] .trading-account-info {
 }
 
 .account-balance {
+    position: relative;
     display: flex;
     justify-content: space-between;
     font-size: 0.95rem;
     color: var(--text-color);
+}
+
+.account-balance span:first-child {
+    margin-right: auto;
+}
+
+.account-balance #availableBalance {
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Ascundem complet textul prețului din Available Balance */
+.trading-panel .trading-account-info .account-balance #availableBalance {
+    display: none;
+}
+
+#availableBalance:not([data-eye-toggle="true"]) {
+    display: none;
 }
 
 .account-balance span:last-child {
@@ -1110,4 +1129,25 @@ html[data-theme="light"] .wallet-asset-item {
         font-size: 1rem;
         margin-right: 8px;
     }
+}
+
+/* Swap Modal Hidden */
+#swapModal {
+    display: none !important;
+}
+
+/* Ascundem toate butoanele de swap în pagina de trade */
+.swap-btn,
+button[data-coin-id],
+.fa-exchange-alt,
+.swap-direction-btn {
+    display: none !important;
+}
+
+/* În cazul în care mai există alte elemente de swap */
+.swap-container,
+.swap-form,
+.swap-info,
+.swap-fee-info {
+    display: none !important;
 } 
