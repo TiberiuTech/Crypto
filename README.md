@@ -27,36 +27,31 @@
 ---
 
 ## 3. Project Structure
-/ (root)
-│
-├── index.html # Landing page (features, hero, etc.)
-├── styles.css # Main global styles
-├── script.js # Main JS logic (UI, theme, etc.)
-│
-├── /pages
-│ ├── prices.html # Crypto prices, charts, and stats
-│ ├── news.html # Crypto news aggregation
-│ ├── wallet.html # User wallet, balances, transactions
-│ ├── trade.html # Trading interface
-│ ├── orionix.html # About Orionix token
-│ ├── css/
-│ │ ├── prices.css
-│ │ ├── news.css
-│ │ ├── wallet.css
-│ │ ├── trade.css
-│ ├── js/
-│ ├── prices.js
-│ ├── news.js
-│ ├── wallet.js
-│ ├── trade.js
-│ ├── firebase-config.js
-│
-├── /assets # Images, icons, logos
-│
+/
+├── index.html                  # Landing page (features, hero, etc.)
+├── styles.css                  # Main global styles
+├── script.js                   # Main JS logic (UI, theme, etc.)
+├── pages/
+│   ├── prices.html             # Crypto prices, charts, and stats
+│   ├── news.html               # Crypto news aggregation
+│   ├── wallet.html             # User wallet, balances, transactions
+│   ├── trade.html              # Trading interface
+│   ├── orionix.html            # About Orionix token
+│   ├── css/
+│   │   ├── prices.css
+│   │   ├── news.css
+│   │   ├── wallet.css
+│   │   ├── trade.css
+│   └── js/
+│       ├── prices.js
+│       ├── news.js
+│       ├── wallet.js
+│       ├── trade.js
+│       └── firebase-config.js
+├── assets/                     # Images, icons, logos
 └── Orionix/
-├── orionix-interface.js # Blockchain interaction logic
-├── deployment-helper.js # Deployment scripts for token
-
+    ├── orionix-interface.js    # Blockchain interaction logic
+    └── deployment-helper.js    # Deployment scripts for token
 
 ---
 
