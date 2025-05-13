@@ -9,10 +9,8 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 module.exports = {
   solidity: "0.8.20",
   networks: {
-    // Rețeaua locală Hardhat pentru dezvoltare și testare
     hardhat: {},
     
-    // Configurație pentru testnet Sepolia
     sepolia: {
       url: SEPOLIA_RPC_URL,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
@@ -20,17 +18,14 @@ module.exports = {
     }
   },
   
-  // Configurații pentru surse Etherscan pentru verificare
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
   
-  // Setări pentru solidity-coverage
   mocha: {
     timeout: 40000,
   },
   
-  // Adăugăm path-uri pentru contracte, teste, etc.
   paths: {
     sources: "./contracts",
     tests: "./test",

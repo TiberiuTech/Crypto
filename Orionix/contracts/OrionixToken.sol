@@ -10,7 +10,6 @@ contract OrionixToken is ERC20, ERC20Burnable, Ownable {
         ERC20("Orionix", "ORX")
         Ownable(initialOwner)
     {
-        // Mint 1,000,000 tokens initial (cu 18 zecimale)
         _mint(msg.sender, 1000000 * 10 ** decimals());
     }
 

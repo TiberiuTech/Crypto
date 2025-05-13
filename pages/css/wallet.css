@@ -1369,4 +1369,15 @@ html[data-theme="light"] .preview-title {
 .no-transactions-message p {
     margin: 0;
     font-size: 0.95rem;
+}
+
+.page-title {
+    font-size: 2.8rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
 } 

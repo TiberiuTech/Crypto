@@ -434,3 +434,14 @@ body.has-fixed-navbar .news-container {
     height: 40px;
     color: var(--secondary-text-color);
 }
+
+.page-title {
+    font-size: 2.8rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+}

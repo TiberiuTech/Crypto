@@ -1,129 +1,114 @@
-/**
- * Helper pentru deployarea contractului Orionix Token pe rețeaua Sepolia
- * 
- * Acest script te ghidează prin procesul de deployment al contractului Orionix Token
- * pe rețeaua de test Sepolia, folosind Hardhat.
- */
-
 const fs = require('fs');
 const readline = require('readline');
 const { execSync } = require('child_process');
 const path = require('path');
 const crypto = require('crypto');
 
-// Crează o interfață readline pentru interacțiunea cu utilizatorul
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-// Funcție pentru a pune o întrebare utilizatorului
 function askQuestion(query) {
   return new Promise((resolve) => rl.question(query, resolve));
 }
 
-// Funcție pentru a afișa titluri formatate
 function displayTitle(title) {
   console.log('\n' + '='.repeat(80));
   console.log(' ' + title);
   console.log('='.repeat(80) + '\n');
 }
 
-// Funcție pentru a genera un fișier .env nou
 async function createEnvFile() {
-  console.log('\nCreare fișier .env pentru configurarea deployment-ului...');
+  console.log('\nCreating .env file...');
   
   if (fs.existsSync('.env')) {
-    const overwrite = await askQuestion('Fișierul .env există deja. Doriți să îl suprascrieți? (y/n): ');
+    const overwrite = await askQuestion('File .env already exists. Do you want to overwrite it? (y/n): ');
     if (overwrite.toLowerCase() !== 'y') {
-      console.log('Se folosește fișierul .env existent.');
+      console.log('Using existing .env file.');
       return;
     }
   }
   
-  // Obținem configurația de la utilizator
-  console.log('\nAveți nevoie de următoarele informații:');
-  console.log('1. O cheie privată pentru un cont cu fonduri pe Sepolia');
-  console.log('2. Un URL pentru accesarea rețelei Sepolia (Infura, Alchemy etc.)');
-  console.log('3. Opțional: Un API key pentru Etherscan (pentru verificarea contractului)\n');
+  console.log('\nYou need the following information:');
+  console.log('1. A private key for a Sepolia account with funds');
+  console.log('2. An URL for accessing the Sepolia network (Infura, Alchemy etc.)');
+  console.log('3. Optional: An Etherscan API key (for contract verification)\n');
   
-  let privateKey = await askQuestion('Introduceți cheia privată (fără 0x prefix): ');
-  // Verificăm formatul cheii private
+  let privateKey = await askQuestion('Enter your private key (without 0x prefix): ');
   if (privateKey.startsWith('0x')) {
     privateKey = privateKey.substring(2);
   }
   
   if (privateKey.length !== 64) {
-    console.log('\n⚠️ ATENȚIE: Cheia privată nu are 64 de caractere (32 de bytes). Este posibil să fie invalidă.');
-    const proceed = await askQuestion('Doriți să continuați? (y/n): ');
+    console.log('\nWARNING: The private key does not have 64 characters (32 bytes). It may be invalid.');
+    const proceed = await askQuestion('Do you want to continue? (y/n): ');
     if (proceed.toLowerCase() !== 'y') {
-      console.log('Deployment anulat.');
+      console.log('Deployment cancelled.');
       process.exit(1);
     }
   }
   
-  let rpcUrl = await askQuestion('Introduceți URL-ul RPC pentru Sepolia (sau apăsați Enter pentru a folosi URL-ul public): ');
+  let rpcUrl = await askQuestion('Enter the RPC URL for Sepolia (or press Enter to use the public URL): ');
   if (!rpcUrl) {
     rpcUrl = 'https://ethereum-sepolia.publicnode.com';
-    console.log(`Se folosește URL-ul public: ${rpcUrl}`);
+    console.log(`Using public URL: ${rpcUrl}`);
   }
   
-  let etherscanKey = await askQuestion('Introduceți API key-ul Etherscan (opțional, apăsați Enter pentru a sări): ');
+  let etherscanKey = await askQuestion('Enter the Etherscan API key (optional, press Enter to skip): ');
   
-  // Scriem configurația în fișierul .env
-  const envContent = `# Configurare pentru deployment pe Sepolia testnet
-# Adăugată de scriptul deployment-helper.js la ${new Date().toLocaleString()}
+  const envContent = `# Configuration for deployment on Sepolia testnet
+# Added by deployment-helper.js at ${new Date().toLocaleString()}
 PRIVATE_KEY=${privateKey}
 SEPOLIA_RPC_URL=${rpcUrl}
 ETHERSCAN_API_KEY=${etherscanKey}
 `;
 
   fs.writeFileSync('.env', envContent);
-  console.log('\n✅ Fișierul .env a fost creat cu succes.');
+  console.log('\n✅ .env file created successfully.');
 }
 
-// Funcție pentru a compila contractul
+// Function to compile the contract
 async function compileContract() {
-  console.log('\nCompilare contract...');
+  console.log('\nCompiling contract...');
   
   try {
     execSync('npx hardhat clean', { stdio: 'inherit' });
     execSync('npx hardhat compile', { stdio: 'inherit' });
-    console.log('✅ Compilare reușită!');
+    console.log('✅ Compilation successful!');
     return true;
   } catch (error) {
-    console.error('\n❌ Eroare la compilare:', error.message);
+    console.error('\n❌ Compilation error:', error.message);
     return false;
   }
 }
 
-// Funcție pentru a deploiya contractul
+// Function to deploy the contract
 async function deployContract() {
-  console.log('\nDeployment contract Orionix Token pe rețeaua Sepolia...');
-  console.log('⚠️ Asigurați-vă că aveți fonduri suficiente pe contul din .env pentru a plăti taxa de gas.');
+  console.log('\nDeploying Orionix Token on Sepolia network...');
+  console.log('⚠️ Ensure you have enough funds in the account from .env to pay for gas.');
   
-  const proceed = await askQuestion('Continuați cu deployment-ul? (y/n): ');
+  const proceed = await askQuestion('Continue with deployment? (y/n): ');
   if (proceed.toLowerCase() !== 'y') {
-    console.log('Deployment anulat.');
+    console.log('Deployment cancelled.');
     return false;
   }
   
   try {
-    console.log('\nSe execută deployment...');
+    console.log('\nExecuting deployment...');
     execSync('npx hardhat run ./deploy.js --network sepolia', { stdio: 'inherit' });
-    console.log('\n✅ Deployment reușit!');
+    console.log('\nDeployment successful!');
     
-    // Citim fișierul orionix-interface.js pentru a verifica adresa contractului
     const interfaceFilePath = path.join(__dirname, 'orionix-interface.js');
     if (fs.existsSync(interfaceFilePath)) {
       const content = fs.readFileSync(interfaceFilePath, 'utf8');
       const match = content.match(/contractAddress\s*:\s*"(0x[a-fA-F0-9]+)"/);
       
       if (match && match[1] && match[1] !== '0x0000000000000000000000000000000000000000') {
-        console.log(`\nAdresa contractului: ${match[1]}`);
-        console.log('Adresa a fost actualizată automat în fișierul orionix-interface.js');
+        console.log(`\nContract address: ${match[1]}`);
+        console.log('Address has been automatically updated in orionix-interface.js');
         
-        // Actualizăm și flag-ul contractDeployed
         const updatedContent = content.replace(
           /contractDeployed\s*:\s*false/,
           'contractDeployed: true'
@@ -132,36 +117,36 @@ async function deployContract() {
         
         return true;
       } else {
-        console.log('\n⚠️ Adresa contractului nu a fost actualizată în orionix-interface.js');
+        console.log('\n⚠️ Contract address not updated in orionix-interface.js');
         return false;
       }
     } else {
-      console.log('\n⚠️ Nu s-a găsit fișierul orionix-interface.js');
+      console.log('\n⚠️ orionix-interface.js file not found');
       return false;
     }
   } catch (error) {
-    console.error('\n❌ Eroare la deployment:', error.message);
+    console.error('\n❌ Deployment error:', error.message);
     return false;
   }
 }
 
-// Funcție pentru a verifica existența și configurația MetaMask
+// Function to check the existence and configuration of MetaMask
 async function checkMetaMask() {
-  console.log('\nPentru a interacționa cu contractul Orionix Token, veți avea nevoie de:');
-  console.log('1. Extensia MetaMask instalată în browser');
-  console.log('2. Un cont în MetaMask configurat pentru rețeaua Sepolia');
-  console.log('3. ETH Sepolia în contul dvs. (puteți obține de la un faucet)\n');
+  console.log('\nTo interact with the Orionix Token contract, you will need:');
+  console.log('1. The MetaMask extension installed in your browser');
+  console.log('2. A MetaMask account configured for the Sepolia network');
+  console.log('3. ETH Sepolia in your account (you can get it from a faucet)\n');
   
-  const hasMM = await askQuestion('Aveți MetaMask instalat și configurat pentru Sepolia? (y/n): ');
+  const hasMM = await askQuestion('Do you have MetaMask installed and configured for Sepolia? (y/n): ');
   if (hasMM.toLowerCase() !== 'y') {
-    console.log('\nVă recomandăm să:');
-    console.log('1. Instalați MetaMask de la https://metamask.io/');
-    console.log('2. Adăugați rețeaua Sepolia în MetaMask');
-    console.log('3. Obțineți ETH Sepolia de la un faucet precum https://sepolia-faucet.pk910.de/\n');
+    console.log('\nWe recommend:');
+    console.log('1. Install MetaMask from https://metamask.io/');
+    console.log('2. Add the Sepolia network to MetaMask');
+    console.log('3. Get ETH Sepolia from a faucet like https://sepolia-faucet.pk910.de/\n');
   }
 }
 
-// Funcție pentru a verifica existența fișierelor necesare
+// Function to check the existence of required files
 function checkProjectFiles() {
   const requiredFiles = [
     './contracts/OrionixToken.sol',
@@ -172,13 +157,13 @@ function checkProjectFiles() {
   
   let allFilesExist = true;
   
-  console.log('\nVerificare fișiere necesare:');
+  console.log('\nChecking required files:');
   
   for (const file of requiredFiles) {
     if (fs.existsSync(file)) {
-      console.log(`✅ ${file} există`);
+      console.log(`${file} exists`);
     } else {
-      console.log(`❌ ${file} lipsește`);
+      console.log(`${file} is missing`);
       allFilesExist = false;
     }
   }
@@ -186,57 +171,50 @@ function checkProjectFiles() {
   return allFilesExist;
 }
 
-// Funcție principală pentru execuția scriptului
 async function main() {
   try {
-    displayTitle('DEPLOYMENT HELPER PENTRU ORIONIX TOKEN');
+    displayTitle('DEPLOYMENT HELPER FOR ORIONIX TOKEN');
     
-    console.log('Acest script vă va ghida prin procesul de deployment al contractului Orionix Token');
-    console.log('pe rețeaua de test Sepolia folosind Hardhat.\n');
+    console.log('This script will guide you through the process of deploying the Orionix Token contract');
+    console.log('on the Sepolia test network using Hardhat.\n');
     
-    // Verificăm fișierele necesare
     const filesOk = checkProjectFiles();
     if (!filesOk) {
-      console.log('\n⚠️ Unele fișiere necesare lipsesc. Vă rugăm să verificați structura proiectului.');
-      const proceed = await askQuestion('Doriți să continuați oricum? (y/n): ');
+      console.log('\nSome required files are missing. Please check the project structure.');
+      const proceed = await askQuestion('Do you want to continue anyway? (y/n): ');
       if (proceed.toLowerCase() !== 'y') {
-        console.log('Deployment anulat.');
+        console.log('Deployment cancelled.');
         return;
       }
     }
     
-    // Creare fișier .env
     await createEnvFile();
     
-    // Compilare contract
     const compileOk = await compileContract();
     if (!compileOk) {
-      console.log('\n⚠️ Compilarea a eșuat. Verificați erorile și încercați din nou.');
+      console.log('\nCompilation failed. Please check the errors and try again.');
       return;
     }
     
-    // Verificare MetaMask
     await checkMetaMask();
     
-    // Deployment contract
     const deployOk = await deployContract();
     
     if (deployOk) {
-      console.log('\n🎉 Felicitări! Contractul Orionix Token a fost deploiat cu succes.');
-      console.log('\nUrmătorii pași:');
-      console.log('1. Deschideți index.html în browser');
-      console.log('2. Conectați-vă cu MetaMask folosind butonul "Conectează MetaMask"');
-      console.log('3. Interacționați cu contractul Orionix Token\n');
+      console.log('\n🎉 Congratulations! The Orionix Token contract has been deployed successfully.');
+      console.log('\nNext steps:');
+      console.log('1. Open index.html in your browser');
+      console.log('2. Connect with MetaMask using the "Connect MetaMask" button');
+      console.log('3. Interact with the Orionix Token contract\n');
     } else {
-      console.log('\n⚠️ Deployment-ul nu a fost complet. Verificați erorile și încercați din nou.');
+      console.log('\nDeployment failed. Please check the errors and try again.');
     }
     
   } catch (error) {
-    console.error('\n❌ A apărut o eroare neașteptată:', error);
+    console.error('\n❌ An unexpected error occurred:', error);
   } finally {
     rl.close();
   }
 }
 
-// Rulăm funcția principală
 main(); 

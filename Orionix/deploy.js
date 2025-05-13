@@ -2,11 +2,10 @@ const { ethers } = require("ethers");
 const fs = require("fs");
 
 async function main() {
-  // Citim ABI-ul și bytecode-ul contractului compilat
   const contractJsonPath = './OrionixToken.json';
   
   if (!fs.existsSync(contractJsonPath)) {
-    console.error(`Fișierul ${contractJsonPath} nu există. Compilați contractul întâi.`);
+    console.error(`File ${contractJsonPath} does not exist. Compile the contract first.`);
     process.exit(1);
   }
 
@@ -14,15 +13,12 @@ async function main() {
   const abi = contractJson.abi;
   const bytecode = contractJson.bytecode;
 
-  // Conectare la provider (Infura, Alchemy sau alt provider)
-  // Utilizăm URL-ul nod Sepolia
   const providerUrl = process.env.PROVIDER_URL || "https://sepolia.infura.io/v3/YOUR_INFURA_KEY";
   const provider = new ethers.providers.JsonRpcProvider(providerUrl);
 
-  // Obținem wallet-ul pentru deployare
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey) {
-    console.error("Variabila de mediu PRIVATE_KEY nu este setată!");
+    console.error("Environment variable PRIVATE_KEY is not set!");
     process.exit(1);
   }
 
@@ -30,76 +26,67 @@ async function main() {
   const deployerAddress = await wallet.getAddress();
   console.log(`Deploying from address: ${deployerAddress}`);
 
-  // Verificăm soldul înainte de deployare
   const balance = await provider.getBalance(deployerAddress);
-  console.log(`Sold ETH: ${ethers.utils.formatEther(balance)} ETH`);
+  console.log(`ETH balance: ${ethers.utils.formatEther(balance)} ETH`);
 
   if (balance.eq(0)) {
-    console.error("Adresa nu are ETH pentru a deployal pe Sepolia. Obțineți ETH de la un faucet Sepolia.");
+    console.error("Address does not have ETH to deploy on Sepolia. Get ETH from a Sepolia faucet.");
     process.exit(1);
   }
 
-  // Creăm contractul
   const contractFactory = new ethers.ContractFactory(abi, bytecode, wallet);
   
   console.log("Deploying OrionixToken...");
   const deployTransaction = await contractFactory.getDeployTransaction(deployerAddress);
   
-  // Estimăm costul gas
   const gasEstimate = await provider.estimateGas(deployTransaction);
-  console.log(`Estimare gas: ${gasEstimate.toString()}`);
+  console.log(`Gas estimate: ${gasEstimate.toString()}`);
   
-  // Obținem gas price
   const gasPrice = await provider.getGasPrice();
   console.log(`Gas price: ${ethers.utils.formatUnits(gasPrice, "gwei")} gwei`);
   
-  // Calculăm costul total estimat
   const costEstimate = gasEstimate.mul(gasPrice);
-  console.log(`Cost estimat: ${ethers.utils.formatEther(costEstimate)} ETH`);
+  console.log(`Cost estimate: ${ethers.utils.formatEther(costEstimate)} ETH`);
   
-  // Verificăm dacă avem destui ETH
   if (balance.lt(costEstimate)) {
-    console.error(`Sold insuficient: aveți ${ethers.utils.formatEther(balance)} ETH, necesarul este de ${ethers.utils.formatEther(costEstimate)} ETH`);
+    console.error(`Insufficient balance: you have ${ethers.utils.formatEther(balance)} ETH, required ${ethers.utils.formatEther(costEstimate)} ETH`);
     process.exit(1);
   }
   
-  // Deployăm contractul
-  console.log("Trimitem tranzacția de deployare...");
+  console.log("Sending deployment transaction...");
   const contract = await contractFactory.deploy(deployerAddress);
   
-  console.log(`Așteptăm confirmarea tranzacției: ${contract.deployTransaction.hash}`);
+  console.log(`Waiting for transaction confirmation: ${contract.deployTransaction.hash}`);
   await contract.deployed();
   
-  console.log(`Contract deployed la adresa: ${contract.address}`);
+  console.log(`Contract deployed at address: ${contract.address}`);
   
-  // Salvăm adresa contractului în orionix-interface.js
   updateContractAddress(contract.address);
   
-  console.log("Deployment finalizat cu succes!");
+  console.log("Deployment successful!");
 }
 
 function updateContractAddress(address) {
   const filePath = './orionix-interface.js';
   if (!fs.existsSync(filePath)) {
-    console.warn(`Nu s-a găsit fișierul ${filePath}. Nu putem actualiza automat adresa contractului.`);
+    console.warn(`File ${filePath} not found. Cannot update contract address automatically.`);
     return;
   }
   
   let content = fs.readFileSync(filePath, 'utf8');
   
-  // Pattern pentru a căuta și înlocui adresa contractului
   const pattern = /(contractAddress\s*:\s*)"[^"]*"/;
   const replacement = `$1"${address}"`;
   
   content = content.replace(pattern, replacement);
   
   fs.writeFileSync(filePath, content);
-  console.log(`Adresa contractului a fost actualizată în ${filePath}`);
+  console.log(`Contract address updated in ${filePath}`);
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Eroare la deploymentul contractului:", error);
+    console.error("Error during contract deployment:", error);
     process.exit(1);
   }); 
