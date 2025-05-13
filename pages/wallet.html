@@ -12,7 +12,6 @@
           const theme = savedTheme || (prefersDark ? 'dark' : 'light');
           document.documentElement.setAttribute('data-theme', theme);
           
-          // Adăugăm o funcție pentru a reseta portofelul când apare problema XRP
           window.resetWallet = function() {
             localStorage.removeItem('wallet');
             alert('Wallet reset successful! Please refresh the page.');
@@ -29,7 +28,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Debug reset button - ascuns vizual dar accesibil via console -->
     <button id="resetWalletBtn" onclick="resetWallet()" style="position:fixed; bottom:5px; right:5px; opacity:0.1; z-index:9999; font-size:10px; padding:5px; background-color:red; color:white; border:none; border-radius:4px;">Reset Wallet</button>
     <nav class="navbar">
         <a href="../index.html" class="logo">Crypto-Platform</a>
@@ -71,7 +69,6 @@
             <h2>Crypto Wallet</h2>
         </div>
         
-        <!-- Dashboard Section -->
         <div class="dashboard-section">
             <div class="balance-card">
                 <div class="balance-header">
@@ -125,28 +122,24 @@
             </div>
         </div>
         
-        <!-- Assets Section -->
         <div class="assets-section">
             <div class="section-header">
                 <h3>Your Assets</h3>
             </div>
             
             <div class="assets-list" id="assetsList">
-                <!-- Activele vor fi adăugate dinamic prin JavaScript -->
                 <div class="no-assets-message">
                     <p>No assets yet. Make a deposit to add assets to your wallet.</p>
                 </div>
             </div>
         </div>
         
-        <!-- Recent Transactions Section -->
         <div class="transactions-section">
             <div class="section-header">
                 <h3>Recent Transactions</h3>
             </div>
             
             <div class="transactions-list" id="transactionsList">
-                <!-- Tranzacțiile vor fi adăugate dinamic prin JavaScript -->
                 <div class="no-transactions-message">
                     <p>No transactions yet. Your transaction history will appear here.</p>
                 </div>
@@ -154,7 +147,6 @@
         </div>
     </main>
 
-    <!-- Modal pentru Depozit -->
     <div id="depositModal" class="wallet-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -172,7 +164,6 @@
                                 <i class="fas fa-chevron-down dropdown-arrow"></i>
                             </div>
                             <div class="dropdown-options" id="coinOptions">
-                                <!-- Options will be populated dynamically from prices table -->
                             </div>
                             <input type="hidden" id="depositCoin" value="btc">
                         </div>
@@ -210,7 +201,6 @@
         </div>
     </div>
 
-    <!-- Modal pentru Withdraw -->
     <div id="withdrawModal" class="wallet-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -246,7 +236,6 @@
         </div>
     </div>
 
-    <!-- Modal pentru Swap -->
     <div id="swapModal" class="wallet-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -311,7 +300,6 @@
         </div>
     </div>
 
-    <!-- Modal pentru Istoric extins -->
     <div id="historyModal" class="wallet-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -350,7 +338,6 @@
                 </div>
                 
                 <div class="extended-transactions-list">
-                    <!-- Tranzacțiile vor fi generate dinamic prin JavaScript -->
                 </div>
                 
                 <div class="history-pagination">
@@ -362,14 +349,11 @@
         </div>
     </div>
 
-    <!-- Firebase Scripts -->
-    <!-- Implementare simplificată pentru autentificare -->
     <script src="js/firebase-config.js"></script>
     
     <script src="../script.js"></script>
     <script src="js/wallet.js"></script>
     
-    <!-- Modal pentru detalii card -->
     <div id="cardDetailsModal" class="wallet-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -419,7 +403,6 @@
         </div>
     </div>
     
-    <!-- Modal pentru confirmarea plății -->
     <div id="paymentConfirmationModal" class="wallet-modal">
         <div class="modal-content">
             <div class="modal-header">

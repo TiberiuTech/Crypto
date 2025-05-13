@@ -19,24 +19,17 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Ethers.js va fi încărcat dinamic în orionix-interface.js -->
-    <!-- Fallback pentru ethers.js - încărcăm din multiple surse pentru redundanță -->
     <script>
-        // Ethers.js va fi încărcat dinamic în orionix-interface.js, dar adăugăm și un fallback direct
         if (typeof window.ethers === 'undefined') {
-            // Adăugăm un script neasincron pentru a încărca ethers.js imediat
             document.write('<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" onerror="handleEthersError()"><\/script>');
-            
-            // Funcție de handling pentru erori la încărcare
             function handleEthersError() {
-                console.warn("Eroare la încărcarea ethers.js din CDN principal, încercăm sursă alternativă");
+                console.warn("Eror at loading ethers.js");
                 document.write('<script src="./Orionix/ethers.min.js"><\/script>');
             }
         }
     </script>
     
     <style>
-        /* Stiluri pentru butonul de conectare wallet */
         .connect-btn {
             display: inline-flex;
             align-items: center;
@@ -91,7 +84,6 @@
             opacity: 0;
         }
         
-        /* Animație de loading pentru buton */
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -103,7 +95,6 @@
             cursor: wait;
         }
         
-        /* Stiluri pentru indicator stare contract */
         #contract-status {
             position: relative;
             display: inline-flex;
@@ -125,10 +116,9 @@
         }
         
         #contract-status.simulation:before {
-            background-color: #3b82f6; /* Albastru pentru modul simulare */
+            background-color: #3b82f6; 
         }
         
-        /* Stiluri pentru carduri dezactivate */
         .action-card.disabled {
             opacity: 0.6;
             pointer-events: none;
@@ -277,18 +267,18 @@
 
     <section class="features-section">
         <div class="container">
-            <h2 class="features-heading">Platformă Completă pentru Crypto</h2>
-            <p class="features-subheading">Tot ce ai nevoie pentru a intra în lumea criptomonedelor</p>
+            <h2 class="features-heading">Complete Crypto Platform</h2>
+            <p class="features-subheading">Everything you need to enter the world of cryptocurrencies</p>
             
             <div class="features-container">
                 <div class="feature-box" data-feature="wallet">
                     <div class="feature-icon">
                         <i class="fas fa-wallet"></i>
                     </div>
-                    <h3>Wallet Securizat</h3>
-                    <p>Păstrează-ți activele în siguranță cu portofelul nostru digital, protejat prin criptare avansată și autentificare multi-factor.</p>
+                    <h3>Secure Wallet</h3>
+                    <p>Keep your assets safe with our digital wallet, protected by advanced encryption and multi-factor authentication.</p>
                     <a href="pages/wallet.html" class="feature-link">
-                        <span>Explorează Wallet</span>
+                        <span>Explore Wallet</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -297,10 +287,10 @@
                     <div class="feature-icon">
                         <i class="fas fa-newspaper"></i>
                     </div>
-                    <h3>Știri Crypto</h3>
-                    <p>Rămâi informat cu ultimele știri și analize din lumea crypto pentru a lua decizii inteligente de investiții.</p>
+                    <h3>Crypto News</h3>
+                    <p>Stay informed with the latest crypto news and analysis to make smart investment decisions.</p>
                     <a href="pages/news.html" class="feature-link">
-                        <span>Citește Știrile</span>
+                        <span>Read News</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -309,10 +299,10 @@
                     <div class="feature-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3>Tranzacționare Simplă</h3>
-                    <p>Cumpără și vinde criptomonede cu o interfață intuitivă, comisioane mici și execuție rapidă a tranzacțiilor.</p>
+                    <h3>Simple Trading</h3>
+                    <p>Buy and sell cryptocurrencies with an intuitive interface, low fees and fast transaction execution.</p>
                     <a href="pages/trade.html" class="feature-link">
-                        <span>Începe Tranzacționarea</span>
+                        <span>Start Trading</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -321,10 +311,10 @@
                     <div class="feature-icon orionix-icon">
                         <img src="assets/orionix.jpg" alt="Orionix">
                     </div>
-                    <h3>Moneda Orionix</h3>
-                    <p>Descoperă tokenul nostru nativ cu utilitate, creștere sustenabilă și tehnologie blockchain avansată.</p>
+                    <h3>Orionix Token</h3>
+                    <p>Discover our native token with utility, sustainable growth and advanced blockchain technology.</p>
                     <a href="pages/orionix.html" class="feature-link">
-                        <span>Despre Orionix</span>
+                        <span>About Orionix</span>
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -337,7 +327,6 @@
             <h2 class="compare-heading">Compare Cryptocurrencies</h2>
             
             <div class="compare-container">
-                <!-- Orionix Card - Fixed -->
                 <div class="crypto-compare-card">
                     <div class="crypto-header">
                         <div class="crypto-icon">
@@ -374,12 +363,10 @@
                     </div>
                 </div>
                 
-                <!-- VS -->
                 <div class="vs-container">
                     <span class="vs-text">VS</span>
                 </div>
                 
-                <!-- Other Crypto Card - Selectable -->
                 <div class="crypto-compare-card">
                     <div class="crypto-header">
                         <div class="crypto-icon">
@@ -430,19 +417,15 @@
 
     <script src="script.js" defer></script>
     <script>
-        // Script pentru inițializarea graficelor de comparare
         window.addEventListener('load', function() {
-            // Verificăm dacă secțiunea de comparare există
             const compareSection = document.getElementById('compare-section');
             if (!compareSection) return;
             
-            // Verificăm dacă funcțiile necesare sunt disponibile
             if (typeof initCryptoCompare === 'function') {
-                console.log('Inițializăm graficele de comparare după încărcarea completă a paginii');
+                console.log('Initializing charts after page load');
                 setTimeout(function() {
                     initCryptoCompare();
                     
-                    // Forțăm re-inițializarea graficelor după un scurt delay
                     setTimeout(function() {
                         if (typeof generateCompareChartData === 'function' && typeof updateCompareChart === 'function') {
                             const orxData = generateCompareChartData(4.25, 1.22);
@@ -451,38 +434,34 @@
                             const btcData = generateCompareChartData(86037.88, 1.22);
                             updateCompareChart('compare-coin-chart', btcData, '#f7931a');
                             
-                            console.log('Graficele au fost re-inițializate cu succes');
+                            console.log('Charts have been re-initialized successfully');
                         }
                     }, 500);
                 }, 100);
             }
         });
     </script>
-    <!-- Script pentru inițializarea directă a graficelor de comparare -->
     <script src="Orionix/orionix-interface.js"></script>
     <script>
     (function() {
         function initializeCompareCharts() {
-            console.log("Inițializare directă a graficelor de comparare...");
+            console.log("Direct initialization of comparison charts...");
             
-            // Verificăm elementele canvas
             const orxChart = document.getElementById('orx-compare-chart');
             const compareChart = document.getElementById('compare-coin-chart');
             
             if (!orxChart || !compareChart) {
-                console.log("Elementele canvas nu sunt încă disponibile, reîncercăm în 500ms");
+                console.log("Canvas elements are not available, retrying in 500ms");
                 setTimeout(initializeCompareCharts, 500);
                 return;
             }
             
-            // Funcție simplificată pentru generarea datelor
             function generateSimpleData(basePrice, isPositive) {
                 const points = 24 * 2;
                 const data = { labels: [], prices: [] };
                 const now = new Date();
                 
                 for (let i = 0; i < points; i++) {
-                    // Generăm etichete simple pentru ore
                     if (i % 2 === 0) {
                         const hour = (now.getHours() - Math.floor((points - i) / 2)) % 24;
                         data.labels.push(hour.toString().padStart(2, '0') + ':00');
@@ -490,7 +469,6 @@
                         data.labels.push('');
                     }
                     
-                    // Generăm prețuri cu trend
                     const progress = i / (points - 1);
                     const random = Math.sin(i * 0.5) * 0.02;
                     const trend = isPositive ? 
@@ -503,30 +481,24 @@
                 return data;
             }
             
-            // Funcție simplificată pentru desenarea graficului
             function drawSimpleChart(canvas, data, color) {
                 const ctx = canvas.getContext('2d');
                 if (!ctx) return;
                 
-                // Curățăm canvas-ul
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Setăm dimensiunile corecte
                 const containerWidth = canvas.parentElement.clientWidth || 400;
                 const containerHeight = canvas.parentElement.clientHeight || 200;
                 canvas.width = containerWidth;
                 canvas.height = containerHeight;
                 
-                // Găsim valorile min și max pentru scalare
                 const minPrice = Math.min(...data.prices) * 0.995;
                 const maxPrice = Math.max(...data.prices) * 1.005;
                 const priceRange = maxPrice - minPrice;
                 
-                // Calculăm scalarea pentru a desena în canvas
                 const xScale = containerWidth / (data.prices.length - 1);
                 const yScale = containerHeight / priceRange;
                 
-                // Desenăm linia
                 ctx.beginPath();
                 ctx.moveTo(0, containerHeight - (data.prices[0] - minPrice) * yScale);
                 
@@ -540,7 +512,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Desenăm fill sub linie
                 ctx.lineTo(containerWidth, containerHeight);
                 ctx.lineTo(0, containerHeight);
                 ctx.closePath();
@@ -553,20 +524,18 @@
                 ctx.fillStyle = gradient;
                 ctx.fill();
                 
-                console.log("Grafic desenat cu succes:", canvas.id);
+                console.log("Chart drawn successfully:", canvas.id);
             }
             
-            // Desenăm graficele
             const orxData = generateSimpleData(4.25, true);
             drawSimpleChart(orxChart, orxData, '#10b981');
             
             const btcData = generateSimpleData(86037.88, true);
             drawSimpleChart(compareChart, btcData, '#f7931a');
             
-            console.log("Ambele grafice au fost inițializate cu succes");
+            console.log("Both charts have been initialized successfully");
         }
         
-        // Pornim inițializarea după încărcarea completă a paginii
         if (document.readyState === 'complete') {
             initializeCompareCharts();
         } else {
@@ -577,11 +546,8 @@
     })();
     </script>
 
-    <!-- Firebase Scripts -->
-    <!-- Am înlocuit Firebase-ul real cu o implementare simplificată -->
     <script src="pages/js/firebase-config.js"></script>
     
-    <!-- Main Script -->
     <script src="script.js"></script>
 
 </body>

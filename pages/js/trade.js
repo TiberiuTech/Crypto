@@ -1,67 +1,54 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM încărcat, inițializăm componentele");
+    console.log("DOM loaded, initializing components");
     
-    // Eliminăm codul care ar putea crea modalul de swap
     const swapModal = document.getElementById('swapModal');
     if (swapModal) {
         swapModal.remove();
-        console.log("Modalul de swap a fost eliminat din DOM");
+        console.log("Swap modal removed from DOM");
     }
     
-    // Corectăm valorile XRP înainte de orice altă operație
     if (typeof fixXRPValue === 'function') {
-        console.log("Apelăm fixXRPValue() pentru a asigura consistența valorilor");
+        console.log("Calling fixXRPValue() to ensure consistent values");
         fixXRPValue();
     } else {
-        console.warn("Funcția fixXRPValue nu a fost găsită, este posibil ca valorile XRP să nu fie afișate corect");
-        // Definim o funcție temporară pentru a evita erori
+        console.warn("Function fixXRPValue not found, possible XRP values will not be displayed correctly");
         window.fixXRPValue = function() {
             console.log("fixXRPValue dummy function");
         };
     }
     
-    // Inițializăm interfața fără a actualiza valorile încă
     setupChart();
     initCustomDropdown();
-    initEmptyUI(); // Doar inițializare UI fără valori
+    initEmptyUI();
     
-    // Inițializăm API-ul și forțăm actualizarea imediată a datelor
-    console.log("Inițializăm API și forțăm update-ul datelor");
+    console.log("Initializing API and forcing data update");
     initCryptoAPI();
     
-    // Restul inițializărilor după obținerea datelor
     setupEventListeners();
     
-    // Inițiem actualizarea periodică a prețurilor
     startPriceUpdates();
     
     updateTradeBalance();
     
-    // Inițializăm funcționalitatea de toggle pentru solduri
     initializeBalanceVisibilityToggle();
     
-    // Forțăm o actualizare imediată a wallet assets pentru a avea prețuri corecte
     setTimeout(() => {
-        // Facem un fetch pentru a avea date actualizate
         fetchCryptoData().then(() => {
-            console.log("Date fetch actualizate, actualizăm wallet assets");
+            console.log("Data fetch updated, updating wallet assets");
             updateWalletAssetsDisplay();
         }).catch(err => {
-            console.warn("Eroare la actualizarea datelor pentru wallet assets:", err);
-            updateWalletAssetsDisplay(); // Actualizăm oricum cu ce avem
+            console.warn("Error updating wallet assets data:", err);
+            updateWalletAssetsDisplay();
         });
     }, 500);
     
-    // Configurăm actualizarea periodică a wallet assets
     setInterval(() => {
         updateWalletAssetsDisplay();
-    }, 30000); // Actualizăm la fiecare 30 secunde
+    }, 30000);
     
-    // Verificăm existența și creăm tabelul de Order History dacă nu există
     setupOrderHistory();
 });
 
-// Date de market demo cu valori neutre
 const marketData = {
     'BTC/USDT': {
         lastPrice: 0.00,
@@ -89,7 +76,6 @@ const marketData = {
     }
 };
 
-// Mapare simboluri monede către ID-urile CoinGecko
 const coinGeckoIdMap = {
     'BTC': 'bitcoin',
     'ETH': 'ethereum',
@@ -101,24 +87,19 @@ const coinGeckoIdMap = {
     'DOGE': 'dogecoin'
 };
 
-// Mapare pentru API-ul CryptoCompare
 const cryptoCompareSymbols = ['BTC', 'ETH', 'BNB', 'XRP', 'ADA', 'SOL', 'DOT', 'DOGE'];
 
-// Stocăm datele primite de la API
 let cryptoData = {};
 let priceChartData = {};
 let currentCoin = 'BTC';
 let priceUpdateInterval;
 let lastAPICall = 0;
-const API_CALL_DELAY = 10000; // 10 secunde între apeluri pentru a evita limitarea
+const API_CALL_DELAY = 10000;
 
-// Schimb proxy-ul cu unul mai fiabil
 const COINGECKO_PROXY = 'https://cors-anywhere.herokuapp.com/';
 
-// Flag global pentru a indica dacă folosim date reale sau demo
 let usingRealData = false;
 
-// Mapare a intervalelor UI către formatul Binance
 const timeframeMap = {
     '1h': {
         binanceInterval: '1m',
@@ -152,10 +133,8 @@ const timeframeMap = {
     }
 };
 
-// Interval curent activ (default: 1d)
 let currentTimeframe = '1d';
 
-// Culori pentru tema dark/light
 function getThemeColors() {
     const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
     
@@ -173,7 +152,6 @@ function getThemeColors() {
     };
 }
 
-// Inițializare dropdown personalizat cu iconițe
 function initCustomDropdown() {
     const customDropdown = document.querySelector('.custom-dropdown');
     const selectedOption = document.querySelector('.selected-option');
@@ -182,24 +160,20 @@ function initCustomDropdown() {
     const hiddenSelect = document.getElementById('tradingPair');
     
     if (!customDropdown || !selectedOption || !hiddenSelect) {
-        console.error("Nu s-au găsit toate elementele necesare pentru dropdown!");
+        console.error("All necessary elements for dropdown not found!");
         return;
     }
     
-    console.log("Inițializare dropdown personalizat");
+    console.log("Custom dropdown initialization");
     
-    // Asigurăm poziționarea corectă a meniului dropdown
     function positionDropdown() {
         if (dropdownOptions) {
-            // Forțăm dropdown-ul să aibă aceeași lățime ca și elementul selectat
             const rect = selectedOption.getBoundingClientRect();
             dropdownOptions.style.width = rect.width + 'px';
             
-            // Mută dropdown-ul în body pentru a evita probleme de overflow/z-index
             if (!document.body.contains(dropdownOptions)) {
                 document.body.appendChild(dropdownOptions);
                 
-                // Poziționează-l sub elementul selectat
                 const rectSelected = selectedOption.getBoundingClientRect();
                 dropdownOptions.style.position = 'fixed';
                 dropdownOptions.style.top = (rectSelected.bottom + 2) + 'px';
@@ -209,15 +183,12 @@ function initCustomDropdown() {
         }
     }
     
-    // Toggle dropdown la click pe elementul selectat
     selectedOption.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevenim propagarea evenimentului
+        e.stopPropagation();
         
-        // Dacă este deja activ, îl ascundem
         if (customDropdown.classList.contains('active')) {
             customDropdown.classList.remove('active');
         } else {
-            // Altfel îl afișăm și poziționăm corect
             customDropdown.classList.add('active');
             positionDropdown();
         }
@@ -225,79 +196,63 @@ function initCustomDropdown() {
         console.log("Dropdown toggle:", customDropdown.classList.contains('active'));
     });
     
-    // Închide dropdown la click în afara acestuia
     document.addEventListener('click', (e) => {
         if (!customDropdown.contains(e.target) && !dropdownOptions.contains(e.target)) {
             customDropdown.classList.remove('active');
         }
     });
     
-    // Adăugăm handler pentru opțiuni
     dropdownOptionItems.forEach(option => {
         option.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevenim propagarea evenimentului
+            e.stopPropagation();
             
             const value = option.getAttribute('data-value');
             const iconElement = option.querySelector('.crypto-icon').cloneNode(true);
             const text = option.querySelector('span:not(.crypto-icon)').textContent;
             
-            console.log("[DROPDOWN] Opțiune selectată:", value);
+            console.log("[DROPDOWN] Selected option:", value);
             
-            // Actualizăm opțiunea selectată
             const selectedIcon = selectedOption.querySelector('.crypto-icon');
-            selectedIcon.className = iconElement.className; // Copiem toate clasele CSS
-            selectedIcon.innerHTML = iconElement.innerHTML; // Copiem conținutul (text/simbol)
+            selectedIcon.className = iconElement.className;
+            selectedIcon.innerHTML = iconElement.innerHTML;
             
             selectedOption.querySelector('span:not(.crypto-icon)').textContent = text;
             
-            // Actualizăm selectul ascuns
             hiddenSelect.value = value;
-            
-            // Forțăm actualizări UI pentru a evita probleme cu event handling
-            // Mai întâi setăm toate valorile din header la loading
+
             document.getElementById('lastPrice').textContent = `$---`;
             document.getElementById('priceChange').textContent = `---`;
             document.getElementById('highPrice').textContent = `$---`;
             document.getElementById('lowPrice').textContent = `$---`;
             document.getElementById('volume').textContent = `---`;
             
-            // Resetăm datele existente
             const symbol = value.split('/')[0];
             currentCoin = symbol;
             
-            // Actualizăm UI-ul pentru simbolul selectat
             updateSelectedSymbolDisplay(symbol);
             
-            // Arătăm indicatorul de loading
             toggleLoadingIndicator(true);
             
-            console.log("[DROPDOWN] Pregătit să declanșez change pentru:", value);
+            console.log("[DROPDOWN] Ready to trigger change for:", value);
             
-            // Declanșăm event change pentru select
             const event = new Event('change', { bubbles: true });
             hiddenSelect.dispatchEvent(event);
             
-            // Închidem dropdown-ul
             customDropdown.classList.remove('active');
             
-            // Verificăm dacă event change a fost procesat corect, altfel forțăm actualizarea
             setTimeout(() => {
                 if (document.getElementById('lastPrice').textContent === '$---') {
-                    console.log("[DROPDOWN] Forțez fetch după timeout");
-                    // Dacă încă nu avem date după 200ms, forțăm un fetch direct
-                    cryptoData = {}; // Resetăm tot obiectul
-                    priceChartData = {}; // Resetăm toate datele graficului
+                    console.log("[DROPDOWN] Forcing fetch after timeout");
+                    cryptoData = {};
+                    priceChartData = {};
                     
-                    // Resetăm timer-ul de API pentru a permite actualizarea imediată
                     lastAPICall = 0;
                     
-                    // Apelăm direct fetchFromBinance
                     fetchFromBinance().then(success => {
                         if (success) {
-                            console.log(`[DROPDOWN] Date actualizate cu succes pentru ${symbol}`);
+                            console.log(`[DROPDOWN] Date updated successfully for ${symbol}`);
                             toggleLoadingIndicator(false);
                             
-                            // Reinițializăm graficul
                             if (window.priceChart) window.priceChart.destroy();
                             initChartData();
                         } else {
@@ -305,7 +260,7 @@ function initCustomDropdown() {
                             toggleLoadingIndicator(false);
                         }
                     }).catch(error => {
-                        console.error(`[DROPDOWN] Eroare la actualizare:`, error);
+                        console.error(`[DROPDOWN] Error updating data:`, error);
                         useFallbackData();
                         toggleLoadingIndicator(false);
                     });
@@ -314,7 +269,6 @@ function initCustomDropdown() {
         });
     });
     
-    // Inițializăm cu prima opțiune
     const firstOption = dropdownOptionItems[0];
     if (firstOption) {
         const value = firstOption.getAttribute('data-value');
@@ -323,40 +277,30 @@ function initCustomDropdown() {
         updateSelectedSymbolDisplay(symbol);
     }
     
-    // Adăugăm un event listener global pentru taste
     document.addEventListener('keydown', (e) => {
-        // Închidem dropdown-ul la apăsarea tastei Escape
         if (e.key === 'Escape') {
             customDropdown.classList.remove('active');
         }
     });
     
-    // Repoziționăm la redimensionarea ferestrei
     window.addEventListener('resize', positionDropdown);
     
-    // Poziționare inițială
     positionDropdown();
 }
 
-// Configurarea Chart.js
 function setupChart() {
-    // În Chart.js v3, plugin-urile se înregistrează automat,
-    // deci nu este nevoie de înregistrare manuală
-    console.log("Inițializare Chart.js și plugin-uri");
+    console.log("Chart.js initialization and plugins registration");
 }
 
-// Inițializarea interfaței fără a afișa valori, doar configurăm componentele
 function initEmptyUI() {
-    // Inițializare ordine deschise
     const openOrders = document.getElementById('openOrders');
     const noOpenOrders = document.getElementById('noOpenOrders');
-    
+
     if (openOrders && noOpenOrders) {
         openOrders.innerHTML = '';
         noOpenOrders.style.display = 'flex';
     }
     
-    // Inițializare istoric ordine
     const orderHistory = document.getElementById('orderHistory');
     const noOrderHistory = document.getElementById('noOrderHistory');
     
@@ -365,27 +309,19 @@ function initEmptyUI() {
         noOrderHistory.style.display = 'flex';
     }
     
-    // Inițializăm graficul după ce primim datele reale
-    // Nu apelăm acum initChartData
 }
 
-// Modificăm funcția inițială care afișa valori demo
 function initTradingInterface() {
-    // Obține perechea selectată
     const selectedPair = document.getElementById('tradingPair').value;
     
-    // Actualizează valori de market cu datele reale
-    // Dar doar dacă datele sunt disponibile
     if (cryptoData[selectedPair.split('/')[0]]) {
         updateMarketValues(selectedPair);
     }
 }
 
-// Modificăm funcția pentru a nu mai folosi 47000 ca preț de referință
 function generateChartData(timeframe = '1d', numCandles = 200) {
     const now = new Date();
     const data = [];
-    // Folosim un preț de referință neutru, nu 47000
     let lastClose = 10000 + Math.random() * 1000;
     const volatility = 0.02;
     
@@ -393,30 +329,28 @@ function generateChartData(timeframe = '1d', numCandles = 200) {
     
     switch(timeframe) {
         case '1h':
-            timeIncrement = 5 * 60 * 1000; // 5 minute
+            timeIncrement = 5 * 60 * 1000; 
             break;
         case '4h':
-            timeIncrement = 20 * 60 * 1000; // 20 minute
+            timeIncrement = 20 * 60 * 1000; 
             break;
         case '1d':
-            timeIncrement = 2 * 60 * 60 * 1000; // 2 ore
+            timeIncrement = 2 * 60 * 60 * 1000; 
             break;
         case '1w':
-            timeIncrement = 12 * 60 * 60 * 1000; // 12 ore
+            timeIncrement = 12 * 60 * 60 * 1000; 
             break;
         case '1m':
-            timeIncrement = 24 * 60 * 60 * 1000; // 1 zi
+            timeIncrement = 24 * 60 * 60 * 1000; 
             break;
         default:
-            timeIncrement = 2 * 60 * 60 * 1000; // 2 ore (default)
+            timeIncrement = 2 * 60 * 60 * 1000; 
     }
     
-    // Generăm date pentru ultimele numCandles perioade
     for (let i = numCandles; i >= 0; i--) {
         const timestamp = new Date(now.getTime() - (i * timeIncrement));
         const range = lastClose * volatility;
         
-        // Generăm valori random pentru open, high, low, close
         const change = (Math.random() - 0.5) * range;
         const open = lastClose;
         const close = open + change;
@@ -439,27 +373,23 @@ function generateChartData(timeframe = '1d', numCandles = 200) {
     return data;
 }
 
-// Inițializare date pentru grafic
 function initChartData() {
     const canvasElement = document.getElementById('tradingChart');
     if (!canvasElement) return;
     
-    console.log("Inițializare grafic");
+    console.log("Chart initialization");
     const ctx = canvasElement.getContext('2d');
     const themeColors = getThemeColors();
-    
-    // Verificăm dacă avem date de la CoinGecko
+
     const selectedPair = document.getElementById('tradingPair').value;
     const symbol = selectedPair.split('/')[0];
     
-    // Folosim date de la CoinGecko dacă sunt disponibile, altfel generăm date aleatorii
     const prices = priceChartData[symbol] || 
                   generateChartData().map(item => ({
                       x: new Date(item.time),
                       y: item.close
                   }));
     
-    // Creăm chart-ul principal pentru prețuri ca grafic de linie
     const priceChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -536,18 +466,16 @@ function initChartData() {
         }
     });
     
-    // Salvăm referința la chart pentru actualizări viitoare
     window.priceChart = priceChart;
 }
 
-// Funcție pentru schimbarea timeframe-ului
 function changeTimeframe(timeframe) {
     if (!timeframeMap[timeframe]) {
         console.error(`Timeframe invalid: ${timeframe}`);
         return;
     }
 
-    console.log(`[TIMEFRAME] Schimbare interval la ${timeframe}`);
+    console.log(`[TIMEFRAME] Change interval to ${timeframe}`);
     currentTimeframe = timeframe;
     
     const selectedPair = document.getElementById('tradingPair').value;
@@ -555,31 +483,25 @@ function changeTimeframe(timeframe) {
     const binanceSymbol = binanceSymbolMap[symbol];
     
     if (!binanceSymbol) {
-        console.warn(`Nu există mapare Binance pentru ${symbol}`);
+        console.warn(`No Binance mapping for ${symbol}`);
         return;
     }
     
-    // Arătăm indicator de loading pentru grafic
     toggleChartLoading(true);
     
-    // Facem fetch pentru datele istorice conform timeframe-ului selectat
     fetchHistoricalData(binanceSymbol, timeframe)
         .then(data => {
             if (data && data.length > 0) {
-                // Formatul datelor primite: [[time, open, high, low, close, volume, ...], ...]
                 const prices = data.map(candle => ({
                     x: new Date(candle[0]),
-                    y: parseFloat(candle[4]) // close price
+                    y: parseFloat(candle[4]) 
                 }));
                 
-                // Actualizăm datele pentru grafic
                 priceChartData[symbol] = prices;
                 
-                // Actualizăm graficul
                 updateChartWithTimeframe(symbol, timeframe);
             } else {
-                console.warn(`[TIMEFRAME] Nu s-au primit date pentru ${timeframe}`);
-                // Generăm date demo dacă nu am primit nimic
+                console.warn(`[TIMEFRAME] No data received for ${timeframe}`);
                 const chartData = generateChartData(timeframe);
                 priceChartData[symbol] = chartData.map(item => ({
                     x: new Date(item.time),
@@ -589,8 +511,7 @@ function changeTimeframe(timeframe) {
             }
         })
         .catch(error => {
-            console.error(`[TIMEFRAME] Eroare la preluarea datelor pentru ${timeframe}:`, error);
-            // Generăm date demo în caz de eroare
+            console.error(`[TIMEFRAME] Error fetching data for ${timeframe}:`, error);
             const chartData = generateChartData(timeframe);
             priceChartData[symbol] = chartData.map(item => ({
                 x: new Date(item.time),
@@ -603,7 +524,6 @@ function changeTimeframe(timeframe) {
         });
 }
 
-// Funcție pentru preluarea datelor istorice de la Binance
 async function fetchHistoricalData(binanceSymbol, timeframe) {
     const tf = timeframeMap[timeframe];
     
@@ -630,41 +550,34 @@ async function fetchHistoricalData(binanceSymbol, timeframe) {
     }
 }
 
-// Funcție pentru actualizarea graficului cu noile date și timeframe
 function updateChartWithTimeframe(symbol, timeframe) {
     if (!window.priceChart || !priceChartData[symbol]) {
-        console.warn(`[TIMEFRAME] Nu există grafic sau date pentru ${symbol}`);
+        console.warn(`[TIMEFRAME] No chart or data for ${symbol}`);
         return;
     }
     
     const priceChart = window.priceChart;
     const tf = timeframeMap[timeframe];
     
-    // Actualizăm datele
     priceChart.data.datasets[0].data = priceChartData[symbol];
     
-    // Actualizăm opțiunile pentru axa X
     priceChart.options.scales.x.time.unit = tf.chartUnit;
     priceChart.options.scales.x.time.displayFormats = {
         [tf.chartUnit]: tf.displayFormat
     };
     
-    // Actualizăm titlul
     priceChart.data.datasets[0].label = `${symbol}/USDT (${timeframe})`;
     
-    // Aplicăm modificările
     priceChart.update();
-    console.log(`[TIMEFRAME] Grafic actualizat pentru ${symbol} cu intervalul ${timeframe}`);
+    console.log(`[TIMEFRAME] Chart updated for ${symbol} with interval ${timeframe}`);
 }
 
-// Funcție pentru afișarea/ascunderea loading-ului pe grafic
 function toggleChartLoading(show) {
     const chartContainer = document.querySelector('.chart-container');
     
     if (!chartContainer) return;
     
     if (show) {
-        // Verificăm dacă există deja un indicator de loading
         if (!document.getElementById('chartLoadingIndicator')) {
             const loader = document.createElement('div');
             loader.id = 'chartLoadingIndicator';
@@ -680,7 +593,6 @@ function toggleChartLoading(show) {
             loader.style.alignItems = 'center';
             loader.style.zIndex = '100';
             
-            // Stiluri pentru spinner
             const style = document.createElement('style');
             style.textContent = `
                 .spinner {
@@ -702,7 +614,6 @@ function toggleChartLoading(show) {
             chartContainer.appendChild(loader);
         }
     } else {
-        // Eliminăm loading-ul dacă există
         const loader = document.getElementById('chartLoadingIndicator');
         if (loader) {
             loader.remove();
@@ -710,30 +621,24 @@ function toggleChartLoading(show) {
     }
 }
 
-// Forțăm actualizări vizibile, chiar dacă datele vin din cache
 function forceVisualUpdate() {
     const selectedPair = document.getElementById('tradingPair').value;
     const symbol = selectedPair.split('/')[0];
     if (!cryptoData[symbol]) return;
     
-    // Generăm o mică fluctuație random pentru a simula mișcare de piață
     const data = cryptoData[symbol];
-    const volatility = 0.001; // 0.1% fluctuație maximă
+    const volatility = 0.001; 
     const priceChange = data.price * volatility * (Math.random() * 2 - 1);
     const newPrice = data.price + priceChange;
     
-    // Actualizăm prețul și calculăm noul procent de schimbare
     data.price = newPrice;
     data.priceChange24h = data.priceChange24h + (priceChange / data.price) * 100;
     
-    // Actualizăm high/low dacă e cazul
     if (newPrice > data.high24h) data.high24h = newPrice;
     if (newPrice < data.low24h) data.low24h = newPrice;
     
-    // Folosim funcția centralizată pentru a sincroniza toate prețurile
     syncAllPrices(newPrice, symbol);
     
-    // Actualizăm indicatorul de schimbare a prețului
     const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
     const priceChangeEl = document.getElementById('priceChange');
     if (priceChangeEl) {
@@ -741,7 +646,6 @@ function forceVisualUpdate() {
         priceChangeEl.className = data.priceChange24h >= 0 ? 'positive' : 'negative';
     }
     
-    // Aplicăm și o mică animație de fade pentru a evidenția schimbarea
     const lastPriceEl = document.getElementById('lastPrice');
     if (lastPriceEl) {
         lastPriceEl.classList.add('price-flash');
@@ -751,7 +655,6 @@ function forceVisualUpdate() {
     }
 }
 
-// Adăugăm stilul pentru animația de fade
 (function addPriceFlashStyle() {
     const style = document.createElement('style');
     style.textContent = `
@@ -767,12 +670,10 @@ function forceVisualUpdate() {
     document.head.appendChild(style);
 })();
 
-// Modificăm funcția de actualizare periodică
 function startPriceUpdates() {
-    const UPDATE_INTERVAL = 2000; // 2 secunde pentru update rapid
+    const UPDATE_INTERVAL = 2000; 
     fetchCryptoData();
     
-    // Oprim orice interval existent
     if (priceUpdateInterval) {
         clearInterval(priceUpdateInterval);
     }
@@ -781,13 +682,10 @@ function startPriceUpdates() {
         const selectedPair = document.getElementById('tradingPair').value;
         const symbol = selectedPair.split('/')[0];
         if (!document.hidden) {
-            // Încercăm să obținem date noi de la API
             fetchCryptoData();
             
-            // Forțăm actualizarea vizuală, chiar dacă datele vin din cache
             forceVisualUpdate();
             
-            // Actualizăm și restul UI-ului
             updateChart(symbol);
             populateOrderBook(cryptoData[symbol]?.price);
         }
@@ -798,7 +696,6 @@ document.addEventListener('visibilitychange', () => {
     if (!document.hidden) fetchCryptoData();
 });
 
-// Modificăm event listener-ul pentru perechea de tranzacționare pentru forțare mai puternică
 const tradingPairEl = document.getElementById('tradingPair');
 if (tradingPairEl) {
     tradingPairEl.addEventListener('change', function(event) {
@@ -806,45 +703,34 @@ if (tradingPairEl) {
         const symbol = pair.split('/')[0];
         currentCoin = symbol;
         
-        console.log(`[CHANGE EVENT] Schimbare monedă către ${pair}, source:`, event.target.id);
+        console.log(`[CHANGE EVENT] Coin changed to ${pair}, source:`, event.target.id);
         
-        // Actualizăm textul simbolului în UI
         updateSelectedSymbolDisplay(symbol);
         
-        // Arătăm indicatorul de loading
         toggleLoadingIndicator(true);
         
-        // *** HACK PENTRU A FORȚA CURĂȚAREA DATELOR VECHI ***
-        // Mai întâi setăm toate valorile din header la zero/loading
         document.getElementById('lastPrice').textContent = `$---`;
         document.getElementById('priceChange').textContent = `---`;
         document.getElementById('highPrice').textContent = `$---`;
         document.getElementById('lowPrice').textContent = `$---`;
         document.getElementById('volume').textContent = `---`;
         
-        // Resetăm datele existente
-        cryptoData = {}; // Resetăm tot obiectul, nu doar moneda curentă
-        priceChartData = {}; // Resetăm toate datele graficului
+        cryptoData = {}; 
+        priceChartData = {}; 
         
-        console.log(`[CHANGE EVENT] Forțăm actualizarea completă pentru ${pair}`);
+        console.log(`[CHANGE EVENT] Forcing complete update for ${pair}`);
         
-        // Resetăm timer-ul de API pentru a permite actualizarea imediată
         lastAPICall = 0;
         
-        // Adăugăm un setTimeout suplimentar pentru a ne asigura că UI-ul este actualizat
         setTimeout(() => {
-            // Apelăm direct fetchFromBinance pentru a sări peste verificările de throttling
             fetchFromBinance().then(success => {
                 if (success) {
                     console.log(`[CHANGE EVENT] Date actualizate cu succes pentru ${pair}`);
-                    
-                    // Forțăm actualizarea UI-ului direct din callback pentru a evita race conditions
+
                     const data = cryptoData[symbol];
                     if (data) {
-                        // Verificăm încă o dată ce monedă este selectată acum
                         const currentSelectedPair = document.getElementById('tradingPair').value;
                         if (currentSelectedPair === pair) {
-                            // Actualizăm manual toate elementele din UI
                             document.getElementById('lastPrice').textContent = `$${data.price.toFixed(2)}`;
                             
                             const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
@@ -862,60 +748,51 @@ if (tradingPairEl) {
                         }
                     }
                     
-                    // Ascundem loading-ul după ce datele sunt încărcate
                     toggleLoadingIndicator(false);
                     
-                    // Reinițializăm graficul doar dacă fetch-ul a reușit
                     if (window.priceChart) window.priceChart.destroy();
                     initChartData();
                 } else {
-                    console.warn(`[CHANGE EVENT] Nu s-au putut prelua date pentru ${pair}, folosim fallback`);
+                    console.warn(`[CHANGE EVENT] Failed to fetch data for ${pair}, using fallback`);
                     useFallbackData();
                     
-                    // Ascundem loading-ul
                     toggleLoadingIndicator(false);
                     
-                    // Reinițializăm graficul oricum
                     if (window.priceChart) window.priceChart.destroy();
                     initChartData();
                 }
             }).catch(error => {
-                console.error(`[CHANGE EVENT] Eroare la preluarea datelor pentru ${pair}:`, error);
+                console.error(`[CHANGE EVENT] Error fetching data for ${pair}:`, error);
                 useFallbackData();
-                
-                // Ascundem loading-ul în caz de eroare
+
                 toggleLoadingIndicator(false);
                 
-                // Reinițializăm graficul chiar și cu eroare
                 if (window.priceChart) window.priceChart.destroy();
                 initChartData();
             });
-        }, 50); // O mică pauză pentru a permite UI-ului să se actualizeze înainte de fetch
+        }, 50); 
     });
 }
 
-// Schimb logica de fetch să folosească API-ul Binance în loc de CoinGecko
 async function fetchCryptoData() {
     const now = Date.now();
     if (now - lastAPICall < API_CALL_DELAY) return;
     try {
         const success = await fetchFromBinance();
-        if (!success) throw new Error('Binance nu a returnat date');
+        if (!success) throw new Error('Binance did not return data');
         lastAPICall = now;
         
-        // După ce obținem date reale, actualizăm și wallet-ul
         updateWalletWithRealData();
         
         return true;
     } catch (error) {
-        console.error('Eroare la preluarea datelor:', error);
+        console.error('Error fetching data:', error);
         useFallbackData();
         showAPIErrorMessage();
         return false;
     }
 }
 
-// Mapare simboluri pentru API-ul Binance
 const binanceSymbolMap = {
     'BTC': 'BTCUSDT',
     'ETH': 'ETHUSDT',
@@ -927,7 +804,6 @@ const binanceSymbolMap = {
     'DOGE': 'DOGEUSDT'
 };
 
-// Fetch de la API-ul Binance
 async function fetchFromBinance() {
     try {
         const selectedPair = document.getElementById('tradingPair').value;
@@ -935,126 +811,111 @@ async function fetchFromBinance() {
         const binanceSymbol = binanceSymbolMap[symbol];
         
         if (!binanceSymbol) {
-            console.warn(`Moneda ${symbol} nu are mapare Binance`);
+            console.warn(`Coin ${symbol} does not have a Binance mapping`);
             return false;
         }
         
-        console.log(`Încercăm fetch Binance pentru ${binanceSymbol}...`);
+        console.log(`Attempting to fetch Binance for ${binanceSymbol}...`);
         
-        // API Binance pentru prețul ticker (24h stats)
         const tickerUrl = `https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`;
         console.log(`Fetch ticker URL: ${tickerUrl}`);
         
         let tickerResponse;
         try {
             tickerResponse = await fetch(tickerUrl);
-            console.log(`Răspuns ticker status: ${tickerResponse.status}`);
+            console.log(`Ticker response status: ${tickerResponse.status}`);
         } catch (err) {
-            console.error(`Eroare la fetch ticker: ${err.message}`);
+            console.error(`Error fetching ticker: ${err.message}`);
             throw err;
         }
         
         if (!tickerResponse.ok) {
-            console.error(`Răspuns ticker negativ: ${tickerResponse.status} ${tickerResponse.statusText}`);
-            throw new Error(`Eroare Binance API: ${tickerResponse.status}`);
+            console.error(`Ticker negative response: ${tickerResponse.status} ${tickerResponse.statusText}`);
+            throw new Error(`Binance API error: ${tickerResponse.status}`);
         }
         
         const tickerData = await tickerResponse.json();
-        console.log(`Date ticker primite pentru ${binanceSymbol}:`, tickerData);
+        console.log(`Ticker data received for ${binanceSymbol}:`, tickerData);
         
-        // Verificăm dacă formatul datelor este cel așteptat
         if (!tickerData.lastPrice || !tickerData.highPrice || !tickerData.lowPrice) {
-            console.error(`Date ticker invalide sau incomplete:`, tickerData);
-            throw new Error(`Date ticker invalide pentru ${binanceSymbol}`);
+            console.error(`Invalid or incomplete ticker data:`, tickerData);
+            throw new Error(`Invalid ticker data for ${binanceSymbol}`);
         }
         
-        // API Binance pentru date kline/candlestick (pentru grafic)
         const klineUrl = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=15m&limit=100`;
         console.log(`Fetch kline URL: ${klineUrl}`);
         
         let klineResponse;
         try {
             klineResponse = await fetch(klineUrl);
-            console.log(`Răspuns kline status: ${klineResponse.status}`);
+            console.log(`Kline response status: ${klineResponse.status}`);
         } catch (err) {
-            console.error(`Eroare la fetch kline: ${err.message}`);
+            console.error(`Error fetching kline: ${err.message}`);
             throw err;
         }
         
         if (!klineResponse.ok) {
-            console.error(`Răspuns kline negativ: ${klineResponse.status} ${klineResponse.statusText}`);
-            throw new Error(`Eroare Binance Kline API: ${klineResponse.status}`);
+            console.error(`Kline negative response: ${klineResponse.status} ${klineResponse.statusText}`);
+            throw new Error(`Binance Kline API error: ${klineResponse.status}`);
         }
         
         const klineData = await klineResponse.json();
-        console.log(`Primite ${klineData.length} candle-uri pentru ${binanceSymbol}`);
+        console.log(`Received ${klineData.length} candles for ${binanceSymbol}`);
         
-        // Verificăm moneda selectată curent pentru a ne asigura că nu s-a schimbat între timp
         const currentPair = document.getElementById('tradingPair').value;
         if (currentPair !== selectedPair) {
-            console.warn(`Moneda selectată s-a schimbat între timp (${selectedPair} → ${currentPair}), anulăm procesarea`);
+            console.warn(`Selected coin changed between fetching (${selectedPair} → ${currentPair}), cancelling processing`);
             return false;
         }
         
-        // Procesăm datele
         processBinanceData(symbol, tickerData, klineData);
-        console.log(`Date procesate cu succes pentru ${symbol}`);
+        console.log(`Data processed successfully for ${symbol}`);
         return true;
     } catch (error) {
-        console.error(`Eroare Binance pentru ${document.getElementById('tradingPair').value.split('/')[0]}:`, error);
+        console.error(`Binance error for ${document.getElementById('tradingPair').value.split('/')[0]}:`, error);
         usingRealData = false;
         return false;
     }
 }
 
-// Modificăm processBinanceData pentru a actualiza și graficul cu timeframe-ul curent
 function processBinanceData(symbol, tickerData, klineData) {
-    // Ticker data format:
-    // {"symbol":"BTCUSDT","priceChange":"-1071.81000000","priceChangePercent":"-2.157","weightedAvgPrice":"49208.43443907","prevClosePrice":"49688.67000000","lastPrice":"48616.86000000",...
     const currentPrice = parseFloat(tickerData.lastPrice);
     const priceChangePercent = parseFloat(tickerData.priceChangePercent);
     const high24h = parseFloat(tickerData.highPrice);
     const low24h = parseFloat(tickerData.lowPrice);
     const volume24h = parseFloat(tickerData.volume);
     
-    // Verificăm din nou dacă moneda selectată în UI este cea pentru care procesăm datele
     const currentSelectedPair = document.getElementById('tradingPair').value;
     const currentSymbol = currentSelectedPair.split('/')[0];
-    
+
     if (currentSymbol !== symbol) {
-        console.warn(`Moneda selectată s-a schimbat între procesarea datelor (${symbol} → ${currentSymbol}), anulăm actualizarea`);
+        console.warn(`Selected coin changed between processing data (${symbol} → ${currentSymbol}), cancelling update`);
         return;
     }
     
-    console.log(`Procesăm datele pentru ${symbol}, preț: ${currentPrice}`);
+    console.log(`Processing data for ${symbol}, price: ${currentPrice}`);
     
-    // Stocare date pentru UI
     cryptoData[symbol] = {
         price: currentPrice,
         priceChange24h: priceChangePercent,
         high24h: high24h,
         low24h: low24h,
-        volume: formatVolume(volume24h * currentPrice), // Convert to USD volume
+        volume: formatVolume(volume24h * currentPrice),
         lastUpdated: new Date()
     };
     
-    // Procesare date pentru grafic
-    // Kline data format: [[time, open, high, low, close, volume, closetime, quote asset volume,...], ...]
     const prices = klineData.map(candle => ({
         x: new Date(candle[0]),
-        y: parseFloat(candle[4]) // close price
+        y: parseFloat(candle[4])
     }));
     
     priceChartData[symbol] = prices;
     
-    // Setăm flag-ul de date reale
     usingRealData = true;
     
-    // Formatăm prețul pentru a fi folosit consecvent
     const formattedPrice = currentPrice.toFixed(2);
     const formattedPriceWithDollar = `$${formattedPrice}`;
     
-    // Actualizăm toate elementele de preț din interfață cu aceeași valoare
     const elementsToUpdate = [
         { id: 'lastPrice', format: formattedPriceWithDollar },
         { id: 'orderBookPrice', format: formattedPriceWithDollar },
@@ -1063,7 +924,6 @@ function processBinanceData(symbol, tickerData, klineData) {
         { id: 'lowPrice', format: `$${low24h.toFixed(2)}` }
     ];
     
-    // Actualizăm toate elementele din listă
     elementsToUpdate.forEach(element => {
         const el = document.getElementById(element.id);
         if (el) {
@@ -1075,10 +935,8 @@ function processBinanceData(symbol, tickerData, klineData) {
         }
     });
     
-    // Folosim funcția centralizată pentru sincronizarea prețurilor
     syncAllPrices(currentPrice, symbol);
     
-    // Actualizăm indicatorul de schimbare
     const priceChangeText = (priceChangePercent >= 0 ? '+' : '') + priceChangePercent.toFixed(2) + '%';
     const priceChangeEl = document.getElementById('priceChange');
     if (priceChangeEl) {
@@ -1086,85 +944,70 @@ function processBinanceData(symbol, tickerData, klineData) {
         priceChangeEl.className = priceChangePercent >= 0 ? 'positive' : 'negative';
     }
     
-    // Actualizăm volumul
     const volumeEl = document.getElementById('volume');
     if (volumeEl) {
         volumeEl.textContent = formatVolume(volume24h * currentPrice);
     }
     
-    // Actualizare UI
     updateMarketValues(currentSelectedPair);
     
-    // Actualizăm graficul cu timeframe-ul curent
     updateChartWithTimeframe(symbol, currentTimeframe);
     
-    // Indicator vizual pentru utilizator
     showDataSourceIndicator(true, `Binance: ${currentPrice.toFixed(2)} USD`);
 }
 
-// Funcție modificată pentru indicator de sursă date - dezactivată
 function showDataSourceIndicator(isReal, priceText = '') {
-    // Nu mai afișăm nimic, doar logăm în consolă
     if (isReal) {
-        console.log(`Date reale folosite: ${priceText}`);
+        console.log(`Real data used: ${priceText}`);
     } else {
-        console.warn('Date demo folosite (fallback)');
+        console.warn('Demo data used (fallback)');
     }
     
-    // Ștergem indicator-ul existent dacă există
     const existingIndicator = document.getElementById('dataSourceIndicator');
     if (existingIndicator) {
         existingIndicator.remove();
     }
 }
 
-// Modificare funcția useFallbackData să afișeze indicator pentru date demo
 function useFallbackData() {
     const selectedPair = document.getElementById('tradingPair').value;
     const symbol = selectedPair.split('/')[0];
     if (!marketData[selectedPair]) return;
     
-    // Setăm flag-ul de date demo
     usingRealData = false;
     
-    // Generare date simulate realiste
     const basePrice = marketData[selectedPair].lastPrice;
-    const fluctuation = Math.random() * 0.02 * basePrice; // ±2%
+    const fluctuation = Math.random() * 0.02 * basePrice;
     cryptoData[symbol] = {
         price: basePrice + fluctuation,
-        priceChange24h: Math.random() * 4 - 2, // între -2% și +2%
+        priceChange24h: Math.random() * 4 - 2,
         high24h: basePrice * 1.03,
         low24h: basePrice * 0.97,
         volume: marketData[selectedPair].volume,
         lastUpdated: new Date()
     };
     
-    // Generare date istorice simulate
     generateHistoricalData(symbol);
     
     updateMarketValues(selectedPair);
     
-    // Indicator vizual pentru utilizator
     showDataSourceIndicator(false);
 }
 
-// Actualizare dinamică a întregii interfețe
 function updateMarketValues(pair) {
     const symbol = pair.split('/')[0];
     let data = cryptoData[symbol];
 
-    // Verificăm dacă moneda selectată în UI este aceeași cu cea pentru care actualizăm
     const currentSelectedPair = document.getElementById('tradingPair').value;
     if (currentSelectedPair !== pair) {
-        console.log(`Moneda selectată s-a schimbat între timp (${pair} → ${currentSelectedPair}), nu actualizăm UI-ul`);
+        console.log(`Selected coin changed between updating (${pair} → ${currentSelectedPair}), not updating UI`);
         return;
     }
 
-    // Dacă nu există date reale, construim un obiect compatibil din marketData
     if (!data || typeof data.price !== 'number' || isNaN(data.price)) {
         const fallback = marketData[pair];
         if (!fallback) {
-            console.warn('Date lipsă complet pentru', symbol, pair);
+            console.warn('Missing complete data for', symbol, pair);
             return;
         }
         data = {
@@ -1177,45 +1020,37 @@ function updateMarketValues(pair) {
         };
     }
 
-    console.log(`Actualizare UI pentru ${pair} cu prețul ${data.price}`);
+    console.log(`Updating UI for ${pair} with price ${data.price}`);
 
-    // Actualizăm interfața cu datele (reale sau fallback)
     document.getElementById('lastPrice').textContent = `$${data.price.toFixed(2)}`;
     
-    // Folosim direct priceChange24h din API în loc să calculăm față de valorile demo
     const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
     document.getElementById('priceChange').textContent = priceChangeText;
     document.getElementById('priceChange').className = data.priceChange24h >= 0 ? 'positive' : 'negative';
     
-    // Actualizăm și valorile de high, low și volume
     document.getElementById('highPrice').textContent = `$${data.high24h.toFixed(2)}`;
     document.getElementById('lowPrice').textContent = `$${data.low24h.toFixed(2)}`;
     document.getElementById('volume').textContent = data.volume;
 
-    // Actualizăm prețul în alte componente UI
     document.getElementById('orderPrice').value = data.price.toFixed(2);
     document.getElementById('orderBookPrice').textContent = `$${data.price.toFixed(2)}`;
 
-    // Actualizăm graficul
     if (window.priceChart && priceChartData[symbol]) {
         window.priceChart.data.datasets[0].data = priceChartData[symbol];
         window.priceChart.data.datasets[0].label = `${symbol}/USDT`;
         window.priceChart.update();
     }
 
-    // Regenerăm orderbook și istoric
     populateOrderBook(data.price);
     populateTradeHistory();
 }
 
-// Populăm orderbook-ul cu date demo sau bazate pe prețul actual
 function populateOrderBook(basePrice) {
     const sellOrders = document.getElementById('sellOrders');
     const buyOrders = document.getElementById('buyOrders');
     
     if (!sellOrders || !buyOrders) return;
-    
-    // Curățăm conținutul existent
+
     sellOrders.innerHTML = '';
     buyOrders.innerHTML = '';
     
@@ -1223,21 +1058,17 @@ function populateOrderBook(basePrice) {
     const symbol = selectedPair.split('/')[0];
     basePrice = basePrice || (cryptoData[symbol]?.price || 1000);
     
-    // Aflăm simbolul monedei curente pentru afișare corectă în header-ul orderbook
-    // Actualizăm header-ul la amount pentru orderbook
     const amountHeader = document.querySelector('.book-header span:nth-child(2)');
     if (amountHeader) {
         amountHeader.textContent = `Amount (${symbol})`;
     }
     
-    // Generăm ordine de vânzare (în ordine descrescătoare)
     for (let i = 10; i > 0; i--) {
         const price = basePrice + (i * 50 + Math.random() * 20);
         const amount = 0.01 + Math.random() * 0.5;
         const total = price * amount;
         
-        // Adăugăm adâncime de piață - folosim o scală mai mică pentru noua stilizare
-        const depth = Math.random() * 0.8 + 0.1; // între 10% și 90%
+        const depth = Math.random() * 0.8 + 0.1;
         
         const orderRow = document.createElement('div');
         orderRow.className = 'sell-order-row';
@@ -1251,14 +1082,12 @@ function populateOrderBook(basePrice) {
         sellOrders.appendChild(orderRow);
     }
     
-    // Generăm ordine de cumpărare
     for (let i = 1; i <= 10; i++) {
         const price = basePrice - (i * 50 + Math.random() * 20);
         const amount = 0.01 + Math.random() * 0.5;
         const total = price * amount;
         
-        // Adăugăm adâncime de piață - folosim o scală mai mică pentru noua stilizare
-        const depth = Math.random() * 0.8 + 0.1; // între 10% și 90%
+        const depth = Math.random() * 0.8 + 0.1;
         
         const orderRow = document.createElement('div');
         orderRow.className = 'buy-order-row';
@@ -1272,7 +1101,6 @@ function populateOrderBook(basePrice) {
         buyOrders.appendChild(orderRow);
     }
     
-    // Actualizăm spread-ul
     const topBuyPrice = basePrice - 50;
     const bottomSellPrice = basePrice + 50;
     const spread = bottomSellPrice - topBuyPrice;
@@ -1281,31 +1109,24 @@ function populateOrderBook(basePrice) {
     document.getElementById('spread').textContent = `$${spread.toFixed(2)} (${spreadPercent.toFixed(2)}%)`;
 }
 
-// Populăm istoricul tranzacțiilor
 function populateTradeHistory() {
     const tradeHistory = document.getElementById('tradeHistory');
     if (!tradeHistory) return;
     
-    // Verificăm dacă există deja tranzacții în istoric
     if (tradeHistory.querySelector('.trade-row')) {
-        // Avem deja tranzacții, nu ștergem istoricul
         return;
     }
     
-    // Doar dacă nu există nicio tranzacție, afișăm mesajul
-    // Curățăm conținutul existent (în caz că există alt conținut decât tranzacții)
     tradeHistory.innerHTML = '';
     
-    // Adăugăm un mesaj pentru utilizator
     const emptyMessage = document.createElement('div');
     emptyMessage.className = 'empty-trades-message';
     emptyMessage.innerHTML = `
         <i class="fas fa-info-circle"></i>
-        <p>Tranzacțiile tale vor apărea aici după ce plasezi un ordin de Buy sau Sell</p>
+        <p>Your trades will appear here after placing a Buy or Sell order</p>
     `;
     tradeHistory.appendChild(emptyMessage);
     
-    // Adăugăm stiluri pentru mesajul de "no trades"
     const style = document.createElement('style');
     style.textContent = `
         .empty-trades-message {
@@ -1326,21 +1147,18 @@ function populateTradeHistory() {
         }
     `;
     
-    // Verificăm dacă stilul a fost deja adăugat
     if (!document.getElementById('empty-trades-style')) {
         style.id = 'empty-trades-style';
         document.head.appendChild(style);
     }
-}
+}   
 
-// Adăugăm o tranzacție nouă în istoricul de tranzacții
 function addTradeToHistory(price, amount, isBuy) {
     const tradeHistory = document.getElementById('tradeHistory');
     if (!tradeHistory) return;
     
-    console.log(`Adăugare tranzacție în istoric: ${isBuy ? 'Buy' : 'Sell'} ${amount} la prețul $${price}`);
-    
-    // Verificăm dacă există mesajul de tranzacții goale și îl ștergem
+    console.log(`Adding trade to history: ${isBuy ? 'Buy' : 'Sell'} ${amount} at price $${price}`);
+        
     const emptyMessage = tradeHistory.querySelector('.empty-trades-message');
     if (emptyMessage) {
         emptyMessage.remove();
@@ -1349,7 +1167,6 @@ function addTradeToHistory(price, amount, isBuy) {
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
-    // Obținem simbolul monedei curente
     const selectedPair = document.getElementById('tradingPair').value;
     const symbol = selectedPair.split('/')[0];
     
@@ -1361,10 +1178,8 @@ function addTradeToHistory(price, amount, isBuy) {
         <span class="time">${timeStr}</span>
     `;
     
-    // Animație pentru noua tranzacție
     tradeRow.style.animation = 'highlight-new-trade 1.5s ease-out';
     
-    // Adăugăm stilul pentru animație dacă nu există
     if (!document.getElementById('highlight-trade-style')) {
         const style = document.createElement('style');
         style.id = 'highlight-trade-style';
@@ -1377,7 +1192,6 @@ function addTradeToHistory(price, amount, isBuy) {
         document.head.appendChild(style);
     }
     
-    // Adăugăm tranzacția nouă la începutul listei
     if (tradeHistory.firstChild) {
         tradeHistory.insertBefore(tradeRow, tradeHistory.firstChild);
     } else {
@@ -1385,17 +1199,14 @@ function addTradeToHistory(price, amount, isBuy) {
     }
 }
 
-// Adăugăm un ordin în istorie
 function addOrderToHistory(side, type, pair, price, amount) {
     const orderHistory = document.getElementById('orderHistory');
     const noOrderHistory = document.getElementById('noOrderHistory');
     
     if (!orderHistory || !noOrderHistory) return;
     
-    // Ascundem mesajul "no order history"
     noOrderHistory.style.display = 'none';
     
-    // Creăm rândul pentru istoric
     const now = new Date();
     const dateStr = now.toLocaleDateString();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1415,22 +1226,17 @@ function addOrderToHistory(side, type, pair, price, amount) {
         <td>Filled</td>
     `;
     
-    // Adăugăm rândul la început
     if (orderHistory.querySelector('tr')) {
         orderHistory.insertBefore(row, orderHistory.querySelector('tr'));
     } else {
         orderHistory.appendChild(row);
     }
     
-    // Adăugăm și tranzacția în istoricul de tranzacții
-    // side poate fi 'Buy', 'Sell', 'Long', 'Short', 'Bought (Margin)', 'Sold (Margin)'
     const isBuy = side.toLowerCase().includes('buy') || side.toLowerCase().includes('long') || side.toLowerCase().includes('bought');
     addTradeToHistory(price, amount, isBuy);
 }
 
-// Procesăm un ordin nou
 function processOrder() {
-    // Obținem datele din formular
     const pair = document.getElementById('tradingPair').value;
     const orderType = document.querySelector('.order-type-btn.active')?.getAttribute('data-order-type') || 'limit';
     const side = document.querySelector('.action-tab-btn.active')?.getAttribute('data-action') || 'buy';
@@ -1439,12 +1245,9 @@ function processOrder() {
     let stopPrice = null;
     let limitPrice = null;
 
-    // Determinăm tipul de tranzacționare activ
     const tradeType = document.querySelector('.nav-tab.active')?.getAttribute('data-trade-type') || 'spot';
 
-    // Pentru Market, folosim prețul pieței
     if (orderType === 'market') {
-        // Încearcă să folosești prețul din cryptoData sau marketData
         const symbol = pair.split('/')[0];
         if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
             price = window.cryptoData[symbol].price;
@@ -1453,46 +1256,41 @@ function processOrder() {
         }
     }
 
-    // Pentru Stop-Limit, citește stopPrice și limitPrice
     if (orderType === 'stop') {
         stopPrice = parseFloat(document.getElementById('orderStopPrice')?.value);
         limitPrice = parseFloat(document.getElementById('orderLimitPrice')?.value);
-        // Validare
         if (isNaN(stopPrice) || stopPrice <= 0) {
-            alert('Introduceți un Stop Price valid');
+            alert('Enter a valid Stop Price');
             return;
         }
         if (isNaN(limitPrice) || limitPrice <= 0) {
-            alert('Introduceți un Limit Price valid');
+            alert('Enter a valid Limit Price');
             return;
         }
         if (isNaN(amount) || amount <= 0) {
-            alert('Introduceți o cantitate validă');
+            alert('Enter a valid amount');
             return;
         }
     }
 
-    // Validare pentru Limit și Market
     if (orderType !== 'stop') {
         if (orderType !== 'market' && (isNaN(price) || price <= 0)) {
-            alert('Introduceți un preț valid');
+            alert('Enter a valid price');
             return;
         }
         if (isNaN(amount) || amount <= 0) {
-            alert('Introduceți o cantitate validă');
+            alert('Enter a valid amount');
             return;
         }
     }
 
-    // Verificăm balanța disponibilă în funcție de tipul de tranzacționare
-    let balance = 15432.21; // Valoarea pentru spot
+    let balance = 15432.21;
     if (tradeType === 'margin') {
-        balance = 46296.63; // 3x leverage
+        balance = 46296.63;
     } else if (tradeType === 'futures') {
-        balance = 77161.05; // 5x leverage
+        balance = 77161.05;
     }
     
-    // Suprascrie cu balanța reală dacă există
     const walletData = localStorage.getItem('wallet');
     let wallet = null;
     if (walletData) {
@@ -1504,31 +1302,28 @@ function processOrder() {
 
     const total = price * amount;
 
-    // Pentru tranzacții de vânzare, verificăm dacă utilizatorul are suficiente monede
     const isBuy = side.toLowerCase().includes('buy') || side.toLowerCase().includes('long') || side.toLowerCase().includes('bought');
     if (!isBuy && tradeType === 'spot') {
         const symbol = pair.split('/')[0];
         const coinId = getCoinIdFromSymbol(symbol);
         
-        // Verificăm dacă utilizatorul are moneda și cantitatea suficientă
         if (wallet && wallet.coins && wallet.coins[coinId]) {
             const availableAmount = wallet.coins[coinId].amount || 0;
             if (amount > availableAmount) {
-                alert(`Nu aveți suficient ${symbol} pentru această tranzacție. Disponibil: ${availableAmount.toFixed(8)} ${symbol}`);
+                alert(`You don't have enough ${symbol} for this transaction. Available: ${availableAmount.toFixed(8)} ${symbol}`);
                 return;
             }
         } else {
-            alert(`Nu aveți ${symbol} în portofel pentru a vinde.`);
+            alert(`You don't have ${symbol} in your wallet to sell.`);
             return;
         }
     }
 
     if (isBuy && total > balance) {
-        alert(`Fonduri insuficiente pentru această tranzacție (${tradeType})`);
+        alert(`Insufficient funds for this transaction (${tradeType})`);
         return;
     }
 
-    // Generăm texte specifice pentru fiecare tip de tranzacționare
     let actionText, typeText;
     if (tradeType === 'futures') {
         actionText = side === 'buy' ? 'Long' : 'Short';
@@ -1541,35 +1336,24 @@ function processOrder() {
         typeText = orderType.charAt(0).toUpperCase() + orderType.slice(1);
     }
 
-    // Obținem timestamp-ul curent pentru ordin
     const now = new Date();
     const dateStr = now.toLocaleDateString();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const dateTimeStr = `${dateStr} ${timeStr}`;
 
-    // Pentru ordine Market, le executăm imediat
     if (orderType === 'market') {
-        // Procesăm ordinul instant (în versiunea demo)
-        // Adăugăm explicit ordinul în istoricul de ordine
         addOrderToHistory(actionText, typeText, pair, price, amount);
-        
-        // Adăugăm explicit tranzacția în istoricul de tranzacții
+
         addTradeToHistory(price, amount, isBuy);
         
-        // Actualizăm portofelul dacă este trading spot
         if (tradeType === 'spot') {
             if (isBuy) {
-                // Pentru cumpărare, adăugăm moneda în portofel
                 updateWalletAfterPurchase(pair, amount, price);
             } else {
-                // Pentru vânzare, scădem moneda din portofel
                 updateWalletAfterSell(pair, amount, price);
             }
         }
     } else {
-        // Pentru ordine Limit și Stop-Limit, le adăugăm în openOrders
-        // și vor fi executate când prețul atinge valoarea țintă
-        
         const newOrder = {
             dateTime: dateTimeStr,
             pair: pair,
@@ -1584,35 +1368,29 @@ function processOrder() {
             isBuy: isBuy
         };
         
-        // Adăugăm ordinul în lista de ordine deschise
         openOrders.unshift(newOrder);
         saveOrders();
         renderOpenOrders();
         
-        // Notificare specială
         let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
         let priceStr = orderType === 'stop' ? 
             `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
             `$${price.toFixed(2)}`;
         
-        // Mesaj pentru notificare
-        let notificationTitle = `Ordin ${typeStr} plasat`;
-        let notificationMessage = `Ordinul tău ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} la ${priceStr} a fost adăugat la Open Orders și va fi executat automat când prețul pieței atinge limita setată.`;
+        let notificationTitle = `Order ${typeStr} placed`;
+        let notificationMessage = `Your ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} at ${priceStr} has been added to Open Orders and will be executed automatically when the market price reaches the set limit.`;
     }
 
-    // Afișăm un mesaj de succes
     const notification = document.createElement('div');
     notification.className = 'trade-notification';
-    
-    // Conținutul notificării diferă în funcție de tipul de ordin
+        
     if (orderType === 'market') {
-        // Notificare pentru ordinele executate imediat (Market)
         const leverageText = tradeType !== 'spot' ? 
-            ` cu ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
+            ` with ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
     
-        const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Cumpărat') : 
-            (tradeType === 'futures' ? 'Short' : 'Vândut')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
-            pentru $${total.toFixed(2)}${leverageText}`;
+        const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Bought') : 
+            (tradeType === 'futures' ? 'Short' : 'Sold')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
+            for $${total.toFixed(2)}${leverageText}`;
             
         notification.innerHTML = `
             <div class="notification-icon ${side === 'buy' ? 'buy' : 'sell'}">
@@ -1620,14 +1398,13 @@ function processOrder() {
             </div>
             <div class="notification-content">
                 <div class="notification-title">${side === 'buy' ? 
-                    (tradeType === 'futures' ? 'Long' : 'Cumpărare') : 
-                    (tradeType === 'futures' ? 'Short' : 'Vânzare')} reușită (${tradeType.charAt(0).toUpperCase() + tradeType.slice(1)})</div>
+                    (tradeType === 'futures' ? 'Long' : 'Bought') : 
+                    (tradeType === 'futures' ? 'Short' : 'Sold')} successful (${tradeType.charAt(0).toUpperCase() + tradeType.slice(1)})</div>
                 <div class="notification-message">${successMsg}</div>
             </div>
             <button class="notification-close"><i class="fas fa-times"></i></button>
         `;
     } else {
-        // Notificare pentru ordinele plasate dar neexecutate încă (Limit, Stop-Limit)
         let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
         let priceStr = orderType === 'stop' ? 
             `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
@@ -1638,8 +1415,8 @@ function processOrder() {
                 <i class="fas fa-clock"></i>
             </div>
             <div class="notification-content">
-                <div class="notification-title">Ordin ${typeStr} plasat</div>
-                <div class="notification-message">Ordinul tău ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} la ${priceStr} a fost adăugat la Open Orders și va fi executat automat când prețul pieței atinge limita setată.</div>
+                <div class="notification-title">Order ${typeStr} placed</div>
+                <div class="notification-message">Your ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} at ${priceStr} has been added to Open Orders and will be executed automatically when the market price reaches the set limit.</div>
             </div>
             <button class="notification-close"><i class="fas fa-times"></i></button>
         `;
@@ -1647,13 +1424,11 @@ function processOrder() {
 
     document.body.appendChild(notification);
 
-    // Animăm notificarea
     setTimeout(() => {
         notification.style.opacity = '1';
         notification.style.transform = 'translateX(0)';
     }, 100);
 
-    // Închidem notificarea după 5 secunde
     setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
@@ -1662,7 +1437,6 @@ function processOrder() {
         }, 300);
     }, 5000);
 
-    // Event handler pentru butonul de închidere
     notification.querySelector('.notification-close').addEventListener('click', () => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
@@ -1671,24 +1445,18 @@ function processOrder() {
         }, 300);
     });
 
-    // Resetăm formularul
     document.getElementById('orderAmount').value = '';
     document.getElementById('orderTotal').value = '';
     if (document.getElementById('orderStopPrice')) document.getElementById('orderStopPrice').value = '';
     if (document.getElementById('orderLimitPrice')) document.getElementById('orderLimitPrice').value = '';
 }
 
-// Configurăm event listeners
 function setupEventListeners() {
-    // Adăugăm listener pentru butoanele de tip de tranzacționare (Spot, Margin, Futures)
     const tradeTypeButtons = document.querySelectorAll('.nav-tab');
     
-    // Setăm tipul de tranzacție curent
-    let currentTradeType = 'spot'; // Default: spot
+    let currentTradeType = 'spot';
     
-    // Funcție pentru actualizarea UI în funcție de tipul de tranzacționare
     function updateTradeTypeUI(tradeType) {
-        // Actualizăm stilul butoanelor
         tradeTypeButtons.forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('data-trade-type') === tradeType) {
@@ -1696,7 +1464,6 @@ function setupEventListeners() {
             }
         });
         
-        // De asemenea actualizăm și atributul data-tab pentru compatibilitate cu alte funcții existente
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('data-tab') === tradeType) {
@@ -1704,7 +1471,6 @@ function setupEventListeners() {
             }
         });
         
-        // Actualizăm afișarea balanței disponibile în funcție de tipul de tranzacționare
         const balanceValue = document.getElementById('availableBalance');
         if (balanceValue) {
             const walletData = localStorage.getItem('wallet');
@@ -1716,7 +1482,6 @@ function setupEventListeners() {
             if (tradeType === 'spot') {
                 balanceValue.textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             } else if (tradeType === 'margin' || tradeType === 'futures') {
-                // Citește leverage-ul din slider dacă există
                 let leverage = 1;
                 const leverageSlider = document.getElementById('leverageSlider');
                 if (leverageSlider) {
@@ -1728,7 +1493,6 @@ function setupEventListeners() {
             }
         }
         
-        // Actualizăm eticheta pentru Buy/Sell button pentru futures
         const buyBtn = document.querySelector('.action-tab-btn[data-action="buy"]');
         const sellBtn = document.querySelector('.action-tab-btn[data-action="sell"]');
         
@@ -1742,13 +1506,11 @@ function setupEventListeners() {
             }
         }
         
-        // Afișăm/ascundem opțiunile specifice pentru fiecare tip de tranzacționare
         const leverageOptions = document.getElementById('leverageOptions');
         if (leverageOptions) {
             leverageOptions.style.display = (tradeType !== 'spot') ? 'block' : 'none';
-        }
+            }
         
-        // Actualizăm butonul principal de tranzacționare
         const mainBtn = document.getElementById('buyBtcBtn');
         if (mainBtn) {
             const symbol = document.getElementById('tradingPair').value.split('/')[0];
@@ -1761,10 +1523,8 @@ function setupEventListeners() {
             }
         }
         
-        // Salvăm tipul curent pentru a putea fi folosit în alte funcții
         currentTradeType = tradeType;
         
-        // Afișăm o notificare despre schimbarea tipului de tranzacționare
         const typeNames = {
             'spot': 'Spot Trading',
             'margin': 'Margin Trading (3x Leverage)',
@@ -1808,7 +1568,6 @@ function setupEventListeners() {
         });
     }
     
-    // Adăugăm event listener pentru fiecare buton de tip tranzacționare
     tradeTypeButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tradeType = this.getAttribute('data-trade-type');
@@ -1818,7 +1577,6 @@ function setupEventListeners() {
         });
     });
     
-    // Listeners pentru timeframe
     const timeframeButtons = document.querySelectorAll('.timeframe-btn');
     timeframeButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -1829,7 +1587,6 @@ function setupEventListeners() {
         });
     });
     
-    // Listeners pentru tipuri de ordine
     const orderTypeButtons = document.querySelectorAll('.order-type-btn');
     orderTypeButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -1858,19 +1615,16 @@ function setupEventListeners() {
         });
     });
     
-    // Listeners pentru acțiuni (buy/sell)
     const actionButtons = document.querySelectorAll('.action-tab-btn');
     actionButtons.forEach(button => {
         button.addEventListener('click', function() {
             actionButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
-            // Schimbăm culoarea butonului de plasare ordin
             const placeOrderBtn = document.getElementById('buyBtcBtn');
             if (placeOrderBtn) {
                 placeOrderBtn.className = 'place-order-btn ' + this.getAttribute('data-action');
                 
-                // Actualizăm și textul butonului
                 const pair = document.getElementById('tradingPair').value;
                 const baseSymbol = pair.split('/')[0];
                 placeOrderBtn.textContent = this.getAttribute('data-action') === 'buy' ? 
@@ -1879,30 +1633,26 @@ function setupEventListeners() {
         });
     });
     
-    // Listeners pentru butoanele de procent (25%, 50%, etc.)
     const sliderButtons = document.querySelectorAll('.slider-btn');
     sliderButtons.forEach(button => {
         button.addEventListener('click', function() {
             const percent = parseInt(this.getAttribute('data-percent'));
-            const balance = 15432.21; // Valoarea hardcodată pentru demo
+            const balance = 15432.21;
             const price = parseFloat(document.getElementById('orderPrice').value) || 0;
             
             if (price > 0) {
-                // Calculăm cantitatea bazată pe procent și preț
                 const amount = (balance * (percent / 100)) / price;
                 document.getElementById('orderAmount').value = amount.toFixed(5);
                 document.getElementById('orderTotal').value = (amount * price).toFixed(2);
                 
-                // Adăugăm clasa active doar la butonul curent
                 sliderButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
             } else {
-                alert('Introduceți un preț valid înainte de a selecta procentul');
+                alert('Enter a valid price before selecting the percentage');
             }
         });
     });
     
-    // Listeners pentru câmpurile de preț și cantitate pentru a calcula totalul
     const orderPrice = document.getElementById('orderPrice');
     const orderAmount = document.getElementById('orderAmount');
     const orderTotal = document.getElementById('orderTotal');
@@ -1913,20 +1663,17 @@ function setupEventListeners() {
         orderTotal.addEventListener('input', calculateAmount);
     }
     
-    // Listener pentru butonul de plasare ordin
     const placeOrderBtn = document.getElementById('buyBtcBtn');
     if (placeOrderBtn) {
         placeOrderBtn.addEventListener('click', processOrder);
     }
     
-    // Listeners pentru tabs-urile de ordine
     const orderTabButtons = document.querySelectorAll('.orders-tab-btn');
     orderTabButtons.forEach(button => {
         button.addEventListener('click', function() {
             orderTabButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
-            // Schimbăm conținutul vizibil
             const tabId = this.getAttribute('data-orders-tab');
             const containers = document.querySelectorAll('.orders-table-container');
             containers.forEach(container => {
@@ -1940,7 +1687,6 @@ function setupEventListeners() {
         });
     });
     
-    // Eliminăm orice event listener asociat cu butonul de swap în această pagină
     const swapButtons = document.querySelectorAll('.swap-btn');
     if (swapButtons.length > 0) {
         swapButtons.forEach(btn => {
@@ -1949,7 +1695,6 @@ function setupEventListeners() {
     }
 }
 
-// Calculează totalul bazat pe preț și cantitate
 function calculateTotal() {
     const price = parseFloat(document.getElementById('orderPrice').value) || 0;
     const amount = parseFloat(document.getElementById('orderAmount').value) || 0;
@@ -1960,7 +1705,6 @@ function calculateTotal() {
     }
 }
 
-// Calculează cantitatea bazată pe preț și total
 function calculateAmount() {
     const price = parseFloat(document.getElementById('orderPrice').value) || 0;
     const total = parseFloat(document.getElementById('orderTotal').value) || 0;
@@ -1971,7 +1715,6 @@ function calculateAmount() {
     }
 }
 
-// Adăugăm stiluri CSS pentru notificări
 (function addNotificationStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -2062,7 +1805,6 @@ function calculateAmount() {
             color: var(--text-color);
         }
         
-        /* Stiluri pentru butoanele de procent active */
         .slider-btn.active {
             background-color: rgba(16, 185, 129, 0.2);
             border-color: var(--positive-color);
@@ -2070,12 +1812,10 @@ function calculateAmount() {
             font-weight: bold;
         }
         
-        /* Stiluri pentru hover pe butoanele de procent */
         .slider-btn:hover {
             background-color: rgba(16, 185, 129, 0.1);
         }
         
-        /* Stiluri pentru butoanele de tip tranzacționare (Spot, Margin, Futures) */
         .nav-tab {
             opacity: 0.7;
             transition: all 0.3s ease;
@@ -2094,7 +1834,6 @@ function calculateAmount() {
             opacity: 0.9;
         }
         
-        /* Stiluri pentru opțiunile de leverage (pentru Margin și Futures) */
         #leverageOptions {
             display: none;
             margin-top: 15px;
@@ -2118,13 +1857,11 @@ function calculateAmount() {
     document.head.appendChild(style);
 })();
 
-// Funcție pentru a arăta/ascunde indicatorul de loading
 function toggleLoadingIndicator(show) {
     const statItems = document.querySelectorAll('.stat-value');
     
     statItems.forEach(item => {
         if (show) {
-            // Salvăm conținutul curent dacă nu este "---"
             if (item.textContent !== '$---.--' && item.textContent !== '---') {
                 item.setAttribute('data-original', item.textContent);
             }
@@ -2132,7 +1869,6 @@ function toggleLoadingIndicator(show) {
             item.textContent = item.id === 'priceChange' ? 'Loading...' : 'Loading...';
         } else {
             item.classList.remove('loading');
-            // Dacă nu avem conținut salvat, lăsăm textul actualizat de updateMarketValues
             if (item.getAttribute('data-original')) {
                 item.textContent = item.getAttribute('data-original');
                 item.removeAttribute('data-original');
@@ -2141,55 +1877,42 @@ function toggleLoadingIndicator(show) {
     });
 }
 
-// Modificăm initCryptoAPI pentru a arăta loading
 function initCryptoAPI() {
-    console.log("Inițializare API, preluare date inițiale...");
-    
-    // Arătăm indicatorul de loading
+    console.log("Initializing API, fetching initial data...");
+
     toggleLoadingIndicator(true);
     
-    // Forțăm actualizarea imediată, ignorând throttling
     lastAPICall = 0;
     
-    // Obținem datele imediat pentru perechea activă
     fetchFromBinance().then(success => {
-        // Ascundem loading-ul
         toggleLoadingIndicator(false);
         
         if (success) {
-            console.log("Date inițiale preluate cu succes de la Binance");
+            console.log("Initial data fetched successfully from Binance");
             const selectedPair = document.getElementById('tradingPair').value;
             updateMarketValues(selectedPair);
             
-            // Inițializăm graficul după ce avem datele
             initChartData();
             populateOrderBook();
-            // Nu mai apelăm populateTradeHistory() la inițializare
             
         } else {
-            console.warn("Nu s-au putut prelua date inițiale de la Binance, folosim fallback");
+            console.warn("Failed to fetch initial data from Binance, using fallback");
             useFallbackData();
             
-            // Inițializăm graficul chiar și cu datele de fallback
             initChartData();
             populateOrderBook();
-            // Nu mai apelăm populateTradeHistory() la inițializare
         }
     }).catch(error => {
-        // Ascundem loading-ul și în caz de eroare
         toggleLoadingIndicator(false);
         
-        console.error("Eroare la preluarea datelor inițiale:", error);
+        console.error("Error fetching initial data:", error);
         useFallbackData();
         
-        // Inițializăm graficul chiar și cu eroare
         initChartData();
         populateOrderBook();
-        // Nu mai apelăm populateTradeHistory() la inițializare
     });
 }
 
-// Stiluri CSS pentru loading
 (function addLoadingStyles() {
     const style = document.createElement('style');
     style.textContent = `
@@ -2221,9 +1944,7 @@ function initCryptoAPI() {
     document.head.appendChild(style);
 })();
 
-// Afișează un mesaj de eroare pentru probleme cu API-ul
 function showAPIErrorMessage() {
-    // Verificăm dacă este deja afișat un mesaj de eroare
     if (document.querySelector('.api-error-notification')) {
         return;
     }
@@ -2235,21 +1956,19 @@ function showAPIErrorMessage() {
             <i class="fas fa-exclamation-triangle"></i>
         </div>
         <div class="notification-content">
-            <div class="notification-title">Actualizare date</div>
-            <div class="notification-message">Prețurile sunt actualizate din surse externe. Prețurile reale pot varia ușor.</div>
+            <div class="notification-title">Data update</div>
+            <div class="notification-message">Prices are updated from external sources. Real prices may vary slightly.</div>
         </div>
         <button class="notification-close"><i class="fas fa-times"></i></button>
     `;
     
     document.body.appendChild(notification);
     
-    // Animăm notificarea
     setTimeout(() => {
         notification.style.opacity = '1';
         notification.style.transform = 'translateX(0)';
     }, 100);
     
-    // Închidem notificarea după 5 secunde
     setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
@@ -2258,7 +1977,6 @@ function showAPIErrorMessage() {
         }, 300);
     }, 5000);
     
-    // Event handler pentru butonul de închidere
     notification.querySelector('.notification-close').addEventListener('click', () => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
@@ -2268,7 +1986,6 @@ function showAPIErrorMessage() {
     });
 }
 
-// Stiluri pentru notificarea de eroare API
 const apiErrorStyles = `
 .api-error-notification {
     position: fixed;
@@ -2334,28 +2051,24 @@ html[data-theme="light"] .api-error-notification {
 }
 `;
 
-// Injectăm stilurile pentru notificarea de eroare API
 (function injectAPIErrorStyles() {
     const style = document.createElement('style');
     style.textContent = apiErrorStyles;
     document.head.appendChild(style);
 })();
 
-// Generăm date istorice simulate pentru grafice
 function generateHistoricalData(symbol) {
     if (!cryptoData[symbol]) return;
     
     const currentPrice = cryptoData[symbol].price;
     const volatility = Math.abs(cryptoData[symbol].priceChange24h) / 100;
     
-    // Generăm date pentru ultimele 7 zile cu 168 de puncte (1 la fiecare oră)
     const now = Date.now();
     const hourMs = 60 * 60 * 1000;
     const dataPoints = [];
     
-    // Generăm o tendință generală (trend)
     const trend = Math.random() > 0.5 ? 1 : -1;
-    let lastPrice = currentPrice * (1 - (trend * volatility * 7)); // Începem de la un preț de acum 7 zile
+    let lastPrice = currentPrice * (1 - (trend * volatility * 7));
     
     for (let i = 168; i >= 0; i--) {
         const timestamp = now - (i * hourMs);
@@ -2363,27 +2076,23 @@ function generateHistoricalData(symbol) {
         const trendChange = trend * (volatility / 24) * currentPrice;
         
         lastPrice = lastPrice + randomChange + trendChange;
-        if (lastPrice <= 0) lastPrice = currentPrice * 0.01; // Evităm prețurile negative
-        
+        if (lastPrice <= 0) lastPrice = currentPrice * 0.01;
+
         dataPoints.push({
             x: new Date(timestamp),
             y: lastPrice
         });
     }
     
-    // Ultimul punct trebuie să fie prețul actual
     if (dataPoints.length > 0) {
         dataPoints[dataPoints.length - 1].y = currentPrice;
     }
     
-    // Stocăm datele pentru grafic
     priceChartData[symbol] = dataPoints;
     
-    // Actualizăm graficul cu noile date
     updateChart(symbol);
 }
 
-// Formatează volumul pentru afișare
 function formatVolume(volume) {
     if (volume >= 1e9) {
         return `$${(volume / 1e9).toFixed(1)}B`;
@@ -2395,18 +2104,15 @@ function formatVolume(volume) {
     return `$${volume.toFixed(2)}`;
 }
 
-// Actualizează interfața cu datele despre criptomonede
 function updateInterfaceWithCoinData() {
     const selectedPair = document.getElementById('tradingPair').value;
-    const symbol = selectedPair.split('/')[0]; // E.g. "BTC" din "BTC/USDT"
+    const symbol = selectedPair.split('/')[0];
     
     if (cryptoData[symbol]) {
         const data = cryptoData[symbol];
         
-        // Folosim funcția centralizată pentru sincronizarea prețurilor
         syncAllPrices(data.price, symbol);
         
-        // Actualizăm indicatorul de schimbare
         const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
         const priceChangeEl = document.getElementById('priceChange');
         if (priceChangeEl) {
@@ -2414,13 +2120,11 @@ function updateInterfaceWithCoinData() {
             priceChangeEl.className = 'stat-value ' + (data.priceChange24h >= 0 ? 'positive' : 'negative');
         }
         
-        // Actualizăm volumul
         const volumeEl = document.getElementById('volume');
         if (volumeEl) {
             volumeEl.textContent = data.volume;
         }
         
-        // Actualizăm spread-ul aproximativ (bazat pe o valoare de 0.05% din preț)
         const spread = data.price * 0.0005;
         const spreadPercent = 0.05;
         const spreadEl = document.getElementById('spread');
@@ -2430,36 +2134,29 @@ function updateInterfaceWithCoinData() {
     }
 }
 
-// Actualizează graficul cu datele pentru o monedă specifică
 function updateChart(symbol) {
     if (!window.priceChart || !priceChartData[symbol]) return;
     
     const chart = window.priceChart;
     const prices = priceChartData[symbol];
     
-    // Actualizăm datele și titlul graficului
     chart.data.datasets[0].data = prices;
     chart.data.datasets[0].label = `${symbol}/USDT`;
     
-    // Actualizăm graficul
     chart.update();
 }
 
-// Adaug actualizarea textului simbolului în UI
 function updateSelectedSymbolDisplay(symbol) {
-    // Actualizăm și textul din headerul tabelului trade history
     const coinSymbolSpan = document.querySelector('.trade-header .coin-symbol');
     if (coinSymbolSpan) {
         coinSymbolSpan.textContent = symbol;
     }
     
-    // Actualizăm și textul din formular pentru Amount și butonul Buy/Sell
     const amountLabel = document.querySelector('label[for="orderAmount"]');
     if (amountLabel) {
         amountLabel.textContent = `Amount (${symbol})`;
     }
     
-    // Actualizăm butonul de cumpărare/vânzare
     const placeOrderBtn = document.getElementById('buyBtcBtn');
     if (placeOrderBtn) {
         const action = placeOrderBtn.classList.contains('buy') ? 'Buy' : 'Sell';
@@ -2467,19 +2164,15 @@ function updateSelectedSymbolDisplay(symbol) {
     }
 }
 
-// Adăugăm o funcție pentru a crea și adăuga opțiunile de leverage în interfață
 function createLeverageOptions() {
-    // Verificăm dacă există deja elementul, dacă da, nu îl mai creăm
     if (document.getElementById('leverageOptions')) {
         return;
     }
     
-    // Creăm container-ul pentru opțiunile de leverage
     const leverageContainer = document.createElement('div');
     leverageContainer.id = 'leverageOptions';
-    leverageContainer.style.display = 'none'; // Inițial ascuns, va fi afișat doar pentru margin și futures
+    leverageContainer.style.display = 'none';
     
-    // Adăugăm conținut pentru opțiunile de leverage
     leverageContainer.innerHTML = `
         <div class="leverage-header">
             <span>Leverage: <span class="leverage-value">3x</span></span>
@@ -2492,19 +2185,16 @@ function createLeverageOptions() {
         </div>
     `;
     
-    // Adăugăm container-ul în interfață după secțiunea de balance
     const balanceSection = document.querySelector('.balance-section');
     if (balanceSection) {
         balanceSection.parentNode.insertBefore(leverageContainer, balanceSection.nextSibling);
     } else {
-        // Alternativ, îl adăugăm după secțiunea de tabs pentru tipul de tranzacționare
         const navTabs = document.querySelector('.nav-tabs');
         if (navTabs) {
             navTabs.parentNode.insertBefore(leverageContainer, navTabs.nextSibling);
         }
     }
     
-    // Adăugăm event listener pentru slider-ul de leverage
     const leverageSlider = document.getElementById('leverageSlider');
     const leverageValue = document.querySelector('.leverage-value');
     
@@ -2513,12 +2203,10 @@ function createLeverageOptions() {
             const value = this.value;
             leverageValue.textContent = value + 'x';
             
-            // Actualizăm balanța disponibilă în funcție de leverage
             updateLeverageBalance(value);
         });
     }
     
-    // Stilizăm etichete pentru slider
     const leverageLabels = document.querySelector('.leverage-labels');
     if (leverageLabels) {
         leverageLabels.style.display = 'flex';
@@ -2529,7 +2217,6 @@ function createLeverageOptions() {
     }
 }
 
-// Funcție pentru actualizarea balanței disponibile în funcție de leverage
 function updateLeverageBalance(leverageValue) {
     const balanceValue = document.getElementById('availableBalance');
     let baseBalance = 0;
@@ -2543,7 +2230,6 @@ function updateLeverageBalance(leverageValue) {
         if (tradeType === 'spot') {
             balanceValue.textContent = '$' + baseBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         } else {
-            // Calculăm balanța în funcție de leverage
             const newBalance = baseBalance * leverageValue;
             balanceValue.textContent = '$' + newBalance.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
@@ -2562,31 +2248,25 @@ function updateTradeBalance() {
         const wallet = JSON.parse(walletData);
         const balance = wallet.totalBalance || 0;
         
-        // Verificăm dacă balanceElement afișează în prezent valoarea ascunsă
         const isHidden = toggleBtn && toggleBtn.innerHTML.includes('fa-eye-slash');
         
         if (isHidden) {
-            // Păstrăm starea ascunsă
             balanceElement.textContent = '$•••••';
         } else {
-            // Actualizăm direct valoarea balanței
             balanceElement.textContent = '$' + balance.toLocaleString('en-US', { 
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2 
             });
         }
         
-        // Salvăm valoarea reală ca atribut pentru a putea fi utilizată când utilizatorul face toggle
         balanceElement.setAttribute('data-real-value', '$' + balance.toLocaleString('en-US', { 
             minimumFractionDigits: 2, 
             maximumFractionDigits: 2 
         }));
         
-        // Actualizăm și valoarea butonului 100% pentru a reflecta noua balanță
         const sliderButtons = document.querySelectorAll('.slider-btn');
         sliderButtons.forEach(button => {
             if (button.getAttribute('data-percent') === '100') {
-                // Recalculăm valoarea maximă pe care o poate cumpăra utilizatorul
                 const price = parseFloat(document.getElementById('orderPrice').value) || 0;
                 if (price > 0) {
                     const maxAmount = balance / price;
@@ -2597,7 +2277,6 @@ function updateTradeBalance() {
     }
 }
 
-// CSS pentru lacăt (poate fi adăugat dinamic dacă nu există deja)
 (function addLockedInputStyles() {
     const style = document.createElement('style');
     style.textContent = `

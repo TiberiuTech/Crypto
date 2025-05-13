@@ -20,7 +20,6 @@
     <link rel="stylesheet" href="css/trade.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- Chart.js și plugin-uri -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
@@ -70,14 +69,12 @@
             <h2>Trade Crypto</h2>
         </div>
         
-        <!-- Adăugat container pentru assets din wallet -->
         <div class="wallet-assets-container">
             <div class="wallet-assets-header">
                 <h3>Your Assets</h3>
                 <span class="wallet-total-value" id="walletTotalValue">$0.00</span>
             </div>
             <div class="wallet-assets-list" id="walletAssetsList">
-                <!-- Assets vor fi populate dinamic din JS -->
                 <div class="wallet-asset-placeholder">
                     <i class="fas fa-sync-alt fa-spin"></i>
                     <span>Loading your assets...</span>
@@ -85,7 +82,6 @@
             </div>
         </div>
         
-        <!-- Top Bar with Coin Selector and Market Info -->
         <div class="market-top-bar">
             <div class="coin-selector">
                 <div class="custom-dropdown">
@@ -164,9 +160,7 @@
             </div>
         </div>
         
-        <!-- Main Trading Interface -->
         <div class="trading-interface">
-            <!-- Chart Section -->
             <div class="chart-section">
                 <div class="chart-header">
                     <div class="timeframe-selector">
@@ -182,7 +176,6 @@
                 </div>
             </div>
             
-            <!-- Trading Panel -->
             <div class="trading-panel">
                 <div class="trading-content">
                     <div class="trading-account-info">
@@ -235,7 +228,6 @@
             </div>
         </div>
         
-        <!-- Order Book and Trade History -->
         <div class="market-data-section">
             <div class="order-book">
                 <h3>Order Book</h3>
@@ -245,14 +237,12 @@
                     <span>Total (USDT)</span>
                 </div>
                 <div class="sell-orders" id="sellOrders">
-                    <!-- Sell orders will be populated dynamically -->
                 </div>
                 <div class="price-spread">
                     <span class="current-price" id="orderBookPrice">$---.--</span>
                     <span class="spread" id="spread">---</span>
                 </div>
                 <div class="buy-orders" id="buyOrders">
-                    <!-- Buy orders will be populated dynamically -->
                 </div>
             </div>
             
@@ -264,12 +254,10 @@
                     <span>Time</span>
                 </div>
                 <div class="trades-list" id="tradeHistory">
-                    <!-- Trade history will be populated dynamically -->
                 </div>
             </div>
         </div>
         
-        <!-- Open Orders and Order History -->
         <div class="orders-section">
             <div class="orders-tabs">
                 <button class="orders-tab-btn active" data-orders-tab="open">Open Orders</button>
@@ -292,7 +280,6 @@
                             </tr>
                         </thead>
                         <tbody id="openOrders">
-                            <!-- Open orders will be populated dynamically -->
                         </tbody>
                     </table>
                     <div class="no-orders-message" id="noOpenOrders">
@@ -304,8 +291,6 @@
         </div>
     </main>
 
-    <!-- Firebase Scripts -->
-    <!-- Implementare simplificată pentru autentificare -->
     <script src="js/firebase-config.js"></script>
     
     <script src="../script.js"></script>
