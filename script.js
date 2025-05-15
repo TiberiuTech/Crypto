@@ -27,12 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-        if (theme === 'dark') {
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-            if (themeToggleBtnMobile) themeToggleBtnMobile.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            if (themeToggleBtn) themeToggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
-            if (themeToggleBtnMobile) themeToggleBtnMobile.innerHTML = '<i class="fas fa-moon"></i>';
+        updateThemeButtonIcon(theme);
+    }
+    
+    // Funcție pentru actualizarea iconiței butonului în funcție de tema curentă
+    function updateThemeButtonIcon(theme) {
+        const isDark = theme === 'dark';
+        if (themeToggleBtn) {
+            themeToggleBtn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        if (themeToggleBtnMobile) {
+            themeToggleBtnMobile.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
         }
     }
     
@@ -70,25 +75,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Adăugăm event listener pentru comutarea temei
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
-            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
             
             // Actualizăm graficele când se schimbă tema
             setTimeout(updateChartsOnThemeChange, 50);
         });
     }
+    
     if (themeToggleBtnMobile) {
         themeToggleBtnMobile.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
-            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
             
             // Actualizăm graficele când se schimbă tema
             setTimeout(updateChartsOnThemeChange, 50);
         });
     }
-    const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    
+    // Inițializăm tema la încărcarea paginii
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
     applyTheme(initialTheme);
 
     const currentPagePath = window.location.pathname;
