@@ -578,17 +578,68 @@ class OrionixTokenManager {
             if (window.orionixInfo.simulationMode) {
                 console.log("Simulation mode: Simulating token transfer");
                 
+                // Creăm un ID unic de tranzacție
+                const txHash = "0x" + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+                
+                // Formăm timestamp-ul pentru tranzacție
+                const timestamp = new Date().toISOString();
+                
+                // Adăugăm tranzacția în istoricul de tranzacții
+                const transactionList = document.getElementById('transaction-list');
+                if (transactionList) {
+                    // Eliminăm mesajul "No recent transactions" dacă există
+                    const emptyState = transactionList.querySelector('.empty-state');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                    
+                    // Creăm elementul pentru noua tranzacție
+                    const txElement = document.createElement('div');
+                    txElement.className = 'transaction-item';
+                    txElement.innerHTML = `
+                        <div class="tx-type">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Sent</span>
+                        </div>
+                        <div class="tx-details">
+                            <div class="tx-amount">-${amount} ORX</div>
+                            <div class="tx-address">To: ${recipientAddress.substring(0, 6)}...${recipientAddress.substring(38)}</div>
+                            <div class="tx-time">${new Date().toLocaleString()}</div>
+                        </div>
+                        <div class="tx-status">
+                            <span class="status-badge confirmed">Confirmed</span>
+                        </div>
+                    `;
+                    
+                    // Adăugăm tranzacția la începutul listei
+                    transactionList.prepend(txElement);
+                }
+                
+                // Actualizăm balanța
+                const tokenBalanceElement = document.getElementById('token-balance');
+                if (tokenBalanceElement) {
+                    // Extragem balanța curentă
+                    const currentBalanceText = tokenBalanceElement.textContent;
+                    const currentBalance = parseFloat(currentBalanceText.replace(/,/g, '').replace(' ORX', ''));
+                    
+                    // Calculăm noua balanță
+                    const newBalance = currentBalance - parseFloat(amount);
+                    
+                    // Actualizăm UI-ul
+                    tokenBalanceElement.textContent = `${newBalance.toLocaleString()} ORX`;
+                }
+                
                 window.showCenterAlert(`
-                    <b>Transfer simulated successfully!</b><br><br>
+                    <b>Transfer completed successfully!</b><br><br>
                     Recipient: ${recipientAddress}<br>
-                    Sumă: ${amount} ORX<br><br>
+                    Amount: ${amount} ORX<br><br>
                     <small>Note: This is a simulated transaction in test mode.</small>
                 `, true);
                 
                 console.log(`Simulation: ${amount} ORX to ${recipientAddress}`);
                 return {
                     success: true,
-                    transactionHash: "0x" + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')
+                    transactionHash: txHash
                 };
             }
         
