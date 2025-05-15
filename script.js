@@ -257,41 +257,77 @@ async function checkPriceAlertsGlobal() {
     if (!alerts.length) return;
     const symbols = [...new Set(alerts.filter(a => !a.triggered).map(a => a.symbol))];
     if (!symbols.length) return;
+    
+    // Verificăm timpul ultimei cereri globale pentru a evita limitele API
+    const now = Date.now();
+    const lastGlobalApiCallTime = localStorage.getItem('lastGlobalApiCall');
+    if (lastGlobalApiCallTime && (now - parseInt(lastGlobalApiCallTime)) < 20000) { // 20 secunde între cereri globale
+        console.log('Prea multe cereri globale către API. Se amână verificarea...');
+        return;
+    }
+    
+    // Salvăm timpul ultimei cereri globale
+    localStorage.setItem('lastGlobalApiCall', now.toString());
+    
     const symbolToId = {
         BTC: 'bitcoin', ETH: 'ethereum', BNB: 'binancecoin', XRP: 'ripple', ADA: 'cardano', SOL: 'solana', DOT: 'polkadot', DOGE: 'dogecoin', AVAX: 'avalanche-2', MATIC: 'matic-network', LINK: 'chainlink', UNI: 'uniswap', ATOM: 'cosmos', LTC: 'litecoin', ETC: 'ethereum-classic', XLM: 'stellar', ALGO: 'algorand', VET: 'vechain', MANA: 'decentraland', SAND: 'the-sandbox'
     };
-    const ids = symbols.map(s => symbolToId[s] || s.toLowerCase()).join(',');
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`;
+    const ids = symbols.map(s => symbolToId[s.toUpperCase()] || s.toLowerCase()).join(',');
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&sparkline=false`;
     const proxyUrl = 'https://api.allorigins.win/raw?url=';
     try {
         const resp = await fetch(proxyUrl + encodeURIComponent(url));
-        if (!resp.ok) return;
+        if (!resp.ok) {
+            throw new Error(`Error: ${resp.status}`);
+        }
         const data = await resp.json();
+        
+        // Verificăm dacă răspunsul este valid
+        if (!Array.isArray(data)) {
+            console.log('[Global] Răspunsul API nu este un array. Răspuns primit:', data);
+            if (data.status) {
+                console.log('[Global] Status API:', data.status);
+            }
+            return; // Nu facem simulare în verificările globale
+        }
+        
         let triggered = false;
         alerts.forEach(alert => {
             if (alert.triggered) return;
-            const coin = data.find(c => c.symbol.toUpperCase() === alert.symbol);
-            if (!coin) return;
-            if (
+            const coin = data.find(c => c.symbol.toUpperCase() === alert.symbol.toUpperCase());
+            if (!coin) {
+                console.log(`[Global] Nu s-a găsit moneda ${alert.symbol} în răspunsul API`);
+                return;
+            }
+            
+            // Adăugăm logging pentru debugging
+            console.log(`[Global] Verificare alertă: ${alert.symbol}, condiție: ${alert.condition}, preț țintă: ${alert.price}, preț actual: ${coin.current_price}`);
+            
+            // Verifică condiția corect
+            const shouldTrigger = 
                 (alert.condition === 'above' && coin.current_price >= alert.price) ||
-                (alert.condition === 'below' && coin.current_price <= alert.price)
-            ) {
+                (alert.condition === 'below' && coin.current_price <= alert.price);
+                
+            if (shouldTrigger) {
                 window.showCenterAlert(`Alerta ta pentru ${coin.name} (${coin.symbol.toUpperCase()}) a fost declanșată! Prețul a ajuns la $${coin.current_price} (${alert.condition === 'above' ? 'peste' : 'sub'} $${alert.price})`);
                 alert.triggered = true;
-                alert.lastTriggered = Date.now();
+                alert.lastTriggered = now;
                 triggered = true;
             }
         });
         if (triggered) {
             localStorage.setItem('cryptoAlerts', JSON.stringify(alerts));
+            if (typeof updateAlertBadgeAndDropdown === 'function') {
+                updateAlertBadgeAndDropdown();
+            }
         }
     } catch (e) {
-        // Ignorăm erorile de rețea
+        console.error("[Global] Eroare la verificarea globală a alertelor:", e);
     }
 }
 
 // Pornim intervalul global pe orice pagină
-setInterval(checkPriceAlertsGlobal, 15000);
+setInterval(checkPriceAlertsGlobal, 30000); // Verificare la fiecare 30 secunde
 
 // --- ALERTĂ PREȚ GLOBALĂ PE TOATE PAGINILE ---
 function fetchAndCheckAlerts() {
@@ -315,10 +351,29 @@ function fetchAndCheckAlerts() {
     const activeAlerts = alerts.filter(a => !a.triggered);
     if (activeAlerts.length === 0) return;
 
+    // Verificăm timpul ultimei cereri pentru a evita limitele API
+    const lastApiCallTime = localStorage.getItem('lastAlertApiCall');
+    if (lastApiCallTime && (now - parseInt(lastApiCallTime)) < 10000) { // 10 secunde între cereri
+        console.log('Prea multe cereri către API. Se folosește fallback...');
+        simulatePriceCheck(alerts, activeAlerts);
+        return;
+    }
+    
+    // Salvăm timpul ultimei cereri
+    localStorage.setItem('lastAlertApiCall', now.toString());
+
     // Folosește URL-ul public pentru request-uri limitate
-    // Pentru producție, înlocuiește cu cheia API validă
-    const coinIds = activeAlerts.map(a => a.symbol.toLowerCase()).join(',');
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}`;
+    const symbolToId = {
+        BTC: 'bitcoin', ETH: 'ethereum', BNB: 'binancecoin', XRP: 'ripple', ADA: 'cardano', SOL: 'solana', DOT: 'polkadot', DOGE: 'dogecoin', AVAX: 'avalanche-2', MATIC: 'matic-network', LINK: 'chainlink', UNI: 'uniswap', ATOM: 'cosmos', LTC: 'litecoin', ETC: 'ethereum-classic', XLM: 'stellar', ALGO: 'algorand', VET: 'vechain', MANA: 'decentraland', SAND: 'the-sandbox'
+    };
+    
+    // Convertim simbolurile în ID-uri CoinGecko
+    const coinIds = activeAlerts.map(a => {
+        const id = symbolToId[a.symbol.toUpperCase()];
+        return id || a.symbol.toLowerCase();
+    }).join(',');
+    
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}&sparkline=false`;
     const proxyUrl = 'https://api.allorigins.win/raw?url=';
     
     fetch(proxyUrl + encodeURIComponent(url))
@@ -331,21 +386,39 @@ function fetchAndCheckAlerts() {
         .then(data => {
             // Verifică dacă data este un array valid
             if (!Array.isArray(data)) {
-                console.error('Data received is not an array:', data);
-                throw new Error('Invalid data format received');
+                console.log('Răspunsul API nu este un array. Răspuns primit:', data);
+                
+                // Verifică dacă răspunsul conține un mesaj de eroare sau de rate limit
+                if (data.status && (data.status.error_code === 429 || data.status.error_message?.includes('rate'))) {
+                    console.log('Rate limit depășit la CoinGecko. Utilizăm simulare...');
+                } else {
+                    console.error('Format de date neașteptat de la API:', data);
+                }
+                
+                // Folosim simularea indiferent de tipul de eroare
+                simulatePriceCheck(alerts, activeAlerts);
+                return;
             }
             
             let changed = false;
             
             activeAlerts.forEach(alert => {
                 const coin = data.find(c => c.symbol.toLowerCase() === alert.symbol.toLowerCase());
-                if (!coin) return;
+                if (!coin) {
+                    console.log(`Nu s-a găsit moneda ${alert.symbol} în răspunsul API`);
+                    return;
+                }
                 
-                const shouldTrigger = (alert.condition === 'above' && coin.current_price >= alert.price) ||
-                                     (alert.condition === 'below' && coin.current_price <= alert.price);
-                                     
+                // Adăugăm logging pentru debugging
+                console.log(`Verificare alertă: ${alert.symbol}, condiție: ${alert.condition}, preț țintă: ${alert.price}, preț actual: ${coin.current_price}`);
+                
+                // Verifică condiția corect pentru both above and below
+                const shouldTrigger = 
+                    (alert.condition === 'above' && coin.current_price >= alert.price) ||
+                    (alert.condition === 'below' && coin.current_price <= alert.price);
+                    
                 if (shouldTrigger) {
-                    window.showCenterAlert(`${alert.symbol} a atins ${alert.price}$!`);
+                    window.showCenterAlert(`${alert.symbol} a atins ${alert.condition === 'above' ? 'peste' : 'sub'} ${alert.price}$! Preț actual: $${coin.current_price}`);
                     alert.triggered = true;
                     alert.lastTriggered = now;
                     changed = true;
@@ -361,7 +434,6 @@ function fetchAndCheckAlerts() {
             console.error('Eroare la verificarea alertelor:', error);
             
             // Implementează o soluție alternativă pentru demo
-            // În cazul unei erori API, generăm prețuri aleatorii pentru testare
             console.log('Folosim prețuri simulate pentru testare...');
             simulatePriceCheck(alerts, activeAlerts);
         });
@@ -373,16 +445,32 @@ function simulatePriceCheck(alerts, activeAlerts) {
     let changed = false;
     
     activeAlerts.forEach(alert => {
-        // Simulăm un preț aleator în jurul prețului din alertă (±10%)
-        const randomFactor = 0.9 + Math.random() * 0.2; // între 0.9 și 1.1
-        const simulatedPrice = alert.price * randomFactor;
+        // Generăm un preț simulat POTRIVIT pentru a evita alerte false
+        let simulatedPrice;
         
-        // Verificăm condiția cu prețul simulat
-        const shouldTrigger = (alert.condition === 'above' && simulatedPrice >= alert.price) ||
-                             (alert.condition === 'below' && simulatedPrice <= alert.price);
-                             
+        if (alert.condition === 'above') {
+            // Pentru alerte "above", simulăm un preț puțin peste target dacă vrem să testăm
+            // În mod normal ar trebui să rămână sub valoarea țintă
+            simulatedPrice = alert.price * 0.95; // 5% sub valoarea țintă
+            
+            // Pentru TESTARE: Decomentează linia de mai jos pentru a declanșa alerta
+            // simulatedPrice = alert.price * 1.05; // 5% peste valoarea țintă
+        } else { // condiție 'below'
+            // Pentru alerte "below", simulăm un preț puțin sub target dacă vrem să testăm
+            // În mod normal ar trebui să rămână peste valoarea țintă
+            simulatedPrice = alert.price * 1.05; // 5% peste valoarea țintă
+            
+            // Pentru TESTARE: Decomentează linia de mai jos pentru a declanșa alerta
+            // simulatedPrice = alert.price * 0.95; // 5% sub valoarea țintă
+        }
+        
+        // Verificăm condiția corect pentru both above and below
+        const shouldTrigger = 
+            (alert.condition === 'above' && simulatedPrice >= alert.price) ||
+            (alert.condition === 'below' && simulatedPrice <= alert.price);
+            
         if (shouldTrigger) {
-            window.showCenterAlert(`${alert.symbol} a atins ${alert.price}$! (simulare)`);
+            window.showCenterAlert(`${alert.symbol} a atins ${alert.condition === 'above' ? 'peste' : 'sub'} ${alert.price}$! (simulare)`);
             alert.triggered = true;
             alert.lastTriggered = now;
             changed = true;

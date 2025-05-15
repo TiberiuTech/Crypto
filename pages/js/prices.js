@@ -1522,22 +1522,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkPriceAlerts() {
         const alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
+        if (!alerts.length) return;
+        
+        const activeAlerts = alerts.filter(a => !a.triggered);
+        if (activeAlerts.length === 0) return;
+        
         let triggered = false;
-        alerts.forEach(alert => {
+        const now = Date.now();
+        
+        activeAlerts.forEach(alert => {
             // Găsește moneda în tableData (datele reale)
             const coin = tableData.find(c => c.symbol === alert.symbol);
-            if (!coin) return;
-            if (alert.triggered) return; // Nu declanșa de două ori
-            if (
+            if (!coin) {
+                console.log(`[Prices] Nu s-a găsit moneda ${alert.symbol} în datele tabelului`);
+                return;
+            }
+            
+            // Adăugăm logging pentru debugging
+            console.log(`[Prices] Verificare alertă: ${alert.symbol}, condiție: ${alert.condition}, preț țintă: ${alert.price}, preț actual: ${coin.price}`);
+            
+            // Verifică corect ambele condiții (above/below)
+            const shouldTrigger = 
                 (alert.condition === 'above' && coin.price >= alert.price) ||
-                (alert.condition === 'below' && coin.price <= alert.price)
-            ) {
+                (alert.condition === 'below' && coin.price <= alert.price);
+                
+            if (shouldTrigger) {
                 showCenterAlert(`Alerta ta pentru ${coin.name} (${coin.symbol}) a fost declanșată! Prețul a ajuns la $${coin.price.toFixed(2)} (${alert.condition === 'above' ? 'peste' : 'sub'} $${alert.price})`);
                 alert.triggered = true;
-                alert.lastTriggered = Date.now();
+                alert.lastTriggered = now;
                 triggered = true;
             }
         });
+        
         if (triggered) {
             localStorage.setItem('cryptoAlerts', JSON.stringify(alerts));
             if (typeof updateAlertBadgeAndDropdown === 'function') updateAlertBadgeAndDropdown();
