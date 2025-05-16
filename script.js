@@ -886,45 +886,24 @@ function createChart(symbol, historicalData, percentChange) {
         }
     };
     
-    // Configurăm și creăm graficul
+    // Configurăm și creăm graficul - folosim 'line' în loc de 'candlestick'
     window[`${symbol}Chart`] = new Chart(ctx, {
-        type: 'candlestick',
+        type: 'line',
         data: {
+            labels: historicalData.labels,
             datasets: [{
                 label: symbol,
-                data: historicalData.ohlc,
-                color: {
-                    up: positiveColor,
-                    down: negativeColor,
-                    unchanged: '#888888',
-                },
-                borderColor: {
-                    up: positiveColor,
-                    down: negativeColor,
-                    unchanged: '#888888',
-                },
-                backgroundColor: {
-                    up: `${positiveColor}50`,
-                    down: `${negativeColor}50`,
-                    unchanged: '#88888850',
-                },
-            }, {
-                type: 'line',
-                label: `${symbol} Trend`,
-                data: historicalData.data.map((price, i) => ({
-                    x: historicalData.timestamps[i],
-                    y: price
-                })),
+                data: historicalData.data,
                 borderColor: lineColor,
+                backgroundColor: gradient,
                 borderWidth: 1.5,
                 pointRadius: 0,
                 pointHoverRadius: 5,
                 pointBackgroundColor: lineColor,
                 pointBorderColor: 'rgba(255, 255, 255, 0.8)',
                 pointBorderWidth: 1.5,
-                fill: false,
-                tension: 0.3,
-                z: 10 // Asigurăm că linia de trend este deasupra candles
+                fill: true,
+                tension: 0.3
             }]
         },
         options: {
@@ -963,98 +942,28 @@ function createChart(symbol, historicalData, percentChange) {
                     },
                     callbacks: {
                         title: function(context) {
-                            const date = new Date(context[0].raw.x || context[0].raw.c || context[0].label);
-                            return date.toLocaleString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                day: 'numeric',
-                                month: 'short'
-                            });
+                            if (!context || !context.length) return '';
+                            const tooltipData = context[0];
+                            const index = tooltipData.dataIndex;
+                            return historicalData.labels[index];
                         },
                         label: function(context) {
-                            const dataPoint = context.raw;
-                            if (dataPoint.o !== undefined) {
-                                return [
-                                    'Open: ' + formatTooltipValue(dataPoint.o),
-                                    'High: ' + formatTooltipValue(dataPoint.h),
-                                    'Low: ' + formatTooltipValue(dataPoint.l),
-                                    'Close: ' + formatTooltipValue(dataPoint.c)
-                                ];
-                            } else {
-                                return 'Price: ' + formatTooltipValue(dataPoint.y || context.raw);
-                            }
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'hour',
-                        displayFormats: {
-                            hour: 'HH:mm'
-                        }
-                    },
-                    display: true,
-                    grid: {
-                        display: false,
-                    },
-                    ticks: {
-                        display: true,
-                        maxRotation: 0,
-                        autoSkip: true,
-                        maxTicksLimit: 5,
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        font: {
-                            size: 10
+                            return 'Price: ' + formatTooltipValue(context.raw);
                         }
                     }
                 },
+                verticalLine: verticalLinePlugin
+            },
+            scales: {
+                x: {
+                    display: false
+                },
                 y: {
-                    display: true,
-                    position: 'right',
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)'
-                    },
-                    ticks: {
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        font: {
-                            size: 10
-                        },
-                        callback: function(value) {
-                            return formatTooltipValue(value);
-                        }
-                    }
-                }
-            },
-            animation: {
-                duration: 800
-            },
-            onHover: (event, elements) => {
-                if (elements && elements.length) {
-                    chartCanvas.style.cursor = 'pointer';
-                } else {
-                    chartCanvas.style.cursor = 'default';
+                    display: false
                 }
             }
-        },
-        plugins: [verticalLinePlugin]
-    });
-    
-    // Adăugăm event listener pentru click pe grafic
-    chartCanvas.onclick = function(evt) {
-        const points = window[`${symbol}Chart`].getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
-        
-        if (points.length) {
-            const firstPoint = points[0];
-            const value = window[`${symbol}Chart`].data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-            const label = window[`${symbol}Chart`].data.labels[firstPoint.index];
-            
-            // Aici putem adăuga alte acțiuni la click, cum ar fi deschiderea unui dialog sau mai multe informații
-            console.log(`Clicked on ${label}: ${formatTooltipValue(value)}`);
         }
-    };
+    });
 }
 
 // Funcție pentru preluarea datelor despre criptomonede de la CoinGecko
