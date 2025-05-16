@@ -147,3 +147,15 @@ contract Orionix is ERC20 {
 - **Input Validation**: All forms and actions are validated client-side.
 - **HTTPS**: All API and blockchain calls are made over secure connections.
 - **No Sensitive Data**: User data is not stored on the server unless authenticated via Firebase.
+
+## Blockchain Type Feature
+
+The platform now displays a distinction between coins with their own native blockchain and tokens that run on other blockchains. This feature helps users to:
+
+1. **Identify coin types**: Native blockchain coins like Bitcoin, Ethereum, and Solana are labeled as "Nativ" while tokens like LINK, UNI, and SAND that run on other blockchains are labeled as "Token ERC-20" or similar.
+
+2. **Filter cryptocurrencies**: Users can filter the cryptocurrency list by blockchain type using the dropdown menu.
+
+3. **Technical information**: The coin details popup now includes blockchain type information in the technical specifications section.
+
+This distinction is important for users to understand the technical differences between cryptocurrencies and their underlying technologies.

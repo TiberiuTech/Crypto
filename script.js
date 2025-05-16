@@ -753,20 +753,24 @@ function initFeaturesSection() {
 
 // Funcție pentru generarea datelor istorice pentru grafic
 function generateHistoricalData(currentPrice, percentChange, numPoints = 36) {
-    // Calculăm prețul inițial pe baza schimbării procentuale
+    const now = new Date();
+    const labels = [];
+    const data = [];
+    const timestamps = [];
+    const ohlcData = [];
+    
+    // Calculăm prețul inițial bazat pe schimbarea procentuală
     const initialPrice = currentPrice / (1 + percentChange / 100);
     
-    // Generăm date random pentru punctele intermediare, păstrând trendul general
-    const data = [];
-    const labels = [];
-    const timestamps = [];
+    // Volatilitatea simulată bazată pe schimbarea procentuală
+    const volatility = Math.abs(percentChange / 100) * 0.5;
     
-    // Generăm timestamp-uri pentru ultimele 24 de ore
-    const now = new Date();
-    
+    // Generăm puncte de date pentru ultimele 24 de ore
     for (let i = 0; i < numPoints; i++) {
+        // Progresul de la prețul inițial la cel curent (de la 0 la 1)
         const progress = i / (numPoints - 1);
-        // Adăugăm un trend general plus variație aleatoare
+        
+        // Adăugăm un factor aleatoriu pentru a face graficul mai realist
         const randomFactor = Math.random() * 0.2 - 0.1; // +/- 10%
         const price = initialPrice + (currentPrice - initialPrice) * progress + initialPrice * randomFactor;
         
@@ -779,12 +783,28 @@ function generateHistoricalData(currentPrice, percentChange, numPoints = 36) {
         
         // Formatul pentru label: 'hh:mm'
         labels.push(pointTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        
+        // Generăm date OHLC pentru fiecare interval
+        const priceVariation = price * volatility * (Math.random() * 0.5 + 0.5);
+        const open = Math.max(0, price - priceVariation * (Math.random() - 0.5));
+        const close = price;
+        const high = Math.max(open, close) + priceVariation * Math.random() * 0.3;
+        const low = Math.min(open, close) - priceVariation * Math.random() * 0.3;
+        
+        ohlcData.push({
+            x: pointTime,
+            o: open,
+            h: high,
+            l: low,
+            c: close
+        });
     }
     
     return {
         labels: labels,
         data: data,
-        timestamps: timestamps
+        timestamps: timestamps,
+        ohlc: ohlcData
     };
 }
 
@@ -868,22 +888,43 @@ function createChart(symbol, historicalData, percentChange) {
     
     // Configurăm și creăm graficul
     window[`${symbol}Chart`] = new Chart(ctx, {
-        type: 'line',
+        type: 'candlestick',
         data: {
-            labels: historicalData.labels,
             datasets: [{
-                data: historicalData.data,
-                backgroundColor: gradient,
+                label: symbol,
+                data: historicalData.ohlc,
+                color: {
+                    up: positiveColor,
+                    down: negativeColor,
+                    unchanged: '#888888',
+                },
+                borderColor: {
+                    up: positiveColor,
+                    down: negativeColor,
+                    unchanged: '#888888',
+                },
+                backgroundColor: {
+                    up: `${positiveColor}50`,
+                    down: `${negativeColor}50`,
+                    unchanged: '#88888850',
+                },
+            }, {
+                type: 'line',
+                label: `${symbol} Trend`,
+                data: historicalData.data.map((price, i) => ({
+                    x: historicalData.timestamps[i],
+                    y: price
+                })),
                 borderColor: lineColor,
                 borderWidth: 1.5,
-                pointRadius: 0,  // Ascunde punctele by default
-                pointHoverRadius: 5, // Afișează puncte mari la hover
+                pointRadius: 0,
+                pointHoverRadius: 5,
                 pointBackgroundColor: lineColor,
                 pointBorderColor: 'rgba(255, 255, 255, 0.8)',
                 pointBorderWidth: 1.5,
-                pointHitRadius: 30, // Mărește zona de detecție pentru hover
-                fill: true,
-                tension: 0.3
+                fill: false,
+                tension: 0.3,
+                z: 10 // Asigurăm că linia de trend este deasupra candles
             }]
         },
         options: {
@@ -922,34 +963,69 @@ function createChart(symbol, historicalData, percentChange) {
                     },
                     callbacks: {
                         title: function(context) {
-                            return context[0].label;
+                            const date = new Date(context[0].raw.x || context[0].raw.c || context[0].label);
+                            return date.toLocaleString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                day: 'numeric',
+                                month: 'short'
+                            });
                         },
                         label: function(context) {
-                            return formatTooltipValue(context.raw);
+                            const dataPoint = context.raw;
+                            if (dataPoint.o !== undefined) {
+                                return [
+                                    'Open: ' + formatTooltipValue(dataPoint.o),
+                                    'High: ' + formatTooltipValue(dataPoint.h),
+                                    'Low: ' + formatTooltipValue(dataPoint.l),
+                                    'Close: ' + formatTooltipValue(dataPoint.c)
+                                ];
+                            } else {
+                                return 'Price: ' + formatTooltipValue(dataPoint.y || context.raw);
+                            }
                         }
                     }
                 }
             },
             scales: {
                 x: {
-                    display: false,
+                    type: 'time',
+                    time: {
+                        unit: 'hour',
+                        displayFormats: {
+                            hour: 'HH:mm'
+                        }
+                    },
+                    display: true,
                     grid: {
-                        display: false
+                        display: false,
+                    },
+                    ticks: {
+                        display: true,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 5,
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        font: {
+                            size: 10
+                        }
                     }
                 },
                 y: {
-                    display: false,
-                    min: Math.min(...historicalData.data) * 0.97,
-                    max: Math.max(...historicalData.data) * 1.03,
+                    display: true,
+                    position: 'right',
                     grid: {
-                        display: false
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        font: {
+                            size: 10
+                        },
+                        callback: function(value) {
+                            return formatTooltipValue(value);
+                        }
                     }
-                }
-            },
-            elements: {
-                line: {
-                    borderWidth: 1.5,
-                    tension: 0.3
                 }
             },
             animation: {
