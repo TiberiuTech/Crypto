@@ -1788,6 +1788,213 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (high24h) document.getElementById('modal24hHigh').textContent = formatCurrency(high24h);
                 if (low24h) document.getElementById('modal24hLow').textContent = formatCurrency(low24h);
+                
+                // Actualizăm informațiile despre supply
+                const maxSupply = coinData.market_data.max_supply;
+                const circulatingSupply = coinData.market_data.circulating_supply;
+                const totalSupply = coinData.market_data.total_supply;
+                
+                // Actualizăm secțiunea Economy & Supply
+                const infoCards = modalElement.querySelectorAll('.info-card');
+                if (infoCards.length >= 2) {
+                    const economyCard = infoCards[1];
+                    const infoItems = economyCard.querySelectorAll('.info-item');
+                    
+                    if (infoItems.length >= 2) {
+                        // Maximum Supply
+                        if (maxSupply) {
+                            infoItems[0].querySelector('.info-value').textContent = 
+                                `${formatNumber(maxSupply, 1)} ${currentCoin.symbol}`;
+                        } else if (currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai') {
+                            infoItems[0].querySelector('.info-value').textContent = 'Unlimited';
+                        } else {
+                            infoItems[0].querySelector('.info-value').textContent = 'Unknown';
+                        }
+                        
+                        // Circulating Supply
+                        if (circulatingSupply) {
+                            infoItems[1].querySelector('.info-value').textContent = 
+                                `${formatNumber(circulatingSupply, 1)} ${currentCoin.symbol}`;
+                        } else if (totalSupply) {
+                            infoItems[1].querySelector('.info-value').textContent = 
+                                `${formatNumber(totalSupply, 1)} ${currentCoin.symbol}`;
+                        } else {
+                            infoItems[1].querySelector('.info-value').textContent = 'Unknown';
+                        }
+                        
+                        // Next Halving - doar pentru Bitcoin, altfel N/A
+                        if (infoItems.length >= 3) {
+                            const nextHalving = 
+                                currentCoin.id === 'bitcoin' ? 'Apr 2024' :
+                                currentCoin.id === 'litecoin' ? 'Aug 2023' :
+                                'N/A';
+                            infoItems[2].querySelector('.info-value').textContent = nextHalving;
+                        }
+                        
+                        // Block Reward
+                        if (infoItems.length >= 4) {
+                            const blockReward = 
+                                currentCoin.id === 'bitcoin' ? '6.25 BTC' :
+                                currentCoin.id === 'ethereum' ? '2 ETH' :
+                                currentCoin.id === 'litecoin' ? '12.5 LTC' :
+                                currentCoin.id === 'dogecoin' ? '10,000 DOGE' :
+                                currentCoin.blockchainType === 'Nativ' ? 'Varies' :
+                                currentCoin.blockchainType === 'Token ERC-20' || currentCoin.blockchainType === 'Token' ? 'N/A' : 'N/A';
+                            infoItems[3].querySelector('.info-value').textContent = blockReward;
+                        }
+                    }
+                }
+            }
+            
+            // Actualizăm informațiile tehnice și istorice pe baza datelor disponibile
+            if (coinData) {
+                // Informații tehnice despre monedă
+                const techCard = modalElement.querySelector('.info-card:nth-child(1)');
+                if (techCard) {
+                    const infoItems = techCard.querySelectorAll('.info-item');
+                    
+                    if (infoItems.length >= 3) {
+                        // Algorithm
+                        if (coinData.hashing_algorithm) {
+                            infoItems[0].querySelector('.info-value').textContent = coinData.hashing_algorithm;
+                        } else if (currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai') {
+                            infoItems[0].querySelector('.info-value').textContent = 'N/A';
+                        } else {
+                            infoItems[0].querySelector('.info-value').textContent = currentCoin.blockchainType === 'Nativ' ? 'Custom' : 'N/A';
+                        }
+                        
+                        // Consensus Type - dacă avem date, le folosim, altfel păstrăm valorile implicite bazate pe tipul monedei
+                        const consensusType = 
+                            currentCoin.id === 'bitcoin' ? 'PoW' :
+                            currentCoin.id === 'ethereum' ? 'PoS' :
+                            currentCoin.id === 'tether' || currentCoin.id === 'usdc' ? 'N/A' :
+                            currentCoin.blockchainType === 'Nativ' ? 'PoW/PoS' : 
+                            currentCoin.blockchainType === 'Token ERC-20' || currentCoin.blockchainType === 'Token' ? 'PoS (Ethereum)' : 'N/A';
+                        infoItems[1].querySelector('.info-value').textContent = consensusType;
+                        
+                        // Hash Power - nu avem date directe de la API, folosim o valoare implicită bazată pe blockchain
+                        const hashPower = 
+                            currentCoin.id === 'bitcoin' ? '411.84 EH/s' :
+                            currentCoin.id === 'ethereum' ? '1258.23 TH/s' :
+                            currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai' ? 'N/A' :
+                            currentCoin.blockchainType === 'Nativ' ? 'Varies' : 'N/A';
+                        infoItems[2].querySelector('.info-value').textContent = hashPower;
+                    }
+                }
+                
+                // Network & Performance
+                const networkCard = modalElement.querySelector('.info-card:nth-child(3)');
+                if (networkCard) {
+                    const infoItems = networkCard.querySelectorAll('.info-item');
+                    
+                    if (infoItems.length >= 4) {
+                        // Block Time - estimare bazată pe blockchain
+                        const blockTime = 
+                            currentCoin.id === 'bitcoin' ? '10 min' :
+                            currentCoin.id === 'ethereum' ? '12 sec' :
+                            currentCoin.id === 'solana' ? '400 ms' :
+                            currentCoin.id === 'cardano' ? '20 sec' :
+                            currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai' ? 'N/A' :
+                            currentCoin.blockchainType === 'Nativ' ? '~30 sec' : 
+                            currentCoin.blockchainType === 'Token ERC-20' || currentCoin.blockchainType === 'Token' ? '12 sec' : 'N/A';
+                        infoItems[0].querySelector('.info-value').textContent = blockTime;
+                        
+                        // TPS - estimare bazată pe blockchain
+                        const tps = 
+                            currentCoin.id === 'bitcoin' ? '7' :
+                            currentCoin.id === 'ethereum' ? '15-30' :
+                            currentCoin.id === 'solana' ? '65,000' :
+                            currentCoin.id === 'cardano' ? '250' :
+                            currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai' ? 'N/A' :
+                            currentCoin.blockchainType === 'Nativ' ? 'Varies' : 
+                            currentCoin.blockchainType === 'Token ERC-20' || currentCoin.blockchainType === 'Token' ? '15-30' : 'N/A';
+                        infoItems[1].querySelector('.info-value').textContent = tps;
+                        
+                        // Active Nodes - estimare
+                        const activeNodes =
+                            currentCoin.id === 'bitcoin' ? '15,000+' :
+                            currentCoin.id === 'ethereum' ? '8,500+' :
+                            currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai' ? 'N/A' :
+                            currentCoin.blockchainType === 'Nativ' ? '1,000+' : 'N/A';
+                        infoItems[2].querySelector('.info-value').textContent = activeNodes;
+                        
+                        // Chain Size - estimare
+                        const chainSize = 
+                            currentCoin.id === 'bitcoin' ? '491.23 GB' :
+                            currentCoin.id === 'ethereum' ? '1.24 TB' :
+                            currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai' ? 'N/A' :
+                            currentCoin.blockchainType === 'Nativ' ? 'Varies' : 'N/A';
+                        infoItems[3].querySelector('.info-value').textContent = chainSize;
+                    }
+                }
+                
+                // History & Development
+                const historyCard = modalElement.querySelector('.info-card:nth-child(4)');
+                if (historyCard) {
+                    const infoItems = historyCard.querySelectorAll('.info-item');
+                    
+                    if (infoItems.length >= 2) {
+                        // Launch Date
+                        let launchDate = 'Unknown';
+                        if (coinData.genesis_date) {
+                            const genesisDate = new Date(coinData.genesis_date);
+                            launchDate = genesisDate.toLocaleDateString('en-US', {month: 'short', year: 'numeric'});
+                        } else {
+                            // Date speciale pentru monede cunoscute
+                            launchDate = 
+                                currentCoin.id === 'bitcoin' ? 'Jan 2009' :
+                                currentCoin.id === 'ethereum' ? 'Jul 2015' :
+                                currentCoin.id === 'tether' ? 'Oct 2014' :
+                                currentCoin.id === 'usdc' ? 'Sep 2018' :
+                                currentCoin.id === 'dai' ? 'Dec 2017' :
+                                currentCoin.id === 'chainlink' ? 'Jun 2017' :
+                                currentCoin.id === 'uniswap' ? 'Nov 2018' :
+                                'Unknown';
+                        }
+                        infoItems[0].querySelector('.info-value').textContent = launchDate;
+                        
+                        // Creator - informații hard-coded pentru monede cunoscute
+                        const creator = 
+                            currentCoin.id === 'bitcoin' ? 'S. Nakamoto' :
+                            currentCoin.id === 'ethereum' ? 'V. Buterin' :
+                            currentCoin.id === 'ripple' ? 'Ripple Labs' :
+                            currentCoin.id === 'cardano' ? 'C. Hoskinson' :
+                            currentCoin.id === 'solana' ? 'A. Yakovenko' :
+                            currentCoin.id === 'polkadot' ? 'G. Wood' :
+                            currentCoin.id === 'chainlink' ? 'S. Nazarov' :
+                            currentCoin.id === 'tether' ? 'Tether Ltd.' :
+                            currentCoin.id === 'usdc' ? 'Circle & Coinbase' :
+                            currentCoin.id === 'dai' ? 'MakerDAO' :
+                            'Development Team';
+                        infoItems[1].querySelector('.info-value').textContent = creator;
+                        
+                        // First Transaction
+                        if (infoItems.length >= 3) {
+                            const firstTx = 
+                                currentCoin.id === 'bitcoin' ? 'Jan 12, 2009' :
+                                currentCoin.id === 'ethereum' ? 'Aug 7, 2015' :
+                                currentCoin.id === 'tether' ? 'Oct 6, 2014' :
+                                currentCoin.id === 'usdc' ? 'Sep 2018' :
+                                currentCoin.id === 'dai' ? 'Dec 2017' :
+                                launchDate;  // Folosim data de lansare ca aproximare
+                            infoItems[2].querySelector('.info-value').textContent = firstTx;
+                        }
+                        
+                        // First Halving
+                        if (infoItems.length >= 4) {
+                            const firstHalving = 
+                                currentCoin.id === 'bitcoin' ? 'Nov 2012' :
+                                currentCoin.id === 'litecoin' ? 'Aug 2015' :
+                                currentCoin.id === 'tether' || 
+                                currentCoin.id === 'usdc' || 
+                                currentCoin.id === 'dai' || 
+                                currentCoin.blockchainType === 'Token' || 
+                                currentCoin.blockchainType === 'Token ERC-20' ? 'N/A' :
+                                'N/A';
+                            infoItems[3].querySelector('.info-value').textContent = firstHalving;
+                        }
+                    }
+                }
             }
         } catch (error) {
             console.warn('Eroare la obținerea datelor suplimentare:', error);
@@ -1796,6 +2003,80 @@ document.addEventListener('DOMContentLoaded', () => {
             const variance = currentCoin.price * 0.05; // +/- 5%
             document.getElementById('modal24hHigh').textContent = formatCurrency(currentCoin.price + variance);
             document.getElementById('modal24hLow').textContent = formatCurrency(currentCoin.price - variance);
+            
+            // Actualizăm manual informațiile pentru tipuri de monede cunoscute
+            // Acest cod rulează doar dacă API-ul a eșuat
+            
+            // Set default values for specific coins
+            if (currentCoin.id === 'tether' || currentCoin.id === 'usdc' || currentCoin.id === 'dai') {
+                const techCard = modalElement.querySelector('.info-card:nth-child(1)');
+                const economyCard = modalElement.querySelector('.info-card:nth-child(2)');
+                const networkCard = modalElement.querySelector('.info-card:nth-child(3)');
+                const historyCard = modalElement.querySelector('.info-card:nth-child(4)');
+                
+                // Actualizare Tech Specs pentru stablecoins
+                if (techCard) {
+                    const infoItems = techCard.querySelectorAll('.info-item');
+                    if (infoItems.length >= 3) {
+                        infoItems[0].querySelector('.info-value').textContent = 'N/A'; // Algorithm
+                        infoItems[1].querySelector('.info-value').textContent = 'N/A'; // Consensus Type
+                        infoItems[2].querySelector('.info-value').textContent = 'N/A'; // Hash Power
+                    }
+                }
+                
+                // Actualizare Economy pentru stablecoins
+                if (economyCard) {
+                    const infoItems = economyCard.querySelectorAll('.info-item');
+                    if (infoItems.length >= 4) {
+                        infoItems[0].querySelector('.info-value').textContent = 'Unlimited'; // Maximum Supply
+                        
+                        // Circulating Supply - valori diferite pentru fiecare stablecoin
+                        const circulatingSupply = 
+                            currentCoin.id === 'tether' ? '152.4B USDT' :
+                            currentCoin.id === 'usdc' ? '26.2B USDC' :
+                            currentCoin.id === 'dai' ? '5.2B DAI' :
+                            'Unknown';
+                        infoItems[1].querySelector('.info-value').textContent = circulatingSupply;
+                        
+                        infoItems[2].querySelector('.info-value').textContent = 'N/A'; // Next Halving
+                        infoItems[3].querySelector('.info-value').textContent = 'N/A'; // Block Reward
+                    }
+                }
+                
+                // Actualizare Network pentru stablecoins
+                if (networkCard) {
+                    const infoItems = networkCard.querySelectorAll('.info-item');
+                    if (infoItems.length >= 4) {
+                        infoItems[0].querySelector('.info-value').textContent = 'N/A'; // Block Time
+                        infoItems[1].querySelector('.info-value').textContent = 'N/A'; // TPS
+                        infoItems[2].querySelector('.info-value').textContent = 'N/A'; // Active Nodes
+                        infoItems[3].querySelector('.info-value').textContent = 'N/A'; // Chain Size
+                    }
+                }
+                
+                // Actualizare History pentru stablecoins
+                if (historyCard) {
+                    const infoItems = historyCard.querySelectorAll('.info-item');
+                    if (infoItems.length >= 4) {
+                        const launchDate = 
+                            currentCoin.id === 'tether' ? 'Oct 2014' :
+                            currentCoin.id === 'usdc' ? 'Sep 2018' :
+                            currentCoin.id === 'dai' ? 'Dec 2017' :
+                            'Unknown';
+                        infoItems[0].querySelector('.info-value').textContent = launchDate; // Launch Date
+                        
+                        const creator = 
+                            currentCoin.id === 'tether' ? 'Tether Ltd.' :
+                            currentCoin.id === 'usdc' ? 'Circle & Coinbase' :
+                            currentCoin.id === 'dai' ? 'MakerDAO' :
+                            'Unknown';
+                        infoItems[1].querySelector('.info-value').textContent = creator; // Creator
+                        
+                        infoItems[2].querySelector('.info-value').textContent = launchDate; // First Transaction (folosim launch date)
+                        infoItems[3].querySelector('.info-value').textContent = 'N/A'; // First Halving
+                    }
+                }
+            }
         }
         
         // Adăugăm clasa 'modal-open' pe body pentru a fixa dimensiunile
