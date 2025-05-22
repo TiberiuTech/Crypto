@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
         updateThemeButtonIcon(theme);
+        
+        // Actualizăm și temele modalelor
+        updateModalsTheme(theme);
     }
     
     // Funcție pentru actualizarea iconiței butonului în funcție de tema curentă
@@ -1815,5 +1818,22 @@ function updateUIForAuthState(user) {
         if (authBtnsMobile) authBtnsMobile.setAttribute('style', 'display: flex !important');
         if (loginBtnMobile) loginBtnMobile.setAttribute('style', 'display: inline-block !important');
         if (signupBtnMobile) signupBtnMobile.setAttribute('style', 'display: inline-block !important');
+    }
+}
+
+// Funcție pentru actualizarea temei modalelor
+function updateModalsTheme(theme) {
+    // Actualizăm modalul de detalii criptomonedă
+    const coinModal = document.getElementById('coinModal');
+    if (coinModal) {
+        coinModal.classList.remove('light-theme', 'dark-theme');
+        coinModal.classList.add(theme + '-theme');
+    }
+    
+    // Actualizăm și alte modale dacă există
+    const alertModal = document.querySelector('.alert-modal');
+    if (alertModal) {
+        alertModal.classList.remove('light-theme', 'dark-theme');
+        alertModal.classList.add(theme + '-theme');
     }
 }

@@ -1357,6 +1357,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function setupEventListeners() {
+        console.log("Configurare event listeners...");
+        
+        // Închidere modal
+        const modalCloseBtn = document.querySelector('.modal-close');
+        if (modalCloseBtn) {
+            modalCloseBtn.addEventListener('click', function() {
+                const modalElement = window.modal || document.getElementById('coinModal');
+                if (modalElement) {
+                    modalElement.style.display = 'none';
+                    modalElement.classList.remove('active');
+                }
+                
+                // Eliminăm clasa 'modal-open' de pe body
+                document.body.classList.remove('modal-open');
+            });
+        }
+        
+        // Event listener pentru theme toggle
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeToggleBtnMobile = document.getElementById('themeToggleBtnMobile');
+        
+        // Funcție pentru actualizarea temei modalului
+        const updateModalTheme = () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const coinModal = document.getElementById('coinModal');
+            if (coinModal) {
+                coinModal.classList.remove('light-theme', 'dark-theme');
+                coinModal.classList.add(currentTheme + '-theme');
+            }
+        };
+        
+        // Adăugăm listener pentru butonul desktop
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', updateModalTheme);
+        }
+        
+        // Adăugăm listener pentru butonul mobil
+        if (themeToggleBtnMobile) {
+            themeToggleBtnMobile.addEventListener('click', updateModalTheme);
+        }
+        
+        // Aplicăm tema curentă la încărcare
+        updateModalTheme();
+        
         carouselContainer.addEventListener('mouseenter', () => {
             isHovered = true;
             stopAutoScroll();
@@ -1654,6 +1698,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Afișez modalul:", modalElement);
             modalElement.style.display = 'block';
             modalElement.classList.add('active');
+            
+            // Aplicăm tema curentă pe modal
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            modalElement.classList.remove('light-theme', 'dark-theme');
+            modalElement.classList.add(currentTheme + '-theme');
         } else {
             console.error("Modalul nu este disponibil!");
         }
