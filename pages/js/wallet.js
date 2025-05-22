@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateCoinValues();
         
-        updateTotalBalance();
+        updateWalletDisplay();
         
         setupEventListeners();
     });
@@ -679,7 +679,7 @@ function executeSwap(fromCoin, toCoin, fromAmount, toAmount) {
     wallet.coins[toCoin].amount += toAmount;
     wallet.coins[toCoin].value = wallet.coins[toCoin].amount * getCurrentPrice(toCoin);
     
-    updateTotalBalance();
+    updateWalletDisplay();
     
     updateAssetUI(fromCoin);
     
@@ -1018,14 +1018,27 @@ function addNotificationStyles() {
 document.addEventListener('DOMContentLoaded', addNotificationStyles);
 
 function setupEventListeners() {
+    console.log("Setting up event listeners...");
     const actionButtons = document.querySelectorAll('.action-button');
     
+    // Adaug listeners pentru fiecare buton
     actionButtons.forEach(button => {
+        const buttonText = button.querySelector('span').textContent;
+        console.log("Found button:", buttonText);
+        
         button.addEventListener('click', () => {
             const action = button.querySelector('span').textContent.toLowerCase();
+            console.log("Button clicked:", action);
             
             if (action === 'deposit') {
-                document.getElementById('depositModal').style.display = 'block';
+                // Acum și butonul Deposit deschide modalul
+                console.log("Deposit button clicked - opening deposit modal");
+                const depositModal = document.getElementById('depositModal');
+                if (depositModal) {
+                    depositModal.style.display = 'block';
+                } else {
+                    console.error("depositModal element not found!");
+                }
             } else if (action === 'withdraw') {
                 console.log("Opening withdraw modal");
                 
@@ -1110,12 +1123,55 @@ function setupEventListeners() {
                         });
                     }
                 });
-            } else if (action === 'trade') {
-                window.location.href = 'trade.html';
+            } else if (action === 'add funds') {
+                // Deschidem direct modalul cu detalii card pentru Add Funds
+                console.log("Opening card details modal from Add Funds button");
+                
+                // Moneda implicită
+                const defaultCoin = 'bitcoin';
+                const defaultSymbol = 'BTC';
+                
+                // Resetăm input-ul pentru sumă
+                const cardDetailsModal = document.getElementById('cardDetailsModal');
+                if (cardDetailsModal) {
+                    const amountInput = document.getElementById('cardPaymentInput');
+                    if (amountInput) {
+                        amountInput.value = '';
+                    }
+                    
+                    cardDetailsModal.style.display = 'block';
+                }
             }
         });
     });
     
+    // Adaug event listener specific pentru butonul Add Funds folosind ID-ul
+    const addFundsButton = document.getElementById('addFundsButton');
+    if (addFundsButton) {
+        console.log("Found addFundsButton by ID");
+        addFundsButton.addEventListener('click', function() {
+            console.log("Add Funds button clicked by ID");
+            
+            // Moneda implicită
+            const defaultCoin = 'bitcoin';
+            const defaultSymbol = 'BTC';
+            
+            // Resetăm input-ul pentru sumă
+            const cardDetailsModal = document.getElementById('cardDetailsModal');
+            if (cardDetailsModal) {
+                const amountInput = document.getElementById('cardPaymentInput');
+                if (amountInput) {
+                    amountInput.value = '';
+                }
+                
+                cardDetailsModal.style.display = 'block';
+            }
+        });
+    } else {
+        console.error("addFundsButton element not found by ID!");
+    }
+    
+    // Restaurăm restul codului care a fost șters
     const depositAmount = document.getElementById('depositAmount');
     if (depositAmount) {
         depositAmount.addEventListener('input', function() {
@@ -1139,9 +1195,9 @@ function setupEventListeners() {
             
             console.log(`Depozit inițiat: ${amount} ${symbol} (${coin})`);
             
-            document.getElementById('depositModal').style.display = 'none';
-            
-            prepareCardDetailsModal(amount, coin, symbol);
+            // În loc să închidem modalul și să continuăm direct,
+            // verificăm și cerem confirmare
+            checkAndConfirmDeposit(amount, coin, symbol);
         });
     }
     
@@ -1223,7 +1279,7 @@ function updateAssetAfterDeposit(coin, amount) {
     wallet.coins[coinId].amount += amount;
     wallet.coins[coinId].value += amount * getCurrentPrice(coin);
     
-    updateTotalBalance();
+    updateWalletDisplay();
     
     const assetsList = document.getElementById('assetsList');
     if (!assetsList) return;
@@ -1550,635 +1606,19 @@ function getCoinIdFromSymbol(symbol) {
     return symbolToId[normalizedSymbol] || normalizedSymbol;
 }
 
-function updateTotalBalance() {
-    let total = 0;
-    for (const coin in wallet.coins) {
-        total += wallet.coins[coin].value;
+function updateWalletDisplay() {
+    // Actualizăm total balance
+    const balanceAmount = document.getElementById('balanceAmount');
+    const totalBalance = calculateTotalBalance(); // Funcția existentă
+    if (balanceAmount) {
+        balanceAmount.textContent = formatNumber(totalBalance);
     }
     
-    wallet.totalBalance = total;
+    // Actualizăm valoarea portofoliului (care poate fi diferită de totalBalance)
+    const portfolioValue = calculatePortfolioValue(); // Poate fi aceeași funcție sau alta
+    updatePortfolioValue(portfolioValue);
     
-    const amountElement = document.querySelector('.balance-amount .amount');
-    if (amountElement) {
-        amountElement.textContent = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-}
-
-function populateWithdrawCoinDropdown() {
-    const withdrawCoinSelect = document.getElementById('withdrawCoin');
-    const availableAmountElement = document.getElementById('availableAmount');
-    const coinSymbolElement = document.getElementById('coinSymbol');
-    const feeSymbolElement = document.getElementById('feeSymbol');
-    const networkFeeElement = document.getElementById('networkFee');
-    
-    if (!withdrawCoinSelect) return;
-    
-    withdrawCoinSelect.innerHTML = '';
-    
-    if (Object.keys(wallet.coins).length === 0) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'No coins available';
-        option.disabled = true;
-        option.selected = true;
-        withdrawCoinSelect.appendChild(option);
-        
-        if (availableAmountElement) availableAmountElement.textContent = '0.00';
-        if (coinSymbolElement) coinSymbolElement.textContent = '';
-        if (feeSymbolElement) feeSymbolElement.textContent = '';
-        
-        return;
-    }
-    
-    Object.keys(wallet.coins).forEach(coinId => {
-        const coin = wallet.coins[coinId];
-        if (coin.amount > 0) {
-            const option = document.createElement('option');
-            option.value = coinId;
-            option.textContent = `${coin.name} (${coin.ticker})`;
-            withdrawCoinSelect.appendChild(option);
-        }
-    });
-    
-    if (withdrawCoinSelect.options.length > 0) {
-        const selectedCoinId = withdrawCoinSelect.value;
-        const selectedCoin = wallet.coins[selectedCoinId];
-        
-        if (selectedCoin) {
-            if (availableAmountElement) availableAmountElement.textContent = selectedCoin.amount.toFixed(8);
-            if (coinSymbolElement) coinSymbolElement.textContent = selectedCoin.ticker;
-            
-            if (networkFeeElement && feeSymbolElement) {
-                let fee = 0.0005;
-                
-                if (selectedCoin.ticker === 'ETH') {
-                    fee = 0.005;
-                } else if (selectedCoin.ticker === 'BNB') {
-                    fee = 0.001;
-                } else if (selectedCoin.ticker === 'XRP') {
-                    fee = 0.01;
-                }
-                
-                networkFeeElement.textContent = fee.toFixed(6);
-                feeSymbolElement.textContent = selectedCoin.ticker;
-                
-                const feeTextElement = document.querySelector('.fee');
-                if (feeTextElement) {
-                    feeTextElement.innerHTML = `Network Fee: ~<span id="networkFee">${fee.toFixed(6)}</span> <span id="feeSymbol">${selectedCoin.ticker}</span>`;
-                }
-            }
-        }
-    }
-}
-
-function setupWithdrawEvents() {
-    const withdrawCoinSelect = document.getElementById('withdrawCoin');
-    const availableAmountElement = document.getElementById('availableAmount');
-    const coinSymbolElement = document.getElementById('coinSymbol');
-    const feeSymbolElement = document.getElementById('feeSymbol');
-    const networkFeeElement = document.getElementById('networkFee');
-    const maxBtn = document.querySelector('.max-btn');
-    const withdrawAmountInput = document.getElementById('withdrawAmount');
-    const withdrawSubmitBtn = document.getElementById('withdrawSubmitBtn');
-    
-    console.log("Setting up withdraw events - found elements:", {
-        withdrawCoinSelect: withdrawCoinSelect ? withdrawCoinSelect.tagName : null,
-        withdrawAmountInput: withdrawAmountInput ? withdrawAmountInput.tagName : null,
-        withdrawSubmitBtn: withdrawSubmitBtn ? withdrawSubmitBtn.tagName : null,
-        maxBtn: maxBtn ? maxBtn.tagName : null
-    });
-    
-    if (!withdrawCoinSelect) {
-        console.error("withdrawCoinSelect not found");
-        return;
-    }
-    
-    withdrawCoinSelect.addEventListener('change', function() {
-        const selectedCoinId = this.value;
-        const selectedCoin = wallet.coins[selectedCoinId];
-        
-        console.log("Withdraw coin changed:", selectedCoinId, selectedCoin);
-        
-        if (selectedCoin) {
-            if (availableAmountElement) availableAmountElement.textContent = selectedCoin.amount.toFixed(8);
-            if (coinSymbolElement) coinSymbolElement.textContent = selectedCoin.ticker;
-            
-            if (networkFeeElement && feeSymbolElement) {
-                let fee = 0.0005;
-                
-                if (selectedCoin.ticker === 'ETH') {
-                    fee = 0.005;
-                } else if (selectedCoin.ticker === 'BNB') {
-                    fee = 0.001;
-                } else if (selectedCoin.ticker === 'XRP') {
-                    fee = 0.01;
-                }
-                
-                networkFeeElement.textContent = fee.toFixed(6);
-                feeSymbolElement.textContent = selectedCoin.ticker;
-                
-                const feeTextElement = document.querySelector('.fee');
-                if (feeTextElement) {
-                    feeTextElement.innerHTML = `Network Fee: ~<span id="networkFee">${fee.toFixed(6)}</span> <span id="feeSymbol">${selectedCoin.ticker}</span>`;
-                }
-            }
-        }
-    });
-    
-    if (maxBtn && withdrawAmountInput) {
-        maxBtn.addEventListener('click', function() {
-            const selectedCoinId = withdrawCoinSelect.value;
-            const selectedCoin = wallet.coins[selectedCoinId];
-            
-            console.log("MAX button clicked for coin:", selectedCoinId);
-            
-            if (selectedCoin) {
-                const networkFee = parseFloat(networkFeeElement ? networkFeeElement.textContent : 0) || 0;
-                const maxAmount = Math.max(0, selectedCoin.amount - networkFee);
-                
-                console.log("Setting max amount:", maxAmount, "networkFee:", networkFee);
-                
-                withdrawAmountInput.value = maxAmount.toFixed(8);
-            }
-        });
-    }
-    
-    if (withdrawSubmitBtn) {
-        console.log("Adding click event to withdraw button", withdrawSubmitBtn);
-        
-        withdrawSubmitBtn.onclick = function() {
-            console.log("Withdraw button clicked!");
-            
-            if (!withdrawCoinSelect || !withdrawAmountInput) {
-                console.error("Withdraw elements not found");
-                return;
-            }
-            
-            const selectedCoinId = withdrawCoinSelect.value;
-            const withdrawAmount = parseFloat(withdrawAmountInput.value);
-            const networkFee = parseFloat(networkFeeElement ? networkFeeElement.textContent : 0) || 0;
-            
-            console.log("Withdraw initiated:", {
-                selectedCoinId,
-                withdrawAmount,
-                networkFee,
-                input_value: withdrawAmountInput.value
-            });
-            
-            if (!selectedCoinId) {
-                console.error('No coin selected');
-                return;
-            }
-            
-            if (!withdrawAmount || isNaN(withdrawAmount) || withdrawAmount <= 0) {
-                console.error('Invalid amount', withdrawAmountInput.value);
-                return;
-            }
-            
-            const selectedCoin = wallet.coins[selectedCoinId];
-            
-            if (!selectedCoin || selectedCoin.amount < withdrawAmount + networkFee) {
-                console.error('Insufficient funds', { 
-                    available: selectedCoin ? selectedCoin.amount : 0,
-                    requested: withdrawAmount + networkFee
-                });
-                return;
-            }
-            
-            executeWithdraw(selectedCoinId, withdrawAmount, networkFee);
-            
-            document.getElementById('withdrawModal').style.display = 'none';
-            
-            console.log("Withdraw successful and modal closed");
-            return false;
-        };
-    } else {
-        console.error("Withdraw button not found!");
-        
-        const otherButton = document.querySelector('button.submit-btn') || 
-                           document.querySelector('button:contains("Withdraw Now")') ||
-                           document.querySelector('.wallet-modal button.submit-btn');
-        
-        if (otherButton) {
-            console.log("Found alternative button:", otherButton);
-            otherButton.onclick = function() {
-                console.log("Alternative withdraw button clicked!");
-            };
-        }
-    }
-}
-
-function executeWithdraw(coinId, amount, fee) {
-    console.log(`Executing withdraw: ${amount} of ${coinId} with fee ${fee}`);
-    
-    const coin = wallet.coins[coinId];
-    if (!coin) {
-        console.error("Coin not found in wallet", coinId);
-        return;
-    }
-    
-    const totalAmount = amount + fee;
-    
-    console.log(`Before withdraw: ${coin.ticker} balance: ${coin.amount}`);
-
-    coin.amount -= totalAmount;
-    coin.value = coin.amount * getCurrentPrice(coinId);
-    
-    console.log(`After withdraw: ${coin.ticker} balance: ${coin.amount}`);
-    
-    updateTotalBalance();
-    
-    updateAssetUI(coinId);
-    
-    addWithdrawToHistory(coinId, amount, fee);
-}
-
-function updateAssetUI(coinId) {
-    const assetItem = findAssetElement(coinId);
-    if (!assetItem) {
-        console.log(`Asset element for ${coinId} not found, might need to create it`);
-        return;
-    }
-    
-    const coin = wallet.coins[coinId];
-    if (!coin) {
-        console.error(`Coin ${coinId} not found in wallet`);
-        return;
-    }
-    
-    console.log(`Updating UI for ${coinId}, balance: ${coin.amount}`);
-    
-    if (coin.amount <= 0) {
-        console.log(`Asset ${coinId} has zero balance, removing from display`);
-        
-        assetItem.style.transition = "opacity 0.5s ease-out";
-        assetItem.style.opacity = "0";
-        
-        setTimeout(() => {
-            if (assetItem.parentNode) {
-                assetItem.parentNode.removeChild(assetItem);
-            }
-            
-            const assetsList = document.getElementById('assetsList');
-            if (assetsList && assetsList.querySelectorAll('.asset-item').length === 0) {
-            }
-        }, 500);
-        
-        return;
-    }
-    
-    const amountElement = assetItem.querySelector('.asset-amount');
-    const valueElement = assetItem.querySelector('.asset-value');
-    
-    if (amountElement) {
-        amountElement.textContent = `${coin.amount.toFixed(4)} ${coin.ticker}`;
-    }
-    
-    if (valueElement) {
-        valueElement.textContent = `$${coin.value.toFixed(2)}`;
-    }
-}
-
-function addWithdrawToHistory(coinId, amount, fee) {
-    console.log(`Adding withdraw to history: ${amount} ${coinId} (fee: ${fee})`);
-    
-    const newTransaction = {
-        type: 'withdraw',
-        coin: coinId,
-        amount: amount,
-        fee: fee,
-        value: amount * getCurrentPrice(coinId),
-        date: new Date(),
-        status: 'completed'
-    };
-    
-    wallet.transactions.unshift(newTransaction);
-    
-    const transactionsList = document.getElementById('transactionsList');
-    if (!transactionsList) {
-        console.error("transactionsList element not found");
-        return;
-    }
-    
-    const noTransactionsMessage = transactionsList.querySelector('.no-transactions-message');
-    if (noTransactionsMessage) {
-        noTransactionsMessage.style.display = 'none';
-    }
-    
-    const transactionItem = document.createElement('div');
-    transactionItem.className = 'transaction-item';
-    
-    const coin = wallet.coins[coinId];
-    const ticker = coin ? coin.ticker : coinId.toUpperCase();
-    
-    transactionItem.innerHTML = `
-        <div class="transaction-icon send">
-            <i class="fas fa-arrow-up"></i>
-        </div>
-        <div class="transaction-details">
-            <div class="transaction-title">Withdrew ${ticker}</div>
-            <div class="transaction-date">Just now</div>
-        </div>
-        <div class="transaction-amount negative">
-            <div class="amount">-${amount.toFixed(8)} ${ticker}</div>
-            <div class="value">-$${(amount * getCurrentPrice(coinId)).toFixed(2)}</div>
-        </div>
-        <div class="transaction-status">
-            <span class="status completed">Completed</span>
-        </div>
-    `;
-    
-    if (transactionsList.firstChild) {
-        transactionsList.insertBefore(transactionItem, transactionsList.firstChild);
-    } else {
-        transactionsList.appendChild(transactionItem);
-    }
-    
-    console.log("Withdraw transaction added to history");
-    
-    setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-    }, 100);
-}
-
-function removeNoAssetsMessage() {
-    const assetsList = document.getElementById('assetsList');
-    if (assetsList) {
-        const noAssetsMessage = assetsList.querySelector('.no-assets-message');
-        if (noAssetsMessage) {
-            noAssetsMessage.parentNode.removeChild(noAssetsMessage);
-        }
-            
-        assetsList.style.marginTop = '0';
-        assetsList.style.padding = '0';
-        
-        const assetItems = assetsList.querySelectorAll('.asset-item');
-        assetItems.forEach(item => {
-            item.style.marginBottom = '8px';
-        });
-    }
-}
-
-function initializeBalanceVisibilityToggle() {
-    let toggleBtn = document.getElementById('toggleBalanceBtn');
-    let balanceAmount = document.getElementById('balanceAmount');
-    let hiddenBalance = document.getElementById('hiddenBalance');
-    
-    const balanceSection = document.querySelector('.balance-section') || document.querySelector('.wallet-balance');
-    
-    if (balanceSection) {
-        if (!balanceAmount) {
-            balanceAmount = balanceSection.querySelector('.balance-amount') || balanceSection.querySelector('.amount');
-            
-            if (balanceAmount) {
-                balanceAmount.id = 'balanceAmount';
-            } else {
-                const balanceContainer = balanceSection.querySelector('.balance-main') || balanceSection;
-                if (balanceContainer) {
-                    balanceAmount = document.createElement('div');
-                    balanceAmount.id = 'balanceAmount';
-                    balanceAmount.className = 'balance-amount';
-                    balanceAmount.innerHTML = `<span class="currency">$</span><span class="amount">${wallet.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
-                    balanceContainer.appendChild(balanceAmount);
-                }
-            }
-        }
-        
-        if (!hiddenBalance) {
-            const balanceContainer = balanceSection.querySelector('.balance-main') || balanceSection;
-            if (balanceContainer) {
-                hiddenBalance = document.createElement('div');
-                hiddenBalance.id = 'hiddenBalance';
-                hiddenBalance.className = 'balance-amount hidden';
-                hiddenBalance.innerHTML = '<span class="currency">$</span><span class="amount">•••••</span>';
-                hiddenBalance.style.display = 'none';
-                balanceContainer.appendChild(hiddenBalance);
-            }
-        }
-        
-        if (!toggleBtn) {
-            const balanceHeader = balanceSection.querySelector('.balance-header') || balanceSection;
-            if (balanceHeader) {
-                toggleBtn = document.createElement('button');
-                toggleBtn.id = 'toggleBalanceBtn';
-                toggleBtn.className = 'toggle-balance-btn';
-                toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
-                toggleBtn.title = 'Hide Balance';
-                toggleBtn.style.background = 'transparent';
-                toggleBtn.style.border = 'none';
-                toggleBtn.style.cursor = 'pointer';
-                toggleBtn.style.fontSize = '18px';
-                toggleBtn.style.color = 'var(--text-color, #fff)';
-                balanceHeader.appendChild(toggleBtn);
-            }
-        }
-    }
-    
-    if (!toggleBtn || !balanceAmount || !hiddenBalance) {
-        console.error('Balance visibility toggle elements not found');
-        return;
-    }
-    
-    let isVisible = true;
-    
-    toggleBtn.addEventListener('click', function() {
-        isVisible = !isVisible;
-        
-        if (isVisible) {
-            balanceAmount.style.display = '';
-            hiddenBalance.style.display = 'none';
-            toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
-            toggleBtn.title = 'Hide Balance';
-        } else {
-            balanceAmount.style.display = 'none';
-            hiddenBalance.style.display = '';
-            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-            toggleBtn.title = 'Show Balance';
-        }
-    });
-}
-
-function prepareCardDetailsModal(amount, coin, symbol) {
-    const estimatedValue = amount * getCurrentPrice(coin);
-    
-    document.getElementById('cardPaymentAmount').textContent = estimatedValue.toFixed(2);
-    document.getElementById('cardPaymentCrypto').textContent = amount.toFixed(8);
-    document.getElementById('cardPaymentSymbol').textContent = symbol;
-    
-    const cardNumberInput = document.getElementById('cardNumber');
-    if (cardNumberInput) {
-        cardNumberInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\s+/g, '');
-            
-            if (/[^\d]/.test(value)) {
-                value = value.replace(/[^\d]/g, '');
-            }
-            
-            let formattedValue = '';
-            for (let i = 0; i < value.length; i++) {
-                if (i > 0 && i % 4 === 0) {
-                    formattedValue += ' ';
-                }
-                formattedValue += value[i];
-            }
-            
-            const cursorPosition = e.target.selectionStart;
-            const difference = formattedValue.length - e.target.value.length;
-            e.target.value = formattedValue;
-
-            e.target.setSelectionRange(cursorPosition + difference, cursorPosition + difference);
-        });
-    }
-    
-    const cardExpiryInput = document.getElementById('cardExpiry');
-    if (cardExpiryInput) {
-        cardExpiryInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^\d]/g, '');
-            
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + '/' + value.substring(2);
-            }
-            
-            if (value.length > 5) {
-                value = value.substring(0, 5);
-            }
-            
-            if (value.length >= 2) {
-                const month = parseInt(value.substring(0, 2));
-                if (month > 12) {
-                    value = '12' + value.substring(2);
-                }
-                if (month === 0) {
-                    value = '01' + value.substring(2);
-                }
-            }
-            
-            e.target.value = value;
-        });
-    }
-    
-    const processPaymentBtn = document.getElementById('processPaymentBtn');
-    if (processPaymentBtn) {
-        const newProcessBtn = processPaymentBtn.cloneNode(true);
-        processPaymentBtn.parentNode.replaceChild(newProcessBtn, processPaymentBtn);
-        
-        newProcessBtn.addEventListener('click', () => {
-            const cardNumber = document.getElementById('cardNumber').value;
-            const cardExpiry = document.getElementById('cardExpiry').value;
-            const cardCVV = document.getElementById('cardCVV').value;
-            const cardName = document.getElementById('cardName').value;
-            
-            if (!cardNumber || !cardExpiry || !cardCVV || !cardName) {
-                console.log('Validation would happen here');
-            }
-            
-            newProcessBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            newProcessBtn.disabled = true;
-            
-            setTimeout(() => {
-                document.getElementById('cardDetailsModal').style.display = 'none';
-                
-                showPaymentConfirmation(amount, estimatedValue, coin, symbol);
-                
-                updateAssetAfterDeposit(coin, amount);
-                
-                addTransactionToHistory(coin, amount);
-            }, 2000);
-        });
-    }
-    
-    const cardDetailsModal = document.getElementById('cardDetailsModal');
-    if (cardDetailsModal) {
-        cardDetailsModal.style.display = 'block';
-        
-        document.getElementById('cardNumber').value = '';
-        document.getElementById('cardExpiry').value = '';
-        document.getElementById('cardCVV').value = '';
-        document.getElementById('cardName').value = '';
-    }
-}
-
-function showPaymentConfirmation(amount, paymentAmount, coin, symbol) {
-    const txId = 'TX' + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
-    
-    document.getElementById('confirmationAmount').textContent = paymentAmount.toFixed(2);
-    document.getElementById('confirmationCrypto').textContent = amount.toFixed(8);
-    document.getElementById('confirmationSymbol').textContent = symbol;
-    document.getElementById('confirmationTxId').textContent = txId;
-    
-    const doneBtn = document.getElementById('confirmationDoneBtn');
-    if (doneBtn) {
-        const newDoneBtn = doneBtn.cloneNode(true);
-        doneBtn.parentNode.replaceChild(newDoneBtn, doneBtn);
-        
-        newDoneBtn.addEventListener('click', () => {
-            document.getElementById('paymentConfirmationModal').style.display = 'none';
-        });
-    }
-    
-    const confirmationModal = document.getElementById('paymentConfirmationModal');
-    if (confirmationModal) {
-        confirmationModal.style.display = 'block';
-    }
-}
-
-function startPriceFluctuation() {
-    if (!coinPrices.btc || coinPrices.btc === 0) coinPrices.btc = 47000 + Math.random() * 5000;
-    if (!coinPrices.eth || coinPrices.eth === 0) coinPrices.eth = 1800 + Math.random() * 500;
-    if (!coinPrices.orx || coinPrices.orx === 0) coinPrices.orx = 4.5 + Math.random() * 1;
-    
-    updateUI();
-    
-    setInterval(() => {
-        fluctuatePrices();
-        
-        updateCoinValues();
-        
-        updateUI();
-    }, 10000);
-}
-
-function fluctuatePrices() {
-    const btcChange = (Math.random() - 0.5) * 0.01;
-    const ethChange = (Math.random() - 0.5) * 0.01;
-    const orxChange = (Math.random() - 0.5) * 0.01;
-    
-    coinPrices.btc = coinPrices.btc * (1 + btcChange);
-    coinPrices.eth = coinPrices.eth * (1 + ethChange);
-    coinPrices.orx = coinPrices.orx * (1 + orxChange);
-    
-    updateExchangeRates();
-    
-    if (wallet.coins.bitcoin) {
-        wallet.coins.bitcoin.change += btcChange * 100;
-        wallet.coins.bitcoin.change = Math.min(10, Math.max(-10, wallet.coins.bitcoin.change));
-    }
-    
-    if (wallet.coins.ethereum) {
-        wallet.coins.ethereum.change += ethChange * 100;
-        wallet.coins.ethereum.change = Math.min(10, Math.max(-10, wallet.coins.ethereum.change));
-    }
-    
-    if (wallet.coins.orx) {
-        wallet.coins.orx.change += orxChange * 100;
-        wallet.coins.orx.change = Math.min(10, Math.max(-10, wallet.coins.orx.change));
-    }
-    
-    wallet.change = (wallet.change || 2.45) + (Math.random() - 0.5) * 0.1;
-    wallet.change = Math.min(5, Math.max(-3, wallet.change));
-}
-
-function updateCoinValues() {
-    for (const coinId in wallet.coins) {
-        const coin = wallet.coins[coinId];
-        const price = getCurrentPrice(coinId);
-        coin.value = coin.amount * price;
-    }
-}
-
-function updateUI() {
-    updateTotalBalance();
-    
+    // Actualizăm indicatorul de schimbare
     const changeElement = document.querySelector('.balance-change span');
     if (changeElement && wallet.change !== undefined) {
         changeElement.textContent = Math.abs(wallet.change).toFixed(2) + '%';
@@ -2197,13 +1637,19 @@ function updateUI() {
         }
     }
     
-    for (const coinId in wallet.coins) {
-        const assetItem = findAssetElement(coinId);
-        if (assetItem) {
-            updateAssetUI(coinId);
-        }
-    }
+    // Salvăm în localStorage
     saveWalletToStorage();
+}
+
+// Calculează valoarea portofoliului (poate fi aceeași cu total balance pentru început)
+function calculatePortfolioValue() {
+    // Calculăm doar suma valorilor monedelor din portofel (assets)
+    let coinsTotal = 0;
+    for (const coin in wallet.coins) {
+        coinsTotal += wallet.coins[coin].value;
+    }
+    
+    return coinsTotal;
 }
 
 function saveWalletToStorage() {
@@ -2352,7 +1798,7 @@ window.fixXRPValueInWallet = function() {
             wallet.coins.bitcoin.changePercent = 4.2;
         }
         
-        updateTotalBalance();
+        updateWalletDisplay();
         
         console.log("XRP value fixed in current memory:", wallet.coins.ripple);
     } else {
@@ -2362,3 +1808,300 @@ window.fixXRPValueInWallet = function() {
     updateUI();
     return "XRP value fix completed, check updated values!";
 };
+
+// Adăugăm actualizarea valorii portofoliului
+function updatePortfolioValue(value) {
+    const portfolioValueElement = document.getElementById('portfolioValue');
+    if (portfolioValueElement) {
+        portfolioValueElement.textContent = formatNumber(value);
+    }
+}
+
+// La încărcarea inițială și după actualizări, actualizăm ambele valori
+function calculateTotalBalance() {
+    // Calculăm suma valorilor tuturor monedelor
+    let coinsTotal = 0;
+    for (const coin in wallet.coins) {
+        coinsTotal += wallet.coins[coin].value;
+    }
+    
+    // Ne asigurăm că avem cel puțin valoarea stocată în totalBalance
+    // Aceasta permite adăugarea de fonduri fără a adăuga monede specifice
+    return coinsTotal > wallet.totalBalance ? coinsTotal : wallet.totalBalance;
+}
+
+// Funcție pentru formatarea numerelor monetare
+function formatNumber(value) {
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function prepareCardDetailsModal(coin, symbol) {
+    // Arătăm modalul
+    const cardDetailsModal = document.getElementById('cardDetailsModal');
+    if (cardDetailsModal) {
+        cardDetailsModal.style.display = 'block';
+    }
+    
+    // Adăugăm event listener pentru butonul de procesare plată
+    const processPaymentBtn = document.getElementById('processPaymentBtn');
+    if (processPaymentBtn) {
+        processPaymentBtn.onclick = function() {
+            const amountInput = document.getElementById('cardPaymentInput');
+            const amount = parseFloat(amountInput.value);
+            
+            if (!amount || isNaN(amount) || amount <= 0) {
+                showNotification('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            processCardPayment(amount, coin, symbol);
+        };
+    }
+}
+
+function processCardPayment(amount, coin, symbol) {
+    // Ascundem modalul cardDetailsModal
+    document.getElementById('cardDetailsModal').style.display = 'none';
+    
+    // Generăm un ID de tranzacție
+    const txId = 'TX' + Math.floor(Math.random() * 1000000000);
+    
+    // Completăm câmpurile din confirmation modal
+    document.getElementById('confirmationAmount').textContent = amount.toFixed(2);
+    document.getElementById('confirmationCrypto').textContent = amount.toFixed(8);
+    document.getElementById('confirmationSymbol').textContent = symbol;
+    document.getElementById('confirmationTxId').textContent = txId;
+    
+    // Arătăm modalul de confirmare
+    const confirmationModal = document.getElementById('paymentConfirmationModal');
+    confirmationModal.style.display = 'block';
+    
+    // Adăugăm event listener pentru butonul Done
+    const doneBtn = document.getElementById('confirmationDoneBtn');
+    if (doneBtn) {
+        doneBtn.onclick = function() {
+            confirmationModal.style.display = 'none';
+            
+            // Adăugăm fonduri direct la Total Balance
+            addFundsToTotalBalance(amount);
+        };
+    }
+}
+
+// Funcție pentru actualizarea valorilor monedelor
+function updateCoinValues() {
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        const price = getCurrentPrice(coinId);
+        if (price) {
+            coin.value = coin.amount * price;
+        }
+    }
+    
+    updateWalletDisplay();
+}
+
+// Funcție pentru a elimina mesajul "No assets" dacă există active
+function removeNoAssetsMessage() {
+    const assetsList = document.getElementById('assetsList');
+    if (assetsList) {
+        const noAssetsMessage = assetsList.querySelector('.no-assets-message');
+        if (noAssetsMessage && Object.keys(wallet.coins).length > 0) {
+            noAssetsMessage.style.display = 'none';
+        }
+    }
+}
+
+// Funcție pentru a activa/dezactiva vizibilitatea soldului
+function initializeBalanceVisibilityToggle() {
+    const toggleBtn = document.getElementById('toggleBalanceBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const balanceAmount = document.getElementById('balanceAmount');
+            const hiddenBalance = document.getElementById('hiddenBalance');
+            
+            if (balanceAmount && hiddenBalance) {
+                if (balanceAmount.style.display === 'none') {
+                    balanceAmount.style.display = '';
+                    hiddenBalance.style.display = 'none';
+                    toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                } else {
+                    balanceAmount.style.display = 'none';
+                    hiddenBalance.style.display = '';
+                    toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                }
+            }
+        });
+    }
+}
+
+// Funcție pentru a simula fluctuații de preț
+function startPriceFluctuation() {
+    setInterval(() => {
+        // Simulăm mici fluctuații aleatorii în prețuri
+        for (const coinId in coinPrices) {
+            const fluctuation = (Math.random() - 0.5) * 0.01; // ±0.5%
+            coinPrices[coinId] *= (1 + fluctuation);
+        }
+        
+        // Actualizăm valorile portofelului
+        updateCoinValues();
+    }, 60000); // O dată pe minut
+}
+
+// Funcție pentru a adăuga fonduri direct la Total Balance
+function addFundsToTotalBalance(amount) {
+    // Adăugăm suma direct la totalBalance din wallet
+    wallet.totalBalance += amount;
+    
+    // Actualizăm afișarea în UI
+    updateWalletDisplay();
+    
+    // Adăugăm o tranzacție generică în istoric
+    const newTransaction = {
+        type: 'deposit',
+        description: 'Funds added',
+        amount: amount,
+        value: amount,
+        date: new Date(),
+        status: 'completed'
+    };
+    
+    // Adăugăm în lista de tranzacții
+    wallet.transactions.unshift(newTransaction);
+    
+    // Actualizăm UI-ul cu noua tranzacție
+    const transactionsList = document.getElementById('transactionsList');
+    if (transactionsList) {
+        const noTransactionsMessage = transactionsList.querySelector('.no-transactions-message');
+        if (noTransactionsMessage) {
+            noTransactionsMessage.style.display = 'none';
+        }
+        
+        const transactionItem = document.createElement('div');
+        transactionItem.className = 'transaction-item';
+        
+        transactionItem.innerHTML = `
+            <div class="transaction-icon receive">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-title">Funds Added</div>
+                <div class="transaction-date">Just now</div>
+            </div>
+            <div class="transaction-amount positive">
+                <div class="amount">+$${amount.toFixed(2)}</div>
+                <div class="value">+$${amount.toFixed(2)}</div>
+            </div>
+            <div class="transaction-status">
+                <span class="status completed">Completed</span>
+            </div>
+        `;
+        
+        if (transactionsList.firstChild) {
+            transactionsList.insertBefore(transactionItem, transactionsList.firstChild);
+        } else {
+            transactionsList.appendChild(transactionItem);
+        }
+    }
+    
+    // Salvăm portofelul actualizat
+    saveWalletToStorage();
+    
+    // Afișăm o notificare
+    showNotification(`Successfully added $${amount.toFixed(2)} to your wallet!`, 'success');
+}
+
+// Funcție pentru verificarea și confirmarea depozitului
+function checkAndConfirmDeposit(amount, coinId, symbol) {
+    // Obținem prețul monedei
+    const coinPrice = coinData[coinId] ? coinData[coinId].price : getCurrentPrice(coinId);
+    const estimatedValue = amount * coinPrice;
+    
+    // Obținem soldul actual al utilizatorului
+    const userBalance = wallet.totalBalance;
+    
+    // Setăm valorile în modalul de confirmare
+    document.getElementById('confirmDepositAmount').textContent = amount.toFixed(8);
+    document.getElementById('confirmDepositSymbol').textContent = symbol;
+    document.getElementById('confirmDepositValue').textContent = estimatedValue.toFixed(2);
+    document.getElementById('userCurrentBalance').textContent = formatNumber(userBalance);
+    
+    // Verificăm dacă utilizatorul are suficienți bani
+    const hasSufficientFunds = userBalance >= estimatedValue;
+    
+    // Arătăm sau ascundem mesajul de fonduri insuficiente
+    const insufficientFundsMessage = document.getElementById('insufficientFundsMessage');
+    insufficientFundsMessage.style.display = hasSufficientFunds ? 'none' : 'block';
+    
+    // Activăm sau dezactivăm butonul de confirmare
+    const confirmButton = document.getElementById('depositConfirmYesBtn');
+    confirmButton.disabled = !hasSufficientFunds;
+    confirmButton.style.opacity = hasSufficientFunds ? '1' : '0.5';
+    confirmButton.style.cursor = hasSufficientFunds ? 'pointer' : 'not-allowed';
+    
+    // Arătăm modalul de confirmare
+    const confirmModal = document.getElementById('depositConfirmModal');
+    confirmModal.style.display = 'block';
+    
+    // Adăugăm event listeners pentru butoanele de confirmare
+    const confirmYesBtn = document.getElementById('depositConfirmYesBtn');
+    const confirmNoBtn = document.getElementById('depositConfirmNoBtn');
+    const closeBtn = confirmModal.querySelector('.modal-close');
+    
+    // Resetăm event listeners anteriori dacă există
+    const newConfirmYesBtn = confirmYesBtn.cloneNode(true);
+    const newConfirmNoBtn = confirmNoBtn.cloneNode(true);
+    const newCloseBtn = closeBtn.cloneNode(true);
+    
+    confirmYesBtn.parentNode.replaceChild(newConfirmYesBtn, confirmYesBtn);
+    confirmNoBtn.parentNode.replaceChild(newConfirmNoBtn, confirmNoBtn);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    
+    // Adăugăm noile event listeners
+    newConfirmYesBtn.addEventListener('click', function() {
+        if (hasSufficientFunds) {
+            // Ascundem modalul de confirmare
+            confirmModal.style.display = 'none';
+            
+            // Procesăm depozitul
+            processDeposit(amount, coinId, symbol);
+        }
+    });
+    
+    newConfirmNoBtn.addEventListener('click', function() {
+        confirmModal.style.display = 'none';
+    });
+    
+    newCloseBtn.addEventListener('click', function() {
+        confirmModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', function(event) {
+        if (event.target === confirmModal) {
+            confirmModal.style.display = 'none';
+        }
+    });
+}
+
+// Funcție pentru procesarea depozitului
+function processDeposit(amount, coinId, symbol) {
+    // Calculăm valoarea depozitului
+    const coinPrice = coinData[coinId] ? coinData[coinId].price : getCurrentPrice(coinId);
+    const estimatedValue = amount * coinPrice;
+    
+    // Scădem din totalBalance (simulăm o plată)
+    wallet.totalBalance -= estimatedValue;
+    
+    // Adăugăm moneda în portofel
+    updateAssetAfterDeposit(coinId, amount);
+    
+    // Adăugăm în istoric
+    addTransactionToHistory(coinId, amount);
+    
+    // Afișăm o notificare
+    showNotification(`Successfully deposited ${amount.toFixed(8)} ${symbol}!`, 'success');
+    
+    // Ascundem modalul de depozit
+    document.getElementById('depositModal').style.display = 'none';
+}

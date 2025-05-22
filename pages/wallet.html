@@ -72,22 +72,21 @@
         <div class="dashboard-section">
             <div class="balance-card">
                 <div class="balance-header">
-                    <h3>Total Balance</h3>
+                    <h3>Portfolio Overview</h3>
+                    <span class="portfolio-value">$<span id="portfolioValue">0.00</span></span>
                     <div class="balance-actions">
                         <button class="view-btn" title="Toggle Balance Visibility" id="toggleBalanceBtn">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
                 </div>
-                <div class="balance-amount">
-                    <span class="currency">$</span>
-                    <span class="amount" id="balanceAmount">0.00</span>
-                    <span class="amount hidden" id="hiddenBalance" style="display: none;">******</span>
-                </div>
-                <div class="balance-change positive">
-                    <i class="fas fa-caret-up"></i>
-                    <span>0.00%</span>
-                    <span class="period">24h</span>
+                <div class="total-balance-section">
+                    <div class="balance-label">Total Balance</div>
+                    <div class="balance-amount">
+                        <span class="currency">$</span>
+                        <span class="amount" id="balanceAmount">0.00</span>
+                        <span class="amount hidden" id="hiddenBalance" style="display: none;">******</span>
+                    </div>
                 </div>
                 <div class="portfolio-chart">
                     <canvas id="portfolioChart"></canvas>
@@ -113,11 +112,11 @@
                     </div>
                     <span>Swap</span>
                 </button>
-                <button class="action-button" id="tradeButton">
-                    <div class="action-icon trade">
-                        <i class="fas fa-chart-line"></i>
+                <button class="action-button" id="addFundsButton">
+                    <div class="action-icon funds">
+                        <i class="fas fa-wallet"></i>
                     </div>
-                    <span>Trade</span>
+                    <span>Add Funds</span>
                 </button>
             </div>
         </div>
@@ -388,11 +387,10 @@
                         <div class="preview-content">
                             <div class="preview-row">
                                 <span class="preview-label">Amount:</span>
-                                <span class="preview-value">$<span id="cardPaymentAmount">0.00</span></span>
-                            </div>
-                            <div class="preview-row">
-                                <span class="preview-label">Crypto:</span>
-                                <span class="preview-value"><span id="cardPaymentCrypto">0.00</span> <span id="cardPaymentSymbol">BTC</span></span>
+                                <div class="input-with-symbol" style="display: flex; align-items: center;">
+                                    <span style="margin-right: 5px;">$</span>
+                                    <input type="number" id="cardPaymentInput" class="form-input" placeholder="0.00" min="0" step="any" style="flex: 1;">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -422,7 +420,7 @@
                             <span class="detail-label">Amount:</span>
                             <span class="detail-value">$<span id="confirmationAmount">0.00</span></span>
                         </div>
-                        <div class="detail-row">
+                        <div class="detail-row" style="display: none;">
                             <span class="detail-label">Crypto:</span>
                             <span class="detail-value"><span id="confirmationCrypto">0.00</span> <span id="confirmationSymbol">BTC</span></span>
                         </div>
@@ -436,5 +434,218 @@
             </div>
         </div>
     </div>
+
+    <!-- Dialog de confirmare pentru depozit -->
+    <div id="depositConfirmModal" class="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Deposit</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-content">
+                    <p>Are you sure you want to proceed with this deposit?</p>
+                    <div class="confirmation-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Amount:</span>
+                            <span class="detail-value"><span id="confirmDepositAmount">0.00</span> <span id="confirmDepositSymbol">BTC</span></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Estimated value:</span>
+                            <span class="detail-value">$<span id="confirmDepositValue">0.00</span></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Your balance:</span>
+                            <span class="detail-value">$<span id="userCurrentBalance">0.00</span></span>
+                        </div>
+                    </div>
+                    <div id="insufficientFundsMessage" style="color: #ff4444; margin: 15px 0; display: none;">
+                        <i class="fas fa-exclamation-circle"></i> You don't have sufficient funds for this transaction.
+                    </div>
+                    <div class="confirmation-buttons">
+                        <button id="depositConfirmYesBtn" class="submit-btn">Yes, Deposit Now</button>
+                        <button id="depositConfirmNoBtn" class="cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .confirmation-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .cancel-btn,
+        #depositConfirmYesBtn {
+            background-color: #334155;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            width: 120px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            margin: 0;
+        }
+        
+        .cancel-btn:hover {
+            background-color: #475569;
+        }
+        
+        #depositConfirmYesBtn {
+            background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+        }
+    </style>
+
+    <script>
+        // Adăugăm event listeners direct în HTML pentru ambele butoane: Deposit și Add Funds
+        document.addEventListener('DOMContentLoaded', function() {
+            // Formatare pentru numărul cardului
+            const cardNumberInput = document.getElementById('cardNumber');
+            if (cardNumberInput) {
+                cardNumberInput.addEventListener('input', function(e) {
+                    // Eliminăm toate spațiile din input
+                    let value = e.target.value.replace(/\s+/g, '');
+                    
+                    // Adăugăm spații după fiecare 4 caractere
+                    let formattedValue = '';
+                    for (let i = 0; i < value.length; i++) {
+                        if (i > 0 && i % 4 === 0) {
+                            formattedValue += ' ';
+                        }
+                        formattedValue += value[i];
+                    }
+                    
+                    // Actualizăm valoarea input-ului
+                    e.target.value = formattedValue;
+                });
+            }
+            
+            // Formatare pentru data de expirare
+            const cardExpiryInput = document.getElementById('cardExpiry');
+            if (cardExpiryInput) {
+                cardExpiryInput.addEventListener('input', function(e) {
+                    // Eliminăm toate caracterele non-numerice
+                    let value = e.target.value.replace(/[^\d]/g, '');
+                    
+                    // Adăugăm "/" după primele 2 cifre
+                    if (value.length > 2) {
+                        value = value.substring(0, 2) + '/' + value.substring(2);
+                    }
+                    
+                    // Actualizăm valoarea input-ului
+                    e.target.value = value;
+                });
+            }
+            
+            // Pentru butonul Add Funds
+            const addFundsBtn = document.getElementById('addFundsButton');
+            if (addFundsBtn) {
+                addFundsBtn.addEventListener('click', function() {
+                    console.log('Add Funds button clicked from inline script');
+                    
+                    // Moneda implicită
+                    const defaultCoin = 'bitcoin';
+                    const defaultSymbol = 'BTC';
+                    
+                    // Deschidem modalul cu detalii card
+                    const cardDetailsModal = document.getElementById('cardDetailsModal');
+                    if (cardDetailsModal) {
+                        // Resetăm input-ul pentru sumă
+                        const amountInput = document.getElementById('cardPaymentInput');
+                        if (amountInput) {
+                            amountInput.value = '';
+                        }
+                        
+                        // Resetăm și celelalte câmpuri de intrare
+                        if (cardNumberInput) cardNumberInput.value = '';
+                        if (cardExpiryInput) cardExpiryInput.value = '';
+                        if (document.getElementById('cardCVV')) document.getElementById('cardCVV').value = '';
+                        if (document.getElementById('cardName')) document.getElementById('cardName').value = '';
+                        
+                        cardDetailsModal.style.display = 'block';
+                        
+                        // Adăugăm event listener pentru butonul de procesare
+                        const processPaymentBtn = document.getElementById('processPaymentBtn');
+                        if (processPaymentBtn) {
+                            processPaymentBtn.onclick = function() {
+                                const amount = parseFloat(amountInput.value);
+                                
+                                if (!amount || isNaN(amount) || amount <= 0) {
+                                    alert('Please enter a valid amount');
+                                    return;
+                                }
+                                
+                                // Ascundem modalul cardDetailsModal
+                                cardDetailsModal.style.display = 'none';
+                                
+                                // Generăm un ID de tranzacție
+                                const txId = 'TX' + Math.floor(Math.random() * 1000000000);
+                                
+                                // Completăm câmpurile din confirmation modal
+                                document.getElementById('confirmationAmount').textContent = amount.toFixed(2);
+                                document.getElementById('confirmationCrypto').textContent = amount.toFixed(8);
+                                document.getElementById('confirmationSymbol').textContent = defaultSymbol;
+                                document.getElementById('confirmationTxId').textContent = txId;
+                                
+                                // Arătăm modalul de confirmare
+                                const confirmationModal = document.getElementById('paymentConfirmationModal');
+                                confirmationModal.style.display = 'block';
+                                
+                                // Adăugăm event listener pentru butonul Done
+                                const doneBtn = document.getElementById('confirmationDoneBtn');
+                                if (doneBtn) {
+                                    doneBtn.onclick = function() {
+                                        confirmationModal.style.display = 'none';
+                                        
+                                        // Folosim funcția pentru a adăuga fonduri direct la Total Balance
+                                        if (typeof addFundsToTotalBalance === 'function') {
+                                            addFundsToTotalBalance(amount);
+                                        } else {
+                                            // Fallback la vechea funcție dacă cea nouă nu există
+                                            if (typeof updateAssetAfterDeposit === 'function') {
+                                                updateAssetAfterDeposit(defaultCoin, amount);
+                                            }
+                                            
+                                            if (typeof addTransactionToHistory === 'function') {
+                                                addTransactionToHistory(defaultCoin, amount);
+                                            }
+                                            
+                                            if (typeof showNotification === 'function') {
+                                                showNotification(`Successfully added ${amount.toFixed(8)} ${defaultSymbol} to your wallet!`, 'success');
+                                            }
+                                        }
+                                    };
+                                }
+                            };
+                        }
+                    }
+                });
+            }
+            
+            // Pentru butonul Deposit
+            const depositBtn = document.getElementById('depositButton');
+            if (depositBtn) {
+                depositBtn.addEventListener('click', function() {
+                    console.log('Deposit button clicked from inline script');
+                    const depositModal = document.getElementById('depositModal');
+                    if (depositModal) {
+                        depositModal.style.display = 'block';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

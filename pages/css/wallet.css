@@ -52,6 +52,18 @@ html[data-theme="light"] .balance-card {
     margin: 0;
 }
 
+.portfolio-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-left: 10px;
+    margin-right: auto;
+    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
 .balance-actions {
     display: flex;
     gap: 0.5rem;
@@ -197,6 +209,12 @@ html[data-theme="light"] .action-button {
 .action-icon.trade {
     background: rgba(16, 185, 129, 0.15);
     color: #10b981;
+}
+
+/* Adaug stiluri pentru iconița de Add Funds */
+.action-icon.funds {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
 }
 
 .action-button:hover .action-icon {
@@ -1380,4 +1398,19 @@ html[data-theme="light"] .preview-title {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-weight: 800;
+}
+
+.total-balance-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding-left: 10px;
+}
+
+.balance-label {
+    font-size: 1rem;
+    color: var(--secondary-text-color);
+    margin-bottom: 5px;
+    text-align: left;
 } 
