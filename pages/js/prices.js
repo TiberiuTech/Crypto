@@ -703,6 +703,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Funcție unificată pentru a obține toate datele și a actualiza caruselul și tabelul
     async function fetchAllCoinData(forceRefresh = false) {
         try {
+            // Salvăm starea curentă de filtrare și sortare
+            const savedSort = { ...currentSort };
+            const savedSearchTerm = searchTerm;
+            const savedTypeFilter = document.getElementById('typeFilter') ? document.getElementById('typeFilter').value : 'all';
+            
             let allData;
             // Folosește cache dacă nu e nevoie de refresh
             if (Date.now() - apiCache.lastFetchTimestamp < MIN_REQUEST_INTERVAL && apiCache.marketData && !forceRefresh) {
@@ -773,7 +778,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             
+            // Resetăm datele filtrate înainte de a reaplica filtrele
             filteredData = [...tableData];
+            
+            // Replicăm filtrarea cu valorile salvate
+            if (savedSearchTerm) {
+                searchTerm = savedSearchTerm;
+                const searchLower = searchTerm.toLowerCase();
+                filteredData = filteredData.filter(coin => 
+                    coin.name.toLowerCase().includes(searchLower) ||
+                    coin.symbol.toLowerCase().includes(searchLower)
+                );
+            }
+            
+            // Replicăm filtrarea după tip blockchain
+            if (savedTypeFilter !== 'all') {
+                const typeFilter = document.getElementById('typeFilter');
+                if (typeFilter) {
+                    typeFilter.value = savedTypeFilter;
+                }
+                filteredData = filteredData.filter(coin => coin.blockchainType === savedTypeFilter);
+            }
+            
+            // Replicăm sortarea
+            if (savedSort.key) {
+                currentSort = savedSort;
+                filteredData.sort((a, b) => {
+                    let valueA, valueB;
+                    
+                    // Use blockchainType for sorting when key is 'type'
+                    if (savedSort.key === 'type') {
+                        valueA = a.blockchainType || '';
+                        valueB = b.blockchainType || '';
+                    } else {
+                        valueA = a[savedSort.key];
+                        valueB = b[savedSort.key];
+                    }
+
+                    if (valueA < valueB) return savedSort.direction === 'asc' ? -1 : 1;
+                    if (valueA > valueB) return savedSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
             
             // Afișăm distribuția tipurilor pentru debugging
             const nativeCount = tableData.filter(c => c.blockchainType === 'Nativ').length;
@@ -816,6 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizează UI-ul fără a porni animația caruselului
         renderCarouselWithPosition(currentPosition); // Păstrăm poziția curentă
         renderTable();
+        updateSortArrows(); // Asigurăm că săgețile de sortare sunt afișate corect
         checkPriceAlerts();
         renderPagination();
     }
@@ -1352,8 +1399,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 200);
             }, 500);
         });
-        // Actualizare periodică sincronizată
-        setInterval(updateAll, 15000);
+        // Actualizare periodică sincronizată - folosim fetchAllCoinData direct ca să păstreze filtrele
+        setInterval(() => fetchAllCoinData(true), 15000);
     }
     
     function setupEventListeners() {
@@ -2352,12 +2399,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof fetchAllCoinData === 'function') {
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                // Actualizăm doar datele, fără a porni caruselul
+                // Actualizăm datele păstrând filtrele și sortarea
                 fetchAllCoinData(true).then(() => {
-                    // Actualizăm UI-ul fără a porni autoScroll
-                    renderTable();
-                    renderPagination();
-                    // Nu mai apelăm startAutoScroll - caruselul rămâne static
+                    // Nu trebuie să apelăm explicit renderTable() și renderPagination()
+                    // deoarece fetchAllCoinData() le apelează deja și aplică filtrele și sortarea salvate
                 });
             }
         });
