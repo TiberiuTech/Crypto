@@ -1511,4 +1511,72 @@ td.blockchain-type[data-type="Token"]::before {
     padding-left: 5px !important;
     width: 220px;
     max-width: 220px;
+}
+
+/* Adaug stiluri pentru filtrarea din coloana Type */
+
+.type-column {
+    position: relative;
+    padding: 16px 10px !important;
+    white-space: nowrap;
+}
+
+.type-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.type-filter {
+    position: relative;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.type-select {
+    width: 100%;
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-background);
+    color: var(--text-color);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.type-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.type-select option {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    padding: 4px;
+}
+
+/* Stiluri pentru celulele de tip */
+.blockchain-type {
+    text-align: center;
+    position: relative;
+    padding-left: 10px !important;
+    font-weight: 500;
+}
+
+td.blockchain-type::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+td.blockchain-type[data-type="Nativ"]::before {
+    background-color: #10b981;
+}
+
+td.blockchain-type[data-type="Token"]::before {
+    background-color: #3b82f6;
 } 

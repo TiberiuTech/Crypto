@@ -484,12 +484,22 @@ document.addEventListener('DOMContentLoaded', () => {
             // Adăugăm un delay aleator pentru a evita prea multe cereri simultane
             await new Promise(resolve => setTimeout(resolve, Math.random() * 500));
             
-            // Nu mai adăugăm timestamp pentru evitarea cache-ului
-            // Acest lucru contribuia semnificativ la problema de rate limit
-            const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+            // Folosim proxy-ul local pentru toate cererile API
+            const localProxyUrl = 'http://127.0.0.1:5000/api/proxy?url=';
             
-            console.log(`Fetch nou: ${url}`);
-            const response = await fetch(proxyUrl);
+            // Verificăm dacă putem folosi endpoint-ul dedicat pentru prețuri
+            let response;
+            let data;
+            
+            if (url.includes('markets?vs_currency=usd&ids=') && !url.includes('sparkline=true')) {
+                // Pentru cereri de piață, utilizăm ruta /api/prices direct
+                console.log(`Utilizăm endpoint-ul dedicat /api/prices`);
+                response = await fetch('http://127.0.0.1:5000/api/prices');
+            } else {
+                // Pentru alte cereri, folosim proxy-ul general
+                console.log(`Fetch nou prin proxy: ${url}`);
+                response = await fetch(localProxyUrl + encodeURIComponent(url));
+            }
             
             if (response.status === 429) {
                 console.warn('Rate limit depășit la CoinGecko. Folosim datele demo.');
@@ -501,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`API error: ${response.status}`);
             }
             
-            const data = await response.json();
+            data = await response.json();
             
             // Salvăm datele în cache
             if (url.includes('markets?')) {
@@ -707,6 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiCache.marketData = allData;
                 apiCache.lastFetchTimestamp = Date.now();
             }
+            
             // Actualizează datele pentru carusel (primele 10)
             coinData = allData.slice(0, 10).map((coin) => {
                 const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 24);
@@ -723,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     blockchainType: BLOCKCHAIN_TYPES[coin.id] || 'Token'
                 };
             });
+            
             // Actualizează datele pentru tabel (toate)
             tableData = allData.map(coin => {
                 const historicalData = generateHistoricalData(coin.current_price, coin.price_change_percentage_24h, 7);
@@ -739,13 +751,67 @@ document.addEventListener('DOMContentLoaded', () => {
                     blockchainType: BLOCKCHAIN_TYPES[coin.id] || 'Token'
                 };
             });
+            
+            // Asigurăm că avem suficiente monede token pentru test
+            if (tableData.filter(c => c.blockchainType === 'Token').length < 5) {
+                console.log("Adăugăm monede token suplimentare pentru testare");
+                // Adăugăm câteva monede token demo
+                const tokenCoins = [
+                    {id: 'usdc', name: 'USD Coin', symbol: 'USDC', price: 1.00},
+                    {id: 'dai', name: 'Dai', symbol: 'DAI', price: 1.00},
+                    {id: 'chainlink', name: 'Chainlink', symbol: 'LINK', price: 15.25},
+                    {id: 'uniswap', name: 'Uniswap', symbol: 'UNI', price: 8.50},
+                    {id: 'wrapped-bitcoin', name: 'Wrapped Bitcoin', symbol: 'WBTC', price: 108000.00}
+                ];
+                
+                tokenCoins.forEach((tokenCoin, index) => {
+                    if (!tableData.find(c => c.id === tokenCoin.id)) {
+                        const demoData = generateDemoData(tokenCoin.id, 100 + index);
+                        demoData.blockchainType = 'Token';
+                        tableData.push(demoData);
+                    }
+                });
+            }
+            
             filteredData = [...tableData];
+            
+            // Afișăm distribuția tipurilor pentru debugging
+            const nativeCount = tableData.filter(c => c.blockchainType === 'Nativ').length;
+            const tokenCount = tableData.filter(c => c.blockchainType === 'Token').length;
+            console.log(`Distribuție monede: ${nativeCount} native, ${tokenCount} token`);
         } catch (error) {
             console.warn('Eroare la actualizarea datelor din API:', error);
             // Fallback la date demo pentru carusel și tabel
             coinData = CAROUSEL_COINS.map((coin, index) => generateDemoData(coin, index));
             tableData = ALL_COINS.map((coin, index) => generateDemoData(coin, index));
+            
+            // Asigurăm că avem suficiente monede token pentru test
+            if (tableData.filter(c => c.blockchainType === 'Token').length < 5) {
+                console.log("Adăugăm monede token suplimentare pentru testare");
+                // Adăugăm câteva monede token demo
+                for (let i = 0; i < 5; i++) {
+                    const demoToken = {
+                        id: `token-${i}`,
+                        name: `Token Demo ${i+1}`,
+                        symbol: `TKN${i+1}`,
+                        price: 10 + i*5,
+                        change24h: (Math.random() * 10) - 5,
+                        volume24h: 1000000 * (i+1),
+                        marketCap: 10000000 * (i+2),
+                        imageUrl: getCoinImageUrl('ethereum'),
+                        historicalData: generateHistoricalData(10 + i*5, (Math.random() * 10) - 5, 24),
+                        blockchainType: 'Token'
+                    };
+                    tableData.push(demoToken);
+                }
+            }
+            
             filteredData = [...tableData];
+            
+            // Afișăm distribuția tipurilor pentru debugging
+            const nativeCount = tableData.filter(c => c.blockchainType === 'Nativ').length;
+            const tokenCount = tableData.filter(c => c.blockchainType === 'Token').length;
+            console.log(`Distribuție monede (demo): ${nativeCount} native, ${tokenCount} token`);
         }
         // Actualizează UI-ul fără a porni animația caruselului
         renderCarouselWithPosition(currentPosition); // Păstrăm poziția curentă
@@ -918,6 +984,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return number.toFixed(decimals);
     }
 
+    // Funcția pentru formatarea valorilor monetare
+    function formatCurrency(value) {
+        if (value >= 1e9) {
+            return '$' + (value / 1e9).toFixed(2) + 'B';
+        } else if (value >= 1e6) {
+            return '$' + (value / 1e6).toFixed(2) + 'M';
+        } else if (value >= 1e3) {
+            return '$' + (value / 1e3).toFixed(2) + 'K';
+        } else {
+            return '$' + value.toFixed(2);
+        }
+    }
+
     function renderTable() {
         const tableBody = document.getElementById('cryptoTableBody');
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -927,31 +1006,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.crypto-table thead tr').innerHTML = `
             <th>#</th>
             <th>Coin</th>
-            <th>Type</th>
-            <th class="sortable" data-sort="price">
-                <div class="header-content">
-                    <span>Price</span>
-                    <span class="sort-arrow">▲</span>
+            <th class="type-column sortable" data-sort="type">
+                <div class="type-header">
+                    Type <span class="sort-arrow"></span>
                 </div>
             </th>
-            <th class="sortable" data-sort="change24h">
-                <div class="header-content">
-                    <span>24h %</span>
-                    <span class="sort-arrow">▲</span>
-                </div>
-            </th>
-            <th class="sortable" data-sort="volume24h">
-                <div class="header-content">
-                    <span>Volume 24h</span>
-                    <span class="sort-arrow">▲</span>
-                </div>
-            </th>
-            <th class="sortable" data-sort="marketCap">
-                <div class="header-content">
-                    <span>Market Cap</span>
-                    <span class="sort-arrow">▲</span>
-                </div>
-            </th>
+            <th class="sortable" data-sort="price">Price <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="change24h">24h % <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="volume24h">Volume 24h <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="marketCap">Market Cap <span class="sort-arrow"></span></th>
             <th>Chart 7d</th>
             <th>Actions</th>
         `;
@@ -1272,6 +1335,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAll().then(() => {
             setupEventListeners();
             addCoinClickListeners();
+            // Apelăm setupTypeFilter pentru a activa filtrul de tip
+            setupTypeFilter();
             // Randam inițial fără animație
             renderCarouselWithPosition(0);
             
@@ -1353,22 +1418,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        const searchContainer = document.querySelector('.search-container');
-        if (searchContainer) {
-            const filterDropdown = document.createElement('div');
-            filterDropdown.className = 'blockchain-filter';
-            filterDropdown.innerHTML = `
-                <select id="blockchainTypeFilter">
-                    <option value="all">Toate tipurile</option>
-                    <option value="native">Blockchain nativ</option>
-                    <option value="token">Token</option>
-                </select>
-            `;
-            searchContainer.appendChild(filterDropdown);
-            
-            // Add event listener for the blockchain type filter
-            document.getElementById('blockchainTypeFilter').addEventListener('change', function() {
-                blockchainTypeFilter = this.value;
+        // Adăugăm event listener pentru filtrarea după tip
+        const typeFilterElem = document.getElementById('typeFilter');
+        if (typeFilterElem) {
+            typeFilterElem.addEventListener('change', function() {
+                console.log('Type filter changed to:', this.value);
                 filterAndDisplayData();
             });
         }
@@ -1502,6 +1556,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 sortTableBy(key);
             });
         });
+        
+        // Asigurăm-ne că filtrul de tip este setat corect
+        const typeFilterElem = document.getElementById('typeFilter');
+        if (typeFilterElem) {
+            typeFilterElem.addEventListener('change', function() {
+                console.log('Type filter changed:', this.value);
+                filterAndDisplayData();
+            });
+        }
+
+        // Apelăm explicit setupTypeFilter după ce pagina s-a încărcat
+        setupTypeFilter();
     }, 0);
 
     async function showCoinDetails(coinId) {
@@ -1884,16 +1950,11 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
         
-        // Apply blockchain type filter if not set to 'all'
-        if (blockchainTypeFilter !== 'all') {
-            filteredData = filteredData.filter(coin => {
-                if (blockchainTypeFilter === 'native') {
-                    return coin.blockchainType === 'Nativ';
-                } else if (blockchainTypeFilter === 'token') {
-                    return coin.blockchainType !== 'Nativ';
-                }
-                return true;
-            });
+        // Aplicăm filtrarea după tip de blockchain folosind typeFilter
+        const typeFilterElem = document.getElementById('typeFilter');
+        if (typeFilterElem && typeFilterElem.value !== 'all') {
+            const selectedType = typeFilterElem.value;
+            filteredData = filteredData.filter(coin => coin.blockchainType === selectedType);
         }
         
         // Reset current page to 1 when filtering
@@ -1963,8 +2024,19 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSort.direction = 'desc';
         }
         filteredData.sort((a, b) => {
-            if (a[key] < b[key]) return currentSort.direction === 'asc' ? -1 : 1;
-            if (a[key] > b[key]) return currentSort.direction === 'asc' ? 1 : -1;
+            let valueA, valueB;
+            
+            // Use blockchainType for sorting when key is 'type'
+            if (key === 'type') {
+                valueA = a.blockchainType || '';
+                valueB = b.blockchainType || '';
+            } else {
+                valueA = a[key];
+                valueB = b[key];
+            }
+
+            if (valueA < valueB) return currentSort.direction === 'asc' ? -1 : 1;
+            if (valueA > valueB) return currentSort.direction === 'asc' ? 1 : -1;
             return 0;
         });
         renderTable();
@@ -2301,4 +2373,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // Continuăm animația
         animationId = requestAnimationFrame(animateScroll);
     }
+
+    // Adaug implementarea pentru filtrarea după tip direct în antet
+    function setupTypeFilter() {
+        const typeFilter = document.getElementById('typeFilter');
+        if (!typeFilter) return;
+        
+        console.log("Configurăm filtrul de tip...");
+        
+        // Adăugăm event listener pentru selectorul de tip
+        typeFilter.addEventListener('change', function() {
+            console.log("Filtru de tip schimbat:", this.value);
+            filterAndDisplayData();
+        });
+        
+        // Aplicăm filtrul implicit (prima opțiune) la încărcare
+        if (typeFilter.value) {
+            console.log("Aplicăm filtrul implicit:", typeFilter.value);
+            setTimeout(() => filterAndDisplayData(), 100);
+        }
+    }
+
+        // Adăugăm apelul funcției setupTypeFilter în init-ul existent pentru a activa filtrul    // setTypeFilter va fi apelat după ce pagina este încărcată complet
+
+    // Nu modific restul codului, doar adaug aceste funcții la sfârșit
+    // La documentul existent
 }); 

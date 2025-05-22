@@ -65,10 +65,21 @@ async function fetchCoinData() {
             'cardano', 'solana', 'polkadot', 'dogecoin'
         ];
         
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds.join(',')}&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en`);
+        // Folosim serverul proxy local pentru a evita limitele de rate
+        const apiUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds.join(',')}&order=market_cap_desc&per_page=100&page=1&sparkline=false&locale=en`;
+        const localProxyUrl = 'http://127.0.0.1:5000/api/proxy?url=';
+        
+        // Încercăm să folosim endpoint-ul specializat pentru prețuri
+        let response;
+        try {
+            response = await fetch('http://127.0.0.1:5000/api/prices');
+        } catch (proxyError) {
+            console.log('Nu am putut folosi endpoint-ul dedicat, utilizăm proxy general', proxyError);
+            response = await fetch(localProxyUrl + encodeURIComponent(apiUrl));
+        }
         
         if (!response.ok) {
-            throw new Error('Could not fetch coin data from CoinGecko API');
+            throw new Error('Could not fetch coin data from API proxy');
         }
         
         const data = await response.json();
@@ -91,7 +102,7 @@ async function fetchCoinData() {
         
         updateExchangeRates();
         
-        console.log('Coin data loaded from CoinGecko:', coinData);
+        console.log('Coin data loaded from proxy:', coinData);
         return coinData;
     } catch (error) {
         console.error('Error fetching coin data:', error);

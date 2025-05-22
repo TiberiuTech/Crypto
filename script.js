@@ -273,10 +273,13 @@ async function checkPriceAlertsGlobal() {
         BTC: 'bitcoin', ETH: 'ethereum', BNB: 'binancecoin', XRP: 'ripple', ADA: 'cardano', SOL: 'solana', DOT: 'polkadot', DOGE: 'dogecoin', AVAX: 'avalanche-2', MATIC: 'matic-network', LINK: 'chainlink', UNI: 'uniswap', ATOM: 'cosmos', LTC: 'litecoin', ETC: 'ethereum-classic', XLM: 'stellar', ALGO: 'algorand', VET: 'vechain', MANA: 'decentraland', SAND: 'the-sandbox'
     };
     const ids = symbols.map(s => symbolToId[s.toUpperCase()] || s.toLowerCase()).join(',');
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&sparkline=false`;
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    
+    // Modificat pentru a folosi proxy-ul local
+    const apiUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&sparkline=false`;
+    const proxyUrl = 'http://127.0.0.1:5000/api/proxy?url=';
+    
     try {
-        const resp = await fetch(proxyUrl + encodeURIComponent(url));
+        const resp = await fetch(proxyUrl + encodeURIComponent(apiUrl));
         if (!resp.ok) {
             throw new Error(`Error: ${resp.status}`);
         }
@@ -373,10 +376,11 @@ function fetchAndCheckAlerts() {
         return id || a.symbol.toLowerCase();
     }).join(',');
     
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}&sparkline=false`;
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    // Modificat pentru a folosi proxy-ul local
+    const apiUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}&sparkline=false`;
+    const proxyUrl = 'http://127.0.0.1:5000/api/proxy?url=';
     
-    fetch(proxyUrl + encodeURIComponent(url))
+    fetch(proxyUrl + encodeURIComponent(apiUrl))
         .then(response => {
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
@@ -968,8 +972,8 @@ function createChart(symbol, historicalData, percentChange) {
 
 // Funcție pentru preluarea datelor despre criptomonede de la CoinGecko
 function fetchCryptoData() {
-    // Folosim un proxy CORS pentru a evita probleme de CORS
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    // Folosim serverul proxy local pentru a evita problemele de rate limiting
+    const localProxyUrl = 'http://127.0.0.1:5000/api/proxy?url=';
     const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_last_updated_at=true&precision=2';
     
     // Verificăm dacă există un timestamp pentru ultima cerere API
@@ -999,10 +1003,10 @@ function fetchCryptoData() {
     // Marcăm timpul cererii API
     localStorage.setItem('lastApiCall', now.toString());
     
-    console.log("Încercăm API-ul CryptoCompare");
+    console.log("Încercăm API-ul CryptoCompare prin proxy");
     
-    // Încercăm întâi CryptoCompare
-    fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH&tsyms=USD', {
+    // Încercăm întâi CryptoCompare via proxy
+    fetch(localProxyUrl + encodeURIComponent('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH&tsyms=USD'), {
         signal: controller.signal
     })
     .then(response => {
@@ -1055,14 +1059,10 @@ function fetchCryptoData() {
         clearTimeout(timeoutId);
         console.warn("Eroare la CryptoCompare:", cryptocompareError);
         
-        console.log("Încercăm CoinGecko cu proxy");
+        console.log("Încercăm CoinGecko prin proxy local");
         
-        // Dacă CryptoCompare eșuează, încercăm CoinGecko prin proxy
-        fetch(proxyUrl + apiUrl, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
+        // Dacă CryptoCompare eșuează, încercăm direct endpoint-ul specific pentru prețuri din proxy
+        fetch('http://127.0.0.1:5000/api/prices')
         .then(response => {
             if (!response.ok) {
                 throw new Error(`Error: ${response.status}`);
@@ -1070,40 +1070,56 @@ function fetchCryptoData() {
             return response.json();
         })
         .then(data => {
-            // Convertim datele de la CoinGecko în formatul nostru
-            const processedData = [];
-            
-            if (data.bitcoin) {
-                processedData.push({
-                    id: 'bitcoin',
-                    current_price: data.bitcoin.usd,
-                    image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-                    total_volume: data.bitcoin.usd_24h_vol || 0,
-                    market_cap: 750000000000, // Aproximare
-                    price_change_percentage_24h: data.bitcoin.usd_24h_change || 0
-                });
-            }
-            
-            if (data.ethereum) {
-                processedData.push({
-                    id: 'ethereum',
-                    current_price: data.ethereum.usd,
-                    image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-                    total_volume: data.ethereum.usd_24h_vol || 0,
-                    market_cap: 265000000000, // Aproximare
-                    price_change_percentage_24h: data.ethereum.usd_24h_change || 0
-                });
-            }
-            
-            // Salvăm datele în cache
-            localStorage.setItem('cryptoData', JSON.stringify(processedData));
-            
-            // Procesăm datele
-            processData(processedData);
+            // Procesăm datele direct dacă folosim endpoint-ul special pentru prețuri
+            processData(data);
         })
-        .catch(coingeckoError => {
-            console.error("Eroare la CoinGecko:", coingeckoError);
-            useFallbackData();
+        .catch(proxyError => {
+            console.warn("Eroare la proxy-ul local:", proxyError);
+            
+            // Fallback la URL-ul CoinGecko prin proxy
+            fetch(localProxyUrl + encodeURIComponent(apiUrl))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Convertim datele de la CoinGecko în formatul nostru
+                const processedData = [];
+                
+                if (data.bitcoin) {
+                    processedData.push({
+                        id: 'bitcoin',
+                        current_price: data.bitcoin.usd,
+                        image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+                        total_volume: data.bitcoin.usd_24h_vol || 0,
+                        market_cap: 750000000000, // Aproximare
+                        price_change_percentage_24h: data.bitcoin.usd_24h_change || 0
+                    });
+                }
+                
+                if (data.ethereum) {
+                    processedData.push({
+                        id: 'ethereum',
+                        current_price: data.ethereum.usd,
+                        image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                        total_volume: data.ethereum.usd_24h_vol || 0,
+                        market_cap: 265000000000, // Aproximare
+                        price_change_percentage_24h: data.ethereum.usd_24h_change || 0
+                    });
+                }
+                
+                // Salvăm datele în cache
+                localStorage.setItem('cryptoData', JSON.stringify(processedData));
+                
+                // Procesăm datele
+                processData(processedData);
+            })
+            .catch(coingeckoError => {
+                console.error("Eroare la CoinGecko prin proxy:", coingeckoError);
+                useFallbackData();
+            });
         });
     });
     
