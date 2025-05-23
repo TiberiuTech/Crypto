@@ -8,7 +8,7 @@
 /* Dashboard Section */
 .dashboard-section {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -16,7 +16,7 @@
 .balance-card {
     background: rgba(25, 30, 45, 0.5);
     border-radius: 16px;
-    padding: 1.5rem;
+    padding: 2rem;
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -25,6 +25,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    min-height: 400px;
 }
 
 html[data-theme="light"] .balance-card {
@@ -146,13 +147,14 @@ html[data-theme="light"] .balance-card {
     grid-template-rows: 1fr 1fr;
     gap: 1rem;
     height: 100%;
+    min-height: 400px;
 }
 
 .action-button {
     background: rgba(25, 30, 45, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -161,6 +163,7 @@ html[data-theme="light"] .balance-card {
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     height: 100%;
+    min-height: 180px;
 }
 
 html[data-theme="light"] .action-button {
@@ -174,14 +177,14 @@ html[data-theme="light"] .action-button {
 }
 
 .action-icon {
-    width: 45px;
-    height: 45px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 0.5rem;
-    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
     transition: all 0.3s ease;
 }
 
@@ -222,8 +225,8 @@ html[data-theme="light"] .action-button {
 }
 
 .action-button span {
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--text-color);
 }
 
@@ -231,12 +234,13 @@ html[data-theme="light"] .action-button {
 .assets-section, .transactions-section {
     background: rgba(25, 30, 45, 0.5);
     border-radius: 16px;
-    padding: 1.5rem;
+    padding: 2rem;
     margin-bottom: 2rem;
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 350px;
 }
 
 html[data-theme="light"] .assets-section,
@@ -578,11 +582,16 @@ html[data-theme="light"] .transaction-item {
 @media (max-width: 1024px) {
     .dashboard-section {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .balance-card {
+        min-height: 300px;
     }
     
     .quick-actions {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: 1fr;
+        grid-template-columns: 1fr 1fr;
+        min-height: 300px;
     }
 }
 
@@ -591,9 +600,34 @@ html[data-theme="light"] .transaction-item {
         padding: 0 1rem;
     }
     
+    .balance-card {
+        padding: 1.5rem;
+        min-height: 250px;
+    }
+    
     .quick-actions {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
+        grid-template-columns: 1fr 1fr;
+        min-height: auto;
+    }
+    
+    .action-button {
+        padding: 1.5rem;
+        min-height: 140px;
+    }
+    
+    .action-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .action-button span {
+        font-size: 1rem;
+    }
+    
+    .assets-section, .transactions-section {
+        padding: 1.5rem;
+        min-height: 280px;
     }
     
     .asset-item, .transaction-item {
@@ -642,6 +676,40 @@ html[data-theme="light"] .transaction-item {
 }
 
 @media (max-width: 480px) {
+    .dashboard-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .balance-card {
+        padding: 1.2rem;
+        min-height: 220px;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .action-button {
+        padding: 1.2rem;
+        min-height: 100px;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 1rem;
+    }
+    
+    .action-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+    
+    .assets-section, .transactions-section {
+        padding: 1.2rem;
+        min-height: 250px;
+    }
+    
     .section-header {
         flex-direction: column;
         align-items: flex-start;

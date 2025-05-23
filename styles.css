@@ -116,26 +116,25 @@ html[data-theme="light"] body::before {
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 2rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
     color: var(--secondary-text-color);
-    font-size: 0.9rem;
 }
 
 .form-group input {
     width: 100%;
-    padding: 12px 15px;
-    border-radius: 5px;
+    padding: 1rem 1.2rem;
     border: 1px solid var(--border-color);
-    background-color: var(--card-background);
+    border-radius: 10px;
+    background: var(--card-background);
     color: var(--text-color);
-    font-size: 1rem;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    font-size: 1.05rem;
+    transition: border-color 0.2s ease;
 }
 
 .form-group input:focus {
@@ -870,384 +869,21 @@ html[data-theme="light"] body::before {
     color: var(--negative-color);
 }
 
-/* Stiluri responsiv pentru carduri */
-@media (max-width: 1100px) {
-    .crypto-cards {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .crypto-card {
-        width: 100%;
-        max-width: 300px;
-    }
-    
-    .hero-heading {
-        font-size: 3.2rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .hero-section {
-        padding: 60px 20px;
-    }
-    
-    .hero-heading {
-        font-size: 2.6rem;
-    }
-    
-    .hero-subheading {
-        font-size: 1.1rem;
-        margin-bottom: 50px;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-section {
-        padding: 50px 16px;
-    }
-    
-    .hero-heading {
-        font-size: 2.2rem;
-    }
-    
-    .hero-subheading {
-        font-size: 1rem;
-        margin-bottom: 40px;
-    }
-    
-    .crypto-card {
-        min-width: 100%;
-        padding: 20px;
-    }
-}
-
-/* Stiluri pentru pagina Orionix */
-
-.orionix-page {
-    padding: 2rem 1rem;
-}
-
-.orionix-page .container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.orionix-header {
+/* Stiluri pentru secțiunea Features */
+.features-section {
+    min-height: 100vh;
+    height: 100vh;
     display: flex;
-    align-items: center;
-    margin-bottom: 2rem;
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: var(--card-shadow);
-}
-
-.orionix-logo {
-    margin-right: 1.5rem;
-    flex-shrink: 0;
-}
-
-.orionix-logo img {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.orionix-info h1 {
-    font-size: 1.8rem;
-    margin: 0 0 0.5rem;
-    color: var(--text-color);
-}
-
-.orionix-info p {
-    font-size: 1rem;
-    color: var(--secondary-text-color);
-    margin: 0;
-}
-
-.token-details {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.detail-card, .wallet-info-card, .action-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: var(--card-shadow);
-}
-
-.detail-card h3, .wallet-info-card h3, .action-card h3, .transaction-history h3 {
-    font-size: 1.25rem;
-    margin: 0 0 1.25rem;
-    color: var(--text-color);
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
-    font-size: 0.95rem;
-}
-
-.detail-row:last-child {
-    margin-bottom: 0;
-}
-
-.detail-row span:first-child {
-    color: var(--secondary-text-color);
-}
-
-.detail-row span:last-child {
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.contract-address span:last-child {
-    font-size: 0.85rem;
-    word-break: break-all;
-}
-
-.wallet-connect {
-    margin-bottom: 1.5rem;
-}
-
-.connect-btn {
-    display: block;
-    width: 100%;
-    padding: 0.85rem 1rem;
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.connect-btn:hover {
-    background: var(--accent-hover-color);
-}
-
-.connect-btn.connected {
-    background: var(--success-color);
-}
-
-/* Păstrăm stilurile pentru stările specifice */
-.connect-btn:active {
-    transform: translateY(1px);
-}
-
-.connect-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.connect-btn:disabled:hover:before {
-    transform: translateX(-110%);
-}
-
-.connect-btn.loading {
-    position: relative;
-    color: transparent;
-}
-
-.token-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.form-group {
-    margin-bottom: 1.25rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
-    color: var(--secondary-text-color);
-}
-
-.form-group input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background: var(--input-bg);
-    color: var(--text-color);
-    font-size: 0.95rem;
-    transition: border-color 0.2s ease;
-}
-
-.form-group input:focus {
-    border-color: var(--accent-color);
-    outline: none;
-}
-
-.amount-input {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background: var(--input-bg);
-    overflow: hidden;
-}
-
-.amount-input input {
-    flex: 1;
-    border: none;
-    padding: 0.75rem;
-    background: transparent;
-}
-
-.amount-input input:focus {
-    outline: none;
-}
-
-.amount-input span {
-    padding: 0.75rem 1rem;
-    background: var(--border-color);
-    color: var(--text-color);
-    font-weight: 500;
-    font-size: 0.95rem;
-}
-
-.action-btn {
-    display: block;
-    width: 100%;
-    padding: 0.85rem 1rem;
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.action-btn:hover {
-    background: var(--accent-hover-color);
-}
-
-.status-message {
-    margin-top: 0.75rem;
-    padding: 0.5rem 0;
-    font-size: 0.85rem;
-    color: var(--secondary-text-color);
-    min-height: 3em;
-}
-
-.transaction-history {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: var(--card-shadow);
-}
-
-.transaction-list {
-    min-height: 150px;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 2rem 0;
-    color: var(--secondary-text-color);
-    font-size: 0.95rem;
-}
-
-.transaction-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.transaction-item:last-child {
-    border-bottom: none;
-}
-
-.transaction-icon {
-    margin-right: 1rem;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--card-accent-bg);
-    display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    flex-shrink: 0;
-}
-
-.transaction-icon i {
-    font-size: 0.95rem;
-    color: var(--accent-color);
-}
-
-.transaction-details {
-    flex: 1;
-}
-
-.transaction-type {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--text-color);
-    margin-bottom: 0.2rem;
-}
-
-.transaction-address {
-    font-size: 0.85rem;
-    color: var(--secondary-text-color);
-}
-
-.transaction-amount {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--text-color);
-    margin-right: 1rem;
-}
-
-.transaction-time {
-    font-size: 0.85rem;
-    color: var(--secondary-text-color);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .token-details, .token-actions {
-        grid-template-columns: 1fr;
-    }
-    
-    .orionix-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .orionix-logo {
-        margin-right: 0;
-        margin-bottom: 1rem;
-    }
-}
-
-/* Stiluri pentru secțiunea Orionix */
-
-.orionix-section {
-    padding: 80px 20px;
+    align-items: center;
     background-color: var(--background-color);
     position: relative;
     overflow: hidden;
+    padding: 40px 20px;
 }
 
-.orionix-section::before {
+.features-section::before {
     content: '';
     position: absolute;
     top: 0;
@@ -1255,207 +891,100 @@ html[data-theme="light"] body::before {
     width: 100%;
     height: 100%;
     background: 
-        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 35%),
-        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.07) 0%, transparent 40%);
+        radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.05) 0%, transparent 35%),
+        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
     pointer-events: none;
     z-index: 0;
 }
 
-.orionix-section .container {
+.container {
     max-width: 1200px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
-}
-
-.orionix-header {
+    width: 100%;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 2.5rem;
-    background: rgba(25, 30, 45, 0.5);
-    border-radius: 16px;
-    padding: 2rem;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
 }
 
-html[data-theme="light"] .orionix-header {
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.orionix-header:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-}
-
-.orionix-logo {
-    margin-right: 2rem;
-    flex-shrink: 0;
-}
-
-.orionix-logo img {
-    width: 80px;
-    height: 80px;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease;
-}
-
-.orionix-logo img:hover {
-    transform: scale(1.05) rotate(5deg);
-}
-
-.orionix-info h1 {
-    font-size: 2.2rem;
-    margin: 0 0 0.7rem;
-    color: var(--text-color);
-    font-weight: 700;
-    background: linear-gradient(135deg, #4a90e2 0%, #a78bfa 100%);
+.features-heading {
+    font-size: 3.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-}
-
-.orionix-info p {
-    font-size: 1.1rem;
-    color: var(--secondary-text-color);
-    margin: 0;
-}
-
-.about-orionix {
-    margin-bottom: 3.5rem;
     text-align: center;
-    max-width: 900px;
+    margin-bottom: 20px;
+    margin-top: 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.features-subheading {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--secondary-text-color);
+    text-align: center;
+    margin-bottom: 80px;
+    max-width: 700px;
     margin-left: auto;
     margin-right: auto;
-    padding: 0 1rem 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
 }
 
-html[data-theme="light"] .about-orionix {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.about-orionix h2 {
-    font-size: 2.8rem;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #a78bfa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 800;
-}
-
-.about-orionix p {
-    font-size: 1.15rem;
-    line-height: 1.8;
-    color: var(--secondary-text-color);
-    margin-bottom: 1.5rem;
-}
-
-html[data-theme="light"] .about-orionix p {
-    color: #4a5568;
-}
-
-.about-orionix p:last-child {
-    margin-bottom: 0;
-}
-
-.features-grid {
+.features-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.8rem;
-    margin-top: 2.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    flex: 1;
+    align-items: center;
 }
 
-.feature-item {
-    background: rgba(25, 30, 45, 0.5);
+.feature-box {
+    background-color: var(--crypto-card-background);
     border-radius: 16px;
-    padding: 2.5rem 1.8rem;
-    text-align: center;
-    backdrop-filter: blur(10px);
+    padding: 40px 30px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid var(--border-color);
     position: relative;
     overflow: hidden;
 }
 
-html[data-theme="light"] .feature-item {
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+.feature-box:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.feature-item::before {
+.feature-box::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 5px;
+    height: 4px;
     background: linear-gradient(to right, var(--accent-color), var(--accent-color-darker));
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.4s ease;
 }
 
-.feature-item:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    z-index: 10;
-    will-change: transform, box-shadow;
-}
-
-.feature-item:hover::before {
+.feature-box:hover::before {
     transform: scaleX(1);
-}
-
-.feature-item[data-feature="wallet"]::before {
-    background: linear-gradient(to right, #3b82f6, #2563eb);
-}
-
-.feature-item[data-feature="news"]::before {
-    background: linear-gradient(to right, #8b5cf6, #6d28d9);
-}
-
-.feature-item[data-feature="trade"]::before {
-    background: linear-gradient(to right, #10b981, #059669);
-}
-
-.feature-item[data-feature="orionix"]::before {
-    background: linear-gradient(to right, #f59e0b, #d97706);
-}
-
-.feature-item:nth-child(1) {
-    --animation-order: 1;
-}
-
-.feature-item:nth-child(2) {
-    --animation-order: 2;
-}
-
-.feature-item:nth-child(3) {
-    --animation-order: 3;
-}
-
-.feature-item:nth-child(4) {
-    --animation-order: 4;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .feature-icon {
@@ -1465,14 +994,11 @@ html[data-theme="light"] .feature-item {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 25px;
+    margin: 0 auto 25px;
     font-size: 30px;
     background: rgba(var(--accent-color-rgb, 74, 144, 226), 0.15);
     color: var(--accent-color);
-    position: relative;
-    overflow: hidden;
     transition: all 0.3s ease;
-    will-change: transform;
 }
 
 .feature-box:hover .feature-icon {
@@ -1506,6 +1032,7 @@ html[data-theme="light"] .feature-item {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    border-radius: 10px;
 }
 
 .feature-box h3 {
@@ -1513,7 +1040,6 @@ html[data-theme="light"] .feature-item {
     font-weight: 700;
     margin-bottom: 15px;
     color: var(--text-color);
-    position: relative;
 }
 
 .feature-box p {
@@ -1527,17 +1053,15 @@ html[data-theme="light"] .feature-item {
 .feature-link {
     display: flex;
     align-items: center;
+    justify-content: center;
     text-decoration: none;
     color: var(--accent-color);
     font-weight: 600;
     font-size: 1.05rem;
     transition: transform 0.3s ease;
     margin-top: auto;
-    position: relative;
-    overflow: hidden;
-    padding: 8px 12px;
+    padding: 10px 15px;
     border-radius: 8px;
-    z-index: 1;
 }
 
 .feature-box[data-feature="wallet"] .feature-link {
@@ -1600,17 +1124,33 @@ html[data-theme="light"] .feature-item {
 }
 
 @media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 20px;
+    }
+    
+    .hero-heading {
+        font-size: 2.6rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1.1rem;
+        margin-bottom: 50px;
+    }
+    
     .features-section {
-        padding: 0 20px;
+        padding: 30px 20px;
+        min-height: 100vh;
     }
     
     .features-heading {
         font-size: 2.4rem;
+        margin-top: 40px;
+        margin-bottom: 16px;
     }
     
     .features-subheading {
         font-size: 1.1rem;
-        margin-bottom: 30px;
+        margin-bottom: 60px;
     }
     
     .features-container {
@@ -1618,21 +1158,148 @@ html[data-theme="light"] .feature-item {
         max-width: 500px;
         margin-left: auto;
         margin-right: auto;
+        gap: 20px;
+    }
+    
+    .feature-box {
+        padding: 30px 25px;
+    }
+    
+    .compare-section {
+        padding: 30px 20px;
+        min-height: 100vh;
+    }
+    
+    .compare-heading {
+        font-size: 2.2rem;
+        margin-top: 40px;
+        margin-bottom: 50px;
+    }
+    
+    .crypto-compare-card {
+        padding: 25px 20px;
+        min-width: 280px;
+    }
+    
+    .vs-container {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .vs-text {
+        font-size: 1rem;
+    }
+    
+    .crypto-chart-container {
+        height: 100px;
     }
 }
 
 @media (max-width: 480px) {
+    .hero-section {
+        padding: 50px 16px;
+    }
+    
+    .hero-heading {
+        font-size: 2.2rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1rem;
+        margin-bottom: 40px;
+    }
+    
+    .crypto-card {
+        min-width: 100%;
+        padding: 20px;
+    }
+    
+    .features-section {
+        padding: 20px 16px;
+        min-height: 100vh;
+    }
+    
     .features-heading {
         font-size: 2rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
     }
     
     .features-subheading {
         font-size: 1rem;
-        margin-bottom: 20px;
+        margin-bottom: 50px;
+    }
+    
+    .features-container {
+        max-width: 100%;
+        gap: 15px;
     }
     
     .feature-box {
-        padding: 30px 20px;
+        padding: 25px 20px;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .feature-box h3 {
+        font-size: 1.3rem;
+    }
+    
+    .feature-box p {
+        font-size: 1rem;
+    }
+    
+    .compare-section {
+        padding: 20px 16px;
+        min-height: 100vh;
+    }
+    
+    .compare-heading {
+        font-size: 1.8rem;
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .crypto-compare-card {
+        padding: 20px 15px;
+        min-width: 100%;
+    }
+    
+    .crypto-header .crypto-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .crypto-header .crypto-name h3 {
+        font-size: 1.2rem;
+    }
+    
+    .data-value {
+        font-size: 1rem;
+    }
+    
+    .crypto-select {
+        font-size: 1.1rem;
+    }
+    
+    .vs-container {
+        width: 50px;
+        height: 50px;
+        margin: 15px 0;
+    }
+    
+    .vs-text {
+        font-size: 0.9rem;
+    }
+    
+    .crypto-chart-container {
+        height: 80px;
+        padding: 8px;
     }
 }
 
@@ -1690,4 +1357,972 @@ html[data-theme="light"] .feature-item {
 .user-info.mobile .logout-btn {
     margin-top: 8px;
     width: 100%;
+}
+
+/* Stiluri pentru secțiunea Compare */
+.compare-section {
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-color);
+    position: relative;
+    overflow: hidden;
+    padding: 40px 20px;
+}
+
+.compare-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 25% 40%, rgba(74, 144, 226, 0.04) 0%, transparent 35%),
+        radial-gradient(circle at 75% 60%, rgba(16, 185, 129, 0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.compare-heading {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin-bottom: 70px;
+    margin-top: 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.compare-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    flex: 1;
+}
+
+.crypto-compare-card {
+    background-color: var(--crypto-card-background);
+    border-radius: 16px;
+    padding: 30px 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    flex: 1;
+    max-width: 400px;
+    min-width: 350px;
+}
+
+.crypto-compare-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.crypto-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.crypto-header .crypto-icon {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.crypto-header .crypto-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.crypto-header .crypto-name {
+    flex: 1;
+}
+
+.crypto-header .crypto-name h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 5px 0;
+}
+
+.crypto-symbol {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+.crypto-select-container {
+    margin-bottom: 8px;
+}
+
+.crypto-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.crypto-data {
+    margin-bottom: 25px;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 8px 0;
+}
+
+.data-label {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-value-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.data-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.change-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.change-badge.positive {
+    background-color: var(--positive-bg);
+    color: var(--positive-color);
+}
+
+.change-badge.negative {
+    background-color: var(--negative-bg);
+    color: var(--negative-color);
+}
+
+.vs-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-darker));
+    border-radius: 50%;
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.vs-text {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.crypto-chart-container {
+    height: 120px;
+    position: relative;
+    background: rgba(var(--card-background-rgb), 0.5);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.crypto-chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .crypto-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .crypto-card {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .hero-heading {
+        font-size: 3.2rem;
+    }
+    
+    .features-heading {
+        font-size: 2.8rem;
+    }
+    
+    .features-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+    
+    .compare-heading {
+        font-size: 2.5rem;
+        margin-top: 50px;
+        margin-bottom: 60px;
+    }
+    
+    .compare-container {
+        flex-direction: column;
+        gap: 25px;
+        align-items: center;
+    }
+    
+    .crypto-compare-card {
+        max-width: 500px;
+        min-width: 300px;
+        width: 100%;
+    }
+    
+    .vs-container {
+        order: 1;
+        margin: 20px 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 20px;
+    }
+    
+    .hero-heading {
+        font-size: 2.6rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1.1rem;
+        margin-bottom: 50px;
+    }
+    
+    .features-section {
+        padding: 30px 20px;
+        min-height: 100vh;
+    }
+    
+    .features-heading {
+        font-size: 2.4rem;
+        margin-top: 40px;
+        margin-bottom: 16px;
+    }
+    
+    .features-subheading {
+        font-size: 1.1rem;
+        margin-bottom: 60px;
+    }
+    
+    .features-container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        gap: 20px;
+    }
+    
+    .feature-box {
+        padding: 30px 25px;
+    }
+    
+    .compare-section {
+        padding: 30px 20px;
+        min-height: 100vh;
+    }
+    
+    .compare-heading {
+        font-size: 2.2rem;
+        margin-top: 40px;
+        margin-bottom: 50px;
+    }
+    
+    .crypto-compare-card {
+        padding: 25px 20px;
+        min-width: 280px;
+    }
+    
+    .vs-container {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .vs-text {
+        font-size: 1rem;
+    }
+    
+    .crypto-chart-container {
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 50px 16px;
+    }
+    
+    .hero-heading {
+        font-size: 2.2rem;
+    }
+    
+    .hero-subheading {
+        font-size: 1rem;
+        margin-bottom: 40px;
+    }
+    
+    .crypto-card {
+        min-width: 100%;
+        padding: 20px;
+    }
+    
+    .features-section {
+        padding: 20px 16px;
+        min-height: 100vh;
+    }
+    
+    .features-heading {
+        font-size: 2rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+    
+    .features-subheading {
+        font-size: 1rem;
+        margin-bottom: 50px;
+    }
+    
+    .features-container {
+        max-width: 100%;
+        gap: 15px;
+    }
+    
+    .feature-box {
+        padding: 25px 20px;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .feature-box h3 {
+        font-size: 1.3rem;
+    }
+    
+    .feature-box p {
+        font-size: 1rem;
+    }
+    
+    .compare-section {
+        padding: 20px 16px;
+        min-height: 100vh;
+    }
+    
+    .compare-heading {
+        font-size: 1.8rem;
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .crypto-compare-card {
+        padding: 20px 15px;
+        min-width: 100%;
+    }
+    
+    .crypto-header .crypto-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .crypto-header .crypto-name h3 {
+        font-size: 1.2rem;
+    }
+    
+    .data-value {
+        font-size: 1rem;
+    }
+    
+    .crypto-select {
+        font-size: 1.1rem;
+    }
+    
+    .vs-container {
+        width: 50px;
+        height: 50px;
+        margin: 15px 0;
+    }
+    
+    .vs-text {
+        font-size: 0.9rem;
+    }
+    
+    .crypto-chart-container {
+        height: 80px;
+        padding: 8px;
+    }
+}
+
+/* Stiluri pentru pagina Orionix */
+
+.orionix-section {
+    padding: 2rem 0.5rem;
+    min-height: calc(100vh - 80px);
+    background-color: var(--background-color);
+}
+
+.orionix-section .container {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 0 2rem !important;
+}
+
+@media (min-width: 1400px) {
+    .orionix-section .container {
+        padding: 0 2rem !important;
+    }
+}
+
+@media (min-width: 1800px) {
+    .orionix-section .container {
+        padding: 0 3rem !important;
+    }
+}
+
+.orionix-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: var(--card-background);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.orionix-logo {
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+}
+
+.orionix-logo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.orionix-info h1 {
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem;
+    color: var(--text-color);
+}
+
+.orionix-info p {
+    font-size: 1rem;
+    color: var(--secondary-text-color);
+    margin: 0;
+}
+
+.about-orionix {
+    margin-bottom: 3rem;
+    background: var(--card-background);
+    border-radius: 16px;
+    padding: 3rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    width: 100%;
+}
+
+.about-orionix h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+.about-orionix p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.about-orionix p:last-child {
+    margin-bottom: 0;
+}
+
+.token-details {
+    display: flex !important;
+    gap: 3rem !important;
+    margin-bottom: 3rem !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+.detail-card, .wallet-info-card, .action-card {
+    background: var(--card-background);
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex: 1;
+}
+
+.detail-card h3, .wallet-info-card h3, .action-card h3, .transaction-history h3 {
+    font-size: 1.25rem;
+    margin: 0 0 1.5rem;
+    color: var(--text-color);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+    font-size: 0.95rem;
+    padding: 0.3rem 0;
+}
+
+.detail-row:last-child {
+    margin-bottom: auto;
+}
+
+.detail-row span:first-child {
+    color: var(--secondary-text-color);
+}
+
+.detail-row span:last-child {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.contract-address span:last-child {
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.wallet-connect {
+    margin-bottom: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.wallet-connect .connect-btn {
+    margin-bottom: 1rem;
+}
+
+.detail-card .detail-row:last-child {
+    margin-bottom: auto;
+}
+
+.transaction-history .transaction-list {
+    min-height: 150px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-card .form-group:last-of-type {
+    margin-bottom: auto;
+}
+
+.action-card .action-btn {
+    margin-top: auto;
+}
+
+.connect-btn {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.9rem 1.2rem !important;
+    background: var(--accent-color) !important;
+    color: white !important;
+    border: 1px solid var(--accent-color) !important;
+    border-radius: 10px !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.connect-btn:hover {
+    background: var(--accent-color-darker) !important;
+    border-color: var(--accent-color-darker) !important;
+    color: white !important;
+}
+
+.connect-btn:before {
+    display: none !important;
+}
+
+.connect-btn:hover:before {
+    display: none !important;
+}
+
+.connect-btn.connected {
+    background: var(--success-color);
+}
+
+.connect-btn:active {
+    transform: translateY(1px);
+}
+
+.connect-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.connect-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.token-actions {
+    display: flex !important;
+    gap: 3rem !important;
+    margin-bottom: 3rem !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+    color: var(--secondary-text-color);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--card-background);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.amount-input {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--card-background);
+    overflow: hidden;
+    height: 42px;
+}
+
+.amount-input input {
+    flex: 1;
+    border: none;
+    padding: 0.8rem 1rem;
+    background: transparent;
+    height: 100%;
+    font-size: 0.95rem;
+}
+
+.amount-input input:focus {
+    outline: none;
+}
+
+.amount-input span {
+    padding: 0.8rem 1.2rem;
+    background: var(--border-color);
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.95rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.action-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--accent-color-darker);
+}
+
+.status-message {
+    margin-top: 1rem;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    min-height: 2.5em;
+}
+
+.transaction-history {
+    background: var(--card-background);
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    width: 100%;
+    min-height: 380px;
+    flex: 1;
+}
+
+.transaction-list {
+    min-height: 150px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--secondary-text-color);
+    font-size: 0.95rem;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-icon {
+    margin-right: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(var(--accent-color-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.transaction-icon i {
+    font-size: 0.95rem;
+    color: var(--accent-color);
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-type {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 0.2rem;
+}
+
+.transaction-address {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+}
+
+.transaction-amount {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-right: 1rem;
+}
+
+.transaction-time {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+}
+
+/* Responsive pentru pagina Orionix */
+@media (max-width: 1200px) {
+    .token-details, .token-actions {
+        gap: 1.5rem !important;
+    }
+    
+    .detail-card, .wallet-info-card, .action-card, .transaction-history {
+        padding: 1.8rem 2.2rem;
+        min-height: 350px;
+    }
+}
+
+@media (max-width: 968px) {
+    .token-details, .token-actions {
+        flex-direction: column;
+        gap: 1.5rem !important;
+    }
+    
+    .detail-card, .wallet-info-card, .action-card, .transaction-history {
+        min-height: 320px;
+        padding: 1.5rem 2rem;
+    }
+    
+    .detail-card h3, .wallet-info-card h3, .action-card h3, .transaction-history h3 {
+        font-size: 1.15rem;
+    }
+    
+    .orionix-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .orionix-logo {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .orionix-section {
+        padding: 1rem 0.5rem;
+    }
+    
+    .about-orionix {
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .orionix-section .container {
+        padding: 0 1rem !important;
+    }
+    
+    .detail-card, .wallet-info-card, .action-card, .transaction-history {
+        padding: 1.5rem 1.8rem;
+        min-height: 280px;
+    }
+    
+    .detail-card h3, .wallet-info-card h3, .action-card h3, .transaction-history h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .detail-row {
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+    }
+    
+    .form-group input {
+        font-size: 0.9rem;
+        padding: 0.7rem 0.9rem;
+    }
+    
+    .connect-btn, .action-btn {
+        font-size: 0.95rem;
+        padding: 0.8rem 1rem;
+    }
+    
+    .orionix-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .orionix-logo {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .orionix-section {
+        padding: 1rem 0.5rem;
+    }
+    
+    .about-orionix {
+        padding: 2rem 1.5rem;
+    }
+}
+
+.wallet-info-card {
+    justify-content: space-between;
+}
+
+.wallet-info-card .connect-btn {
+    margin: 1rem 0;
+}
+
+.wallet-status {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.wallet-status > div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+    font-size: 0.95rem;
+    padding: 0.2rem 0;
+}
+
+.wallet-status > div:last-child {
+    margin-bottom: 0;
+}
+
+.wallet-status span:first-child {
+    color: var(--secondary-text-color);
+}
+
+.wallet-status span:last-child {
+    font-weight: 500;
+    color: var(--text-color);
 }

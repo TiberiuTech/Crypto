@@ -267,7 +267,7 @@
     </nav>
 
     <section class="orionix-section">
-        <div class="container">
+        <div class="container" style="max-width: 100%; padding: 0 2rem;">
             <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; background: linear-gradient(90deg, #4971e0, #6e94ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;">About Orionix</h2>
             
             <div class="about-orionix" style="padding: 2rem; margin-bottom: 2rem; background: linear-gradient(135deg, rgba(73, 125, 242, 0.05), rgba(73, 125, 242, 0.1)); border-radius: 12px; border: 1px solid rgba(73, 125, 242, 0.2);">
@@ -287,7 +287,7 @@
             </div>
             
             <div class="token-details">
-                <div class="detail-card orionix-card" style="border: 2px solid var(--accent-color); border-radius: 10px;">
+                <div class="detail-card">
                     <h3>General Information</h3>
                     <div class="detail-row">
                         <span>Name:</span>
@@ -323,7 +323,7 @@
                     </div>
                 </div>
                 
-                <div class="wallet-info-card orionix-card" style="border: 2px solid var(--accent-color); border-radius: 10px;">
+                <div class="wallet-info-card">
                     <h3>Your Wallet</h3>
                     <div class="wallet-connect">
                         <button id="connect-wallet-btn" class="connect-btn">Connect MetaMask</button>
@@ -332,12 +332,12 @@
                             Could not load ethers.js library. <a href="#" id="show-details-btn" style="color: #dc3545; text-decoration: underline;">Show details</a>
                         </div>
                     </div>
-                    <div class="wallet-details">
-                        <div class="detail-row">
+                    <div class="wallet-status">
+                        <div>
                             <span>Address:</span>
                             <span id="wallet-address">Not connected</span>
                         </div>
-                        <div class="detail-row">
+                        <div>
                             <span>ORX Balance:</span>
                             <span id="token-balance">0 ORX</span>
                         </div>
@@ -345,8 +345,8 @@
                 </div>
             </div>
             
-            <div class="token-actions" style="display: flex; justify-content: space-between; width: 100%; margin: 2rem 0; gap: 1rem; flex-wrap: wrap;">
-                <div class="action-card orionix-card" style="width: 48%; border: 2px solid var(--accent-color); border-radius: 10px; height: 100%; min-height: 300px; display: flex; flex-direction: column;">
+            <div class="token-actions">
+                <div class="action-card">
                     <h3>Transfer Token</h3>
                     <div class="form-group">
                         <label for="recipient-address">Recipient Address:</label>
@@ -359,11 +359,11 @@
                             <span>ORX</span>
                         </div>
                     </div>
-                    <button id="transfer-btn" class="action-btn" style="margin-top: auto;">Transfer Token</button>
+                    <button id="transfer-btn" class="action-btn">Transfer Token</button>
                     <div id="transfer-status" class="status-message"></div>
                 </div>
                 
-                <div class="transaction-history orionix-card" style="width: 48%; border: 2px solid var(--accent-color); border-radius: 10px; min-height: 300px;">
+                <div class="action-card">
                     <h3>Transaction History</h3>
                     <div class="transaction-list" id="transaction-list">
                         <div class="empty-state">
