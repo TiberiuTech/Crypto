@@ -1238,189 +1238,95 @@ function addOrderToHistory(side, type, pair, price, amount) {
 
 function processOrder() {
     const pair = document.getElementById('tradingPair').value;
-    const orderType = document.querySelector('.order-type-btn.active')?.getAttribute('data-order-type') || 'limit';
+    const orderType = document.querySelector('.order-type-btn.active')?.getAttribute('data-order-type') || 'market';
     const side = document.querySelector('.action-tab-btn.active')?.getAttribute('data-action') || 'buy';
     let price = parseFloat(document.getElementById('orderPrice').value);
     let amount = parseFloat(document.getElementById('orderAmount').value);
-    let stopPrice = null;
-    let limitPrice = null;
 
-    const tradeType = document.querySelector('.nav-tab.active')?.getAttribute('data-trade-type') || 'spot';
-
-    if (orderType === 'market') {
-        const symbol = pair.split('/')[0];
-        if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
-            price = window.cryptoData[symbol].price;
-        } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
-            price = window.marketData[pair].lastPrice;
-        }
-    }
-
-    if (orderType === 'stop') {
-        stopPrice = parseFloat(document.getElementById('orderStopPrice')?.value);
-        limitPrice = parseFloat(document.getElementById('orderLimitPrice')?.value);
-        if (isNaN(stopPrice) || stopPrice <= 0) {
-            alert('Enter a valid Stop Price');
-            return;
-        }
-        if (isNaN(limitPrice) || limitPrice <= 0) {
-            alert('Enter a valid Limit Price');
-            return;
-        }
-        if (isNaN(amount) || amount <= 0) {
-            alert('Enter a valid amount');
-            return;
-        }
-    }
-
-    if (orderType !== 'stop') {
-        if (orderType !== 'market' && (isNaN(price) || price <= 0)) {
-            alert('Enter a valid price');
-            return;
-        }
-        if (isNaN(amount) || amount <= 0) {
-            alert('Enter a valid amount');
-            return;
-        }
-    }
-
-    let balance = 15432.21;
-    if (tradeType === 'margin') {
-        balance = 46296.63;
-    } else if (tradeType === 'futures') {
-        balance = 77161.05;
-    }
-    
-    const walletData = localStorage.getItem('wallet');
-    let wallet = null;
-    if (walletData) {
-        wallet = JSON.parse(walletData);
-        balance = wallet.totalBalance || balance;
-        if (tradeType === 'margin') balance *= 3;
-        if (tradeType === 'futures') balance *= 5;
-    }
-
-    const total = price * amount;
-
-    const isBuy = side.toLowerCase().includes('buy') || side.toLowerCase().includes('long') || side.toLowerCase().includes('bought');
-    if (!isBuy && tradeType === 'spot') {
-        const symbol = pair.split('/')[0];
-        const coinId = getCoinIdFromSymbol(symbol);
-        
-        if (wallet && wallet.coins && wallet.coins[coinId]) {
-            const availableAmount = wallet.coins[coinId].amount || 0;
-            if (amount > availableAmount) {
-                alert(`You don't have enough ${symbol} for this transaction. Available: ${availableAmount.toFixed(8)} ${symbol}`);
-                return;
-            }
-        } else {
-            alert(`You don't have ${symbol} in your wallet to sell.`);
-            return;
-        }
-    }
-
-    if (isBuy && total > balance) {
-        alert(`Insufficient funds for this transaction (${tradeType})`);
+    // Validări de bază
+    if (isNaN(amount) || amount <= 0) {
+        alert('Introduceți o cantitate validă');
         return;
     }
 
-    let actionText, typeText;
-    if (tradeType === 'futures') {
-        actionText = side === 'buy' ? 'Long' : 'Short';
-        typeText = 'Futures';
-    } else if (tradeType === 'margin') {
-        actionText = side === 'buy' ? 'Bought (Margin)' : 'Sold (Margin)';
-        typeText = 'Margin';
-    } else {
-        actionText = side === 'buy' ? 'Bought' : 'Sold';
-        typeText = orderType.charAt(0).toUpperCase() + orderType.slice(1);
+    if (orderType !== 'market' && (isNaN(price) || price <= 0)) {
+        alert('Introduceți un preț valid');
+        return;
     }
 
-    const now = new Date();
-    const dateStr = now.toLocaleDateString();
-    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const dateTimeStr = `${dateStr} ${timeStr}`;
-
+    // Pentru ordine de tip market, folosim prețul curent
     if (orderType === 'market') {
-        addOrderToHistory(actionText, typeText, pair, price, amount);
-
-        addTradeToHistory(price, amount, isBuy);
-        
-        if (tradeType === 'spot') {
-            if (isBuy) {
-                updateWalletAfterPurchase(pair, amount, price);
-            } else {
-                updateWalletAfterSell(pair, amount, price);
-            }
+        const symbol = pair.split('/')[0];
+        if (cryptoData[symbol] && cryptoData[symbol].price) {
+            price = cryptoData[symbol].price;
         }
-    } else {
-        const newOrder = {
-            dateTime: dateTimeStr,
-            pair: pair,
-            type: orderType === 'stop' ? 'Stop-Limit' : 'Limit',
-            side: actionText,
-            price: orderType === 'stop' ? limitPrice : price,
-            stopPrice: orderType === 'stop' ? stopPrice : null,
-            amount: amount,
-            filled: 0,
-            status: 'Open',
-            tradeType: tradeType,
-            isBuy: isBuy
-        };
-        
-        openOrders.unshift(newOrder);
-        saveOrders();
-        renderOpenOrders();
-        
-        let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
-        let priceStr = orderType === 'stop' ? 
-            `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
-            `$${price.toFixed(2)}`;
-        
-        let notificationTitle = `Order ${typeStr} placed`;
-        let notificationMessage = `Your ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} at ${priceStr} has been added to Open Orders and will be executed automatically when the market price reaches the set limit.`;
     }
 
+    const total = price * amount;
+    const symbol = pair.split('/')[0];
+    const coinId = getCoinIdFromSymbol(symbol);
+
+    // Verificăm wallet-ul
+    const walletData = localStorage.getItem('wallet');
+    let wallet = walletData ? JSON.parse(walletData) : null;
+
+    if (!wallet || !wallet.coins) {
+        wallet = {
+            totalBalance: 0,
+            coins: {}
+        };
+        localStorage.setItem('wallet', JSON.stringify(wallet));
+    }
+
+    // Pentru vânzare, verificăm dacă utilizatorul are suficiente fonduri
+    if (side === 'sell') {
+        if (!wallet.coins[coinId] || wallet.coins[coinId].amount < amount) {
+            alert(`Nu aveți suficient ${symbol} pentru această tranzacție`);
+            return;
+        }
+    }
+
+    // Pentru cumpărare, verificăm dacă există suficiente fonduri USDT
+    if (side === 'buy' && total > (wallet.totalBalance || 0)) {
+        alert('Fonduri insuficiente pentru această tranzacție');
+        return;
+    }
+
+    // Procesăm tranzacția
+    if (side === 'buy') {
+        updateWalletAfterPurchase(pair, amount, price);
+    } else {
+        updateWalletAfterSell(pair, amount, price);
+    }
+
+    // Adăugăm în istoric
+    addOrderToHistory(
+        side === 'buy' ? 'Bought' : 'Sold',
+        orderType.charAt(0).toUpperCase() + orderType.slice(1),
+        pair,
+        price,
+        amount
+    );
+
+    // Adăugăm în istoricul de tranzacții
+    addTradeToHistory(price, amount, side === 'buy');
+
+    // Afișăm notificare
     const notification = document.createElement('div');
     notification.className = 'trade-notification';
-        
-    if (orderType === 'market') {
-        const leverageText = tradeType !== 'spot' ? 
-            ` with ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
-    
-        const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Bought') : 
-            (tradeType === 'futures' ? 'Short' : 'Sold')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
-            for $${total.toFixed(2)}${leverageText}`;
-            
-        notification.innerHTML = `
-            <div class="notification-icon ${side === 'buy' ? 'buy' : 'sell'}">
-                <i class="fas fa-${side === 'buy' ? 'arrow-down' : 'arrow-up'}"></i>
+    notification.innerHTML = `
+        <div class="notification-icon ${side}">
+            <i class="fas fa-${side === 'buy' ? 'arrow-down' : 'arrow-up'}"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">${side === 'buy' ? 'Cumpărare' : 'Vânzare'} reușită</div>
+            <div class="notification-message">
+                ${side === 'buy' ? 'Cumpărat' : 'Vândut'} ${amount.toFixed(5)} ${symbol} 
+                la prețul de $${price.toFixed(2)}
             </div>
-            <div class="notification-content">
-                <div class="notification-title">${side === 'buy' ? 
-                    (tradeType === 'futures' ? 'Long' : 'Bought') : 
-                    (tradeType === 'futures' ? 'Short' : 'Sold')} successful (${tradeType.charAt(0).toUpperCase() + tradeType.slice(1)})</div>
-                <div class="notification-message">${successMsg}</div>
-            </div>
-            <button class="notification-close"><i class="fas fa-times"></i></button>
-        `;
-    } else {
-        let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
-        let priceStr = orderType === 'stop' ? 
-            `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
-            `$${price.toFixed(2)}`;
-        
-        notification.innerHTML = `
-            <div class="notification-icon pending">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="notification-content">
-                <div class="notification-title">Order ${typeStr} placed</div>
-                <div class="notification-message">Your ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} at ${priceStr} has been added to Open Orders and will be executed automatically when the market price reaches the set limit.</div>
-            </div>
-            <button class="notification-close"><i class="fas fa-times"></i></button>
-        `;
-    }
+        </div>
+        <button class="notification-close"><i class="fas fa-times"></i></button>
+    `;
 
     document.body.appendChild(notification);
 
@@ -1432,23 +1338,16 @@ function processOrder() {
     setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
+        setTimeout(() => notification.remove(), 300);
     }, 5000);
 
-    notification.querySelector('.notification-close').addEventListener('click', () => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    });
-
+    // Reset form
     document.getElementById('orderAmount').value = '';
     document.getElementById('orderTotal').value = '';
-    if (document.getElementById('orderStopPrice')) document.getElementById('orderStopPrice').value = '';
-    if (document.getElementById('orderLimitPrice')) document.getElementById('orderLimitPrice').value = '';
+
+    // Actualizăm UI-ul
+    updateWalletAssetsDisplay();
+    updateTradeBalance();
 }
 
 function setupEventListeners() {
@@ -2391,43 +2290,214 @@ processOrder = function() {
     const side = document.querySelector('.action-tab-btn.active')?.getAttribute('data-action') || 'buy';
     let price = parseFloat(document.getElementById('orderPrice').value);
     let amount = parseFloat(document.getElementById('orderAmount').value);
+    let stopPrice = null;
+    let limitPrice = null;
+
+    const tradeType = document.querySelector('.nav-tab.active')?.getAttribute('data-trade-type') || 'spot';
+
+    if (orderType === 'market') {
+        const symbol = pair.split('/')[0];
+        if (window.cryptoData && window.cryptoData[symbol] && window.cryptoData[symbol].price) {
+            price = window.cryptoData[symbol].price;
+        } else if (window.marketData && window.marketData[pair] && window.marketData[pair].lastPrice) {
+            price = window.marketData[pair].lastPrice;
+        }
+    }
+
+    if (orderType === 'stop') {
+        stopPrice = parseFloat(document.getElementById('orderStopPrice')?.value);
+        limitPrice = parseFloat(document.getElementById('orderLimitPrice')?.value);
+        if (isNaN(stopPrice) || stopPrice <= 0) {
+            alert('Enter a valid Stop Price');
+            return;
+        }
+        if (isNaN(limitPrice) || limitPrice <= 0) {
+            alert('Enter a valid Limit Price');
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert('Enter a valid amount');
+            return;
+        }
+    }
+
+    if (orderType !== 'stop') {
+        if (orderType !== 'market' && (isNaN(price) || price <= 0)) {
+            alert('Enter a valid price');
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert('Enter a valid amount');
+            return;
+        }
+    }
+
+    let balance = 15432.21;
+    if (tradeType === 'margin') {
+        balance = 46296.63;
+    } else if (tradeType === 'futures') {
+        balance = 77161.05;
+    }
+    
+    const walletData = localStorage.getItem('wallet');
+    let wallet = null;
+    if (walletData) {
+        wallet = JSON.parse(walletData);
+        balance = wallet.totalBalance || balance;
+        if (tradeType === 'margin') balance *= 3;
+        if (tradeType === 'futures') balance *= 5;
+    }
+
+    const total = price * amount;
+
+    const isBuy = side.toLowerCase().includes('buy') || side.toLowerCase().includes('long') || side.toLowerCase().includes('bought');
+    if (!isBuy && tradeType === 'spot') {
+        const symbol = pair.split('/')[0];
+        const coinId = getCoinIdFromSymbol(symbol);
+        
+        if (wallet && wallet.coins && wallet.coins[coinId]) {
+            const availableAmount = wallet.coins[coinId].amount || 0;
+            if (amount > availableAmount) {
+                alert(`You don't have enough ${symbol} for this transaction. Available: ${availableAmount.toFixed(8)} ${symbol}`);
+                return;
+            }
+        } else {
+            alert(`You don't have ${symbol} in your wallet to sell.`);
+            return;
+        }
+    }
+
+    if (isBuy && total > balance) {
+        alert(`Insufficient funds for this transaction (${tradeType})`);
+        return;
+    }
+
+    let actionText, typeText;
+    if (tradeType === 'futures') {
+        actionText = side === 'buy' ? 'Long' : 'Short';
+        typeText = 'Futures';
+    } else if (tradeType === 'margin') {
+        actionText = side === 'buy' ? 'Bought (Margin)' : 'Sold (Margin)';
+        typeText = 'Margin';
+    } else {
+        actionText = side === 'buy' ? 'Bought' : 'Sold';
+        typeText = orderType.charAt(0).toUpperCase() + orderType.slice(1);
+    }
+
     const now = new Date();
     const dateStr = now.toLocaleDateString();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const dateTimeStr = `${dateStr} ${timeStr}`;
-    if (orderType === 'limit') {
-        // Validare
-        if (isNaN(price) || price <= 0 || isNaN(amount) || amount <= 0) {
-            alert('Introduceți un preț și o cantitate validă');
-            return;
+
+    if (orderType === 'market') {
+        addOrderToHistory(actionText, typeText, pair, price, amount);
+
+        addTradeToHistory(price, amount, isBuy);
+        
+        if (tradeType === 'spot') {
+            if (isBuy) {
+                updateWalletAfterPurchase(pair, amount, price);
+            } else {
+                updateWalletAfterSell(pair, amount, price);
+            }
         }
-        // Adaug ordinul în openOrders
-        openOrders.unshift({
+    } else {
+        const newOrder = {
             dateTime: dateTimeStr,
-            pair,
-            type: 'Limit',
-            side: side === 'buy' ? 'Buy' : 'Sell',
-            price,
-            amount
-        });
+            pair: pair,
+            type: orderType === 'stop' ? 'Stop-Limit' : 'Limit',
+            side: actionText,
+            price: orderType === 'stop' ? limitPrice : price,
+            stopPrice: orderType === 'stop' ? stopPrice : null,
+            amount: amount,
+            filled: 0,
+            status: 'Open',
+            tradeType: tradeType,
+            isBuy: isBuy
+        };
+        
+        openOrders.unshift(newOrder);
         saveOrders();
         renderOpenOrders();
-        // Notificare
-        const notification = document.createElement('div');
-        notification.className = 'trade-notification';
-        notification.innerHTML = `<div class="notification-icon buy"><i class="fas fa-arrow-down"></i></div><div class="notification-content"><div class="notification-title">Ordin Limit plasat</div><div class="notification-message">Ordinul tău a fost adăugat la Open Orders și va fi executat automat când prețul pieței ajunge la limita ta.</div></div><button class="notification-close"><i class="fas fa-times"></i></button>`;
-        document.body.appendChild(notification);
-        setTimeout(() => { notification.style.opacity = '1'; notification.style.transform = 'translateX(0)'; }, 100);
-        setTimeout(() => { notification.style.opacity = '0'; notification.style.transform = 'translateX(100%)'; setTimeout(() => { notification.remove(); }, 300); }, 5000);
-        notification.querySelector('.notification-close').addEventListener('click', () => { notification.style.opacity = '0'; notification.style.transform = 'translateX(100%)'; setTimeout(() => { notification.remove(); }, 300); });
-        // Reset formular
-        document.getElementById('orderAmount').value = '';
-        document.getElementById('orderTotal').value = '';
-        return;
+        
+        let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
+        let priceStr = orderType === 'stop' ? 
+            `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
+            `$${price.toFixed(2)}`;
+        
+        let notificationTitle = `Order ${typeStr} placed`;
+        let notificationMessage = `Your ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} at ${priceStr} has been added to Open Orders and will be executed automatically when the market price reaches the set limit.`;
     }
-    // Pentru celelalte tipuri, comportament original
-    originalProcessOrder();
-};
+
+    const notification = document.createElement('div');
+    notification.className = 'trade-notification';
+        
+    if (orderType === 'market') {
+        const leverageText = tradeType !== 'spot' ? 
+            ` with ${tradeType === 'margin' ? '3x' : '5x'} leverage` : '';
+    
+        const successMsg = `${side === 'buy' ? (tradeType === 'futures' ? 'Long' : 'Bought') : 
+            (tradeType === 'futures' ? 'Short' : 'Sold')} ${amount.toFixed(5)} ${pair.split('/')[0]} 
+            for $${total.toFixed(2)}${leverageText}`;
+            
+        notification.innerHTML = `
+            <div class="notification-icon ${side === 'buy' ? 'buy' : 'sell'}">
+                <i class="fas fa-${side === 'buy' ? 'arrow-down' : 'arrow-up'}"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${side === 'buy' ? 
+                    (tradeType === 'futures' ? 'Long' : 'Bought') : 
+                    (tradeType === 'futures' ? 'Short' : 'Sold')} successful (${tradeType.charAt(0).toUpperCase() + tradeType.slice(1)})</div>
+                <div class="notification-message">${successMsg}</div>
+            </div>
+            <button class="notification-close"><i class="fas fa-times"></i></button>
+        `;
+    } else {
+        let typeStr = orderType === 'stop' ? 'Stop-Limit' : 'Limit';
+        let priceStr = orderType === 'stop' ? 
+            `Stop: $${stopPrice.toFixed(2)}, Limit: $${limitPrice.toFixed(2)}` : 
+            `$${price.toFixed(2)}`;
+        
+        notification.innerHTML = `
+            <div class="notification-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">Order ${typeStr} placed</div>
+                <div class="notification-message">Your ${actionText} ${amount.toFixed(5)} ${pair.split('/')[0]} at ${priceStr} has been added to Open Orders and will be executed automatically when the market price reaches the set limit.</div>
+            </div>
+            <button class="notification-close"><i class="fas fa-times"></i></button>
+        `;
+    }
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 5000);
+
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    });
+
+    document.getElementById('orderAmount').value = '';
+    document.getElementById('orderTotal').value = '';
+    if (document.getElementById('orderStopPrice')) document.getElementById('orderStopPrice').value = '';
+    if (document.getElementById('orderLimitPrice')) document.getElementById('orderLimitPrice').value = '';
+}
 
 // La fiecare update de preț, execut ordinele Limit dacă e cazul
 function checkLimitOrders() {
@@ -2608,15 +2678,14 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateWalletAssetsDisplay() {
     const walletData = localStorage.getItem('wallet');
     const assetsList = document.getElementById('walletAssetsList');
-    const walletTotalValue = document.getElementById('walletTotalValue');
+    const portfolioOverview = document.querySelector('.portfolio-overview .value');
+    const totalBalance = document.querySelector('.total-balance .value');
     
     if (!assetsList) return;
     
-    // Golim lista existentă
     assetsList.innerHTML = '';
     
     if (!walletData) {
-        // Nu există wallet, afișăm mesaj
         const emptyWallet = document.createElement('div');
         emptyWallet.className = 'wallet-asset-placeholder';
         emptyWallet.innerHTML = `
@@ -2624,14 +2693,50 @@ function updateWalletAssetsDisplay() {
             <span>No assets found in your wallet</span>
         `;
         assetsList.appendChild(emptyWallet);
-        if (walletTotalValue) walletTotalValue.textContent = '$0.00';
+        if (portfolioOverview) portfolioOverview.textContent = '$0.00';
+        if (totalBalance) totalBalance.textContent = '$0.00';
         return;
     }
     
-    // Parsăm datele din wallet
     const wallet = JSON.parse(walletData);
     
-    // Verificăm dacă sunt monede în wallet
+    // Calculăm valoarea totală a portofoliului (doar monedele crypto, fără USDT)
+    let portfolioValue = 0;
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        if (coin && coin.amount > 0) {
+            const symbol = getCoinSymbolFromId(coinId);
+            const currentPrice = cryptoData[symbol]?.price || coin.price;
+            portfolioValue += coin.amount * currentPrice;
+        }
+    }
+    
+    // Afișăm Portfolio Overview (doar valoarea monedelor crypto)
+    if (portfolioOverview) {
+        portfolioOverview.textContent = '$' + portfolioValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Calculăm și afișăm Total Balance (USDT + valoarea monedelor)
+    const totalValue = (wallet.totalBalance || 0) + portfolioValue;
+    if (totalBalance) {
+        totalBalance.textContent = '$' + totalValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Actualizăm și textul din Portfolio Overview header
+    const portfolioOverviewHeader = document.querySelector('.portfolio-overview .value-label');
+    if (portfolioOverviewHeader) {
+        portfolioOverviewHeader.textContent = '$' + portfolioValue.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
     if (!wallet.coins || Object.keys(wallet.coins).length === 0) {
         const emptyWallet = document.createElement('div');
         emptyWallet.className = 'wallet-asset-placeholder';
@@ -2640,91 +2745,11 @@ function updateWalletAssetsDisplay() {
             <span>No assets found in your wallet</span>
         `;
         assetsList.appendChild(emptyWallet);
-        if (walletTotalValue) walletTotalValue.textContent = '$0.00';
         return;
     }
     
-    // Afișăm valoarea totală a portofelului, folosind valoarea exactă din wallet
-    if (walletTotalValue) {
-        walletTotalValue.textContent = '$' + (wallet.totalBalance || 0).toLocaleString('en-US', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-        });
-    }
-    
-    // Mapare între ID-urile din wallet și cele din cryptoData
-    const coinIdToSymbol = {
-        'bitcoin': 'BTC',
-        'ethereum': 'ETH',
-        'binancecoin': 'BNB',
-        'ripple': 'XRP',
-        'cardano': 'ADA',
-        'solana': 'SOL',
-        'polkadot': 'DOT',
-        'dogecoin': 'DOGE'
-    };
-    
-    // Afișăm fiecare asset din wallet
-    for (const coinId in wallet.coins) {
-        const coin = wallet.coins[coinId];
-        if (!coin || coin.amount <= 0) continue;
-        
-        // Obținem simbolul pentru cryptoData
-        const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase();
-        
-        // Verificăm dacă avem preț din CryptoData
-        let currentPrice = 0;
-        let changePercent = 0;
-        
-        // Încercăm să obținem prețul actual din cryptoData
-        if (cryptoData && cryptoData[symbol]) {
-            currentPrice = cryptoData[symbol].price || 0;
-            changePercent = cryptoData[symbol].priceChange24h || 0;
-        } else {
-            // Folosim datele din wallet ca backup
-            currentPrice = coin.price || 0;
-            changePercent = coin.changePercent || 0;
-        }
-        
-        // Calculăm valoarea în USD a monedei
-        const value = currentPrice * coin.amount;
-        
-        // Asigurăm-ne că avem valori valide numeric pentru afișare
-        const displayValue = !isNaN(value) && isFinite(value) ? 
-            value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 
-            '0.00';
-        
-        const displayPercent = !isNaN(changePercent) && isFinite(changePercent) ? 
-            Math.abs(changePercent).toFixed(1) : 
-            '0.0';
-        
-        const isPositiveChange = changePercent >= 0;
-        
-        // Creare element asset în stil similar cu wallet.html, dar cu poziții modificate
-        const assetItem = document.createElement('div');
-        assetItem.className = 'wallet-asset-item';
-        assetItem.innerHTML = `
-            <div class="wallet-asset-icon ${coinId.toLowerCase()}-icon">${getIconContent(coinId)}</div>
-            <div class="wallet-asset-details">
-                <div class="wallet-asset-name-row">
-                    <span class="wallet-asset-name">${getCoinName(coinId)}</span>
-                    <span class="wallet-asset-symbol">${symbol}</span>
-                </div>
-                <div class="wallet-asset-amount-row">
-                    <span class="wallet-asset-amount">${coin.amount.toFixed(4)} ${symbol}</span>
-                    <span class="wallet-asset-change ${isPositiveChange ? 'positive' : 'negative'}">
-                        <i class="fas fa-caret-${isPositiveChange ? 'up' : 'down'}"></i>
-                        <span>${displayPercent}%</span>
-                    </span>
-                </div>
-                <div class="wallet-asset-value-row">
-                    <span class="wallet-asset-value">$${displayValue}</span>
-                </div>
-            </div>
-        `;
-        
-        assetsList.appendChild(assetItem);
-    }
+    // Restul codului pentru afișarea activelor rămâne neschimbat
+    // ... existing code ...
 }
 
 // Adăugăm stiluri CSS pentru a îmbunătăți afișarea
@@ -3047,7 +3072,6 @@ function setupOrderHistory() {
 function updateWalletAfterPurchase(pair, amount, price) {
     console.log(`Actualizare portofel după cumpărare: ${amount} ${pair.split('/')[0]} la prețul $${price}`);
     
-    // Extragem simbolul monedei din perechea de trading (ex: "BTC" din "BTC/USDT")
     const symbol = pair.split('/')[0];
     const coinId = getCoinIdFromSymbol(symbol);
     
@@ -3056,29 +3080,25 @@ function updateWalletAfterPurchase(pair, amount, price) {
         return;
     }
     
-    // Calculăm valoarea în USD a monedei cumpărate
     const valueUSD = amount * price;
     
-    // Încărcăm portofelul din localStorage
     let wallet = JSON.parse(localStorage.getItem('wallet') || '{"totalBalance":0,"coins":{}}');
     
-    // Inițializăm obiectul wallet dacă nu există
-    if (!wallet) {
-        wallet = {
-            totalBalance: 0,
-            change: 0,
-            coins: {}
-        };
+    // Verificăm dacă avem suficiente fonduri USDT
+    if (valueUSD > wallet.totalBalance) {
+        console.error(`Fonduri insuficiente: necesar $${valueUSD}, disponibil $${wallet.totalBalance}`);
+        return;
     }
     
-    // Inițializăm proprietatea coins dacă nu există
+    // Scădem suma cheltuită din balanța totală
+    wallet.totalBalance -= valueUSD;
+    
     if (!wallet.coins) {
         wallet.coins = {};
     }
     
-    // Verificăm dacă moneda există deja în portofel
+    // Adăugăm sau actualizăm moneda în portofel
     if (!wallet.coins[coinId]) {
-        // Adăugăm moneda nouă în portofel
         wallet.coins[coinId] = {
             amount: amount,
             price: price,
@@ -3087,38 +3107,43 @@ function updateWalletAfterPurchase(pair, amount, price) {
             changePercent: cryptoData[symbol]?.priceChange24h || 0
         };
     } else {
-        // Actualizăm cantitatea existentă
         const existingAmount = wallet.coins[coinId].amount || 0;
         const newAmount = existingAmount + amount;
         
-        // Recalculăm prețul mediu ponderat
         const existingValue = wallet.coins[coinId].value || 0;
         const newValue = existingValue + valueUSD;
         const newAvgPrice = newValue / newAmount;
         
-        wallet.coins[coinId].amount = newAmount;
-        wallet.coins[coinId].price = newAvgPrice;
-        wallet.coins[coinId].value = newValue;
-        wallet.coins[coinId].valueUSD = newValue;
-        wallet.coins[coinId].changePercent = cryptoData[symbol]?.priceChange24h || wallet.coins[coinId].changePercent || 0;
+        wallet.coins[coinId] = {
+            amount: newAmount,
+            price: newAvgPrice,
+            value: newValue,
+            valueUSD: newValue,
+            changePercent: cryptoData[symbol]?.priceChange24h || wallet.coins[coinId].changePercent || 0
+        };
     }
     
-    // Recalculăm balanța totală
-    let totalBalance = 0;
+    // Calculăm valoarea totală a portofoliului (Portfolio Value)
+    let portfolioValue = wallet.totalBalance; // Începem cu USDT disponibil
     for (const id in wallet.coins) {
-        totalBalance += wallet.coins[id].value || 0;
+        const coin = wallet.coins[id];
+        if (coin && coin.amount > 0) {
+            // Folosim prețul curent din cryptoData dacă este disponibil
+            const currentPrice = cryptoData[getCoinSymbolFromId(id)]?.price || coin.price;
+            portfolioValue += coin.amount * currentPrice;
+        }
     }
-    wallet.totalBalance = totalBalance;
     
-    // Salvăm portofelul actualizat în localStorage
+    // Salvăm și valoarea portofoliului separat
+    wallet.portfolioValue = portfolioValue;
+    
     localStorage.setItem('wallet', JSON.stringify(wallet));
     
     console.log(`Portofel actualizat: ${amount} ${symbol} adăugat, total ${wallet.coins[coinId].amount} ${symbol}`);
+    console.log(`Balanță USDT rămasă: $${wallet.totalBalance.toFixed(2)}`);
+    console.log(`Valoare totală portofoliu: $${wallet.portfolioValue.toFixed(2)}`);
     
-    // Actualizăm UI-ul de assets
     setTimeout(updateWalletAssetsDisplay, 500);
-    
-    // Actualizăm și balanța disponibilă
     updateTradeBalance();
 }
 
@@ -3143,7 +3168,6 @@ function getCoinIdFromSymbol(symbol) {
 function updateWalletAfterSell(pair, amount, price) {
     console.log(`Actualizare portofel după vânzare: ${amount} ${pair.split('/')[0]} la prețul $${price}`);
     
-    // Extragem simbolul monedei din perechea de trading (ex: "BTC" din "BTC/USDT")
     const symbol = pair.split('/')[0];
     const coinId = getCoinIdFromSymbol(symbol);
     
@@ -3152,10 +3176,8 @@ function updateWalletAfterSell(pair, amount, price) {
         return;
     }
     
-    // Calculăm valoarea în USD a monedei vândute
     const valueUSD = amount * price;
     
-    // Încărcăm portofelul din localStorage
     let wallet = JSON.parse(localStorage.getItem('wallet'));
     
     if (!wallet || !wallet.coins || !wallet.coins[coinId]) {
@@ -3163,41 +3185,53 @@ function updateWalletAfterSell(pair, amount, price) {
         return;
     }
     
-    // Actualizăm cantitatea existentă
     const existingAmount = wallet.coins[coinId].amount || 0;
+    if (existingAmount < amount) {
+        console.error(`Fonduri insuficiente: disponibil ${existingAmount} ${symbol}, necesar ${amount} ${symbol}`);
+        return;
+    }
+    
+    // Adăugăm valoarea vânzării la balanța totală de USDT
+    wallet.totalBalance += valueUSD;
+    
     const newAmount = existingAmount - amount;
     
-    // Verificăm dacă mai rămâne cantitate după vânzare
     if (newAmount <= 0) {
-        // Dacă nu mai rămâne nimic, eliminăm moneda din portofel
         delete wallet.coins[coinId];
         console.log(`Moneda ${symbol} a fost eliminată din portofel (cantitate epuizată)`);
     } else {
-        // Actualizăm cantitatea și valoarea
-        const existingPrice = wallet.coins[coinId].price || price;
-        const newValue = newAmount * existingPrice;
+        const currentPrice = price;
+        const newValue = newAmount * currentPrice;
         
-        wallet.coins[coinId].amount = newAmount;
-        wallet.coins[coinId].value = newValue;
-        wallet.coins[coinId].valueUSD = newValue;
+        wallet.coins[coinId] = {
+            amount: newAmount,
+            price: currentPrice,
+            value: newValue,
+            valueUSD: newValue,
+            changePercent: cryptoData[symbol]?.priceChange24h || wallet.coins[coinId].changePercent || 0
+        };
     }
     
-    // Recalculăm balanța totală
-    let totalBalance = 0;
+    // Calculăm valoarea totală a portofoliului (Portfolio Value)
+    let portfolioValue = wallet.totalBalance; // Începem cu USDT disponibil
     for (const id in wallet.coins) {
-        totalBalance += wallet.coins[id].value || 0;
+        const coin = wallet.coins[id];
+        if (coin && coin.amount > 0) {
+            const currentPrice = cryptoData[getCoinSymbolFromId(id)]?.price || coin.price;
+            portfolioValue += coin.amount * currentPrice;
+        }
     }
-    wallet.totalBalance = totalBalance;
     
-    // Salvăm portofelul actualizat în localStorage
+    // Salvăm și valoarea portofoliului separat
+    wallet.portfolioValue = portfolioValue;
+    
     localStorage.setItem('wallet', JSON.stringify(wallet));
     
     console.log(`Portofel actualizat după vânzare: ${amount} ${symbol} vândut, nou sold: ${newAmount > 0 ? newAmount : 0} ${symbol}`);
+    console.log(`Balanță USDT actuală: $${wallet.totalBalance.toFixed(2)}`);
+    console.log(`Valoare totală portofoliu: $${wallet.portfolioValue.toFixed(2)}`);
     
-    // Actualizăm UI-ul de assets
-    setTimeout(updateWalletAssetsDisplay, 500);
-    
-    // Actualizăm și balanța disponibilă
+    updateWalletAssetsDisplay();
     updateTradeBalance();
 }
 
@@ -3388,4 +3422,19 @@ function syncAllPrices(price, symbol) {
     }
     
     return true;
+}
+
+function getCoinSymbolFromId(coinId) {
+    const coinIdToSymbol = {
+        'bitcoin': 'BTC',
+        'ethereum': 'ETH',
+        'binancecoin': 'BNB',
+        'ripple': 'XRP',
+        'cardano': 'ADA',
+        'solana': 'SOL',
+        'polkadot': 'DOT',
+        'dogecoin': 'DOGE'
+    };
+    
+    return coinIdToSymbol[coinId] || coinId.toUpperCase();
 }

@@ -1607,49 +1607,120 @@ function getCoinIdFromSymbol(symbol) {
 }
 
 function updateWalletDisplay() {
-    // Actualizăm total balance
-    const balanceAmount = document.getElementById('balanceAmount');
-    const totalBalance = calculateTotalBalance(); // Funcția existentă
-    if (balanceAmount) {
-        balanceAmount.textContent = formatNumber(totalBalance);
+    console.log('Updating wallet display. Current wallet state:', wallet);
+    
+    const totalBalance = Number(wallet.totalBalance || 0);
+    console.log('Total Balance to display:', totalBalance);
+
+    // Actualizăm Total Balance folosind selectorul exact din HTML
+    const totalBalanceElement = document.querySelector('.balance-amount');
+    if (totalBalanceElement) {
+        totalBalanceElement.textContent = '$' + formatNumber(totalBalance);
+        console.log('Updated total balance element:', totalBalanceElement.textContent);
+    } else {
+        console.error('Total balance element not found with class .balance-amount');
     }
-    
-    // Actualizăm valoarea portofoliului (care poate fi diferită de totalBalance)
-    const portfolioValue = calculatePortfolioValue(); // Poate fi aceeași funcție sau alta
-    updatePortfolioValue(portfolioValue);
-    
-    // Actualizăm indicatorul de schimbare
-    const changeElement = document.querySelector('.balance-change span');
-    if (changeElement && wallet.change !== undefined) {
-        changeElement.textContent = Math.abs(wallet.change).toFixed(2) + '%';
-        
-        const balanceChangeEl = document.querySelector('.balance-change');
-        if (balanceChangeEl) {
-            if (wallet.change >= 0) {
-                balanceChangeEl.classList.remove('negative');
-                balanceChangeEl.classList.add('positive');
-                balanceChangeEl.querySelector('i').className = 'fas fa-caret-up';
-            } else {
-                balanceChangeEl.classList.remove('positive');
-                balanceChangeEl.classList.add('negative');
-                balanceChangeEl.querySelector('i').className = 'fas fa-caret-down';
-            }
-        }
+
+    // Actualizăm și label-ul de balance dacă există
+    const balanceLabelElement = document.querySelector('.balance-label');
+    if (balanceLabelElement) {
+        balanceLabelElement.textContent = 'Total Balance';
     }
-    
-    // Salvăm în localStorage
+
+    // Actualizăm Portfolio Overview
+    const portfolioValue = calculatePortfolioValue();
+    const portfolioValueElement = document.querySelector('.portfolio-overview span');
+    if (portfolioValueElement) {
+        portfolioValueElement.textContent = '$' + formatNumber(portfolioValue);
+        console.log('Updated portfolio value:', portfolioValueElement.textContent);
+    }
+
+    // Actualizăm lista de active
+    updateAssetsList();
+
+    // Salvăm starea în localStorage
     saveWalletToStorage();
 }
 
-// Calculează valoarea portofoliului (poate fi aceeași cu total balance pentru început)
+// Helper function pentru calculul valorii portofoliului
 function calculatePortfolioValue() {
-    // Calculăm doar suma valorilor monedelor din portofel (assets)
-    let coinsTotal = 0;
-    for (const coin in wallet.coins) {
-        coinsTotal += wallet.coins[coin].value;
+    let portfolioValue = 0;
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        if (coin && coin.amount > 0) {
+            const currentPrice = getCurrentPrice(coinId);
+            portfolioValue += coin.amount * currentPrice;
+        }
+    }
+    return portfolioValue;
+}
+
+function calculateTotalBalance() {
+    // Începem cu USDT disponibil (fondurile adăugate)
+    let totalBalance = wallet.totalBalance || 0;
+    
+    // Adăugăm valoarea tuturor monedelor
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        if (coin && coin.amount > 0) {
+            const currentPrice = getCurrentPrice(coinId);
+            const coinValue = coin.amount * currentPrice;
+            totalBalance += coinValue;
+        }
     }
     
-    return coinsTotal;
+    return totalBalance;
+}
+
+function updateAssetsList() {
+    const assetsList = document.getElementById('walletAssetsList');
+    if (!assetsList) return;
+    
+    assetsList.innerHTML = '';
+    
+    if (!wallet.coins || Object.keys(wallet.coins).length === 0) {
+        const emptyWallet = document.createElement('div');
+        emptyWallet.className = 'wallet-asset-placeholder';
+        emptyWallet.innerHTML = `
+            <i class="fas fa-wallet"></i>
+            <span>No assets found in your wallet</span>
+        `;
+        assetsList.appendChild(emptyWallet);
+        return;
+    }
+    
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        if (!coin || coin.amount <= 0) continue;
+        
+        const currentPrice = getCurrentPrice(coinId);
+        const value = coin.amount * currentPrice;
+        const changePercent = coinData[coinId]?.price_change_percentage_24h || 0;
+        
+        const assetItem = document.createElement('div');
+        assetItem.className = 'wallet-asset-item';
+        assetItem.innerHTML = `
+            <div class="wallet-asset-icon ${coinId.toLowerCase()}-icon">${getIconContent(coinId)}</div>
+            <div class="wallet-asset-details">
+                <div class="wallet-asset-name-row">
+                    <span class="wallet-asset-name">${getCoinName(coinId)}</span>
+                    <span class="wallet-asset-symbol">${coinData[coinId]?.symbol || coinId.toUpperCase()}</span>
+                </div>
+                <div class="wallet-asset-amount-row">
+                    <span class="wallet-asset-amount">${coin.amount.toFixed(4)} ${coinData[coinId]?.symbol || coinId.toUpperCase()}</span>
+                    <span class="wallet-asset-change ${changePercent >= 0 ? 'positive' : 'negative'}">
+                        <i class="fas fa-caret-${changePercent >= 0 ? 'up' : 'down'}"></i>
+                        <span>${Math.abs(changePercent).toFixed(1)}%</span>
+                    </span>
+                </div>
+                <div class="wallet-asset-value-row">
+                    <span class="wallet-asset-value">$${formatNumber(value)}</span>
+                </div>
+            </div>
+        `;
+        
+        assetsList.appendChild(assetItem);
+    }
 }
 
 function saveWalletToStorage() {
@@ -1860,31 +1931,88 @@ function prepareCardDetailsModal(coin, symbol) {
 }
 
 function processCardPayment(amount, coin, symbol) {
-    // Ascundem modalul cardDetailsModal
-    document.getElementById('cardDetailsModal').style.display = 'none';
+    console.log('Processing card payment:', { amount, coin, symbol });
     
-    // Generăm un ID de tranzacție
-    const txId = 'TX' + Math.floor(Math.random() * 1000000000);
+    // Validăm suma
+    if (!amount || isNaN(amount) || amount <= 0) {
+        console.error('Invalid amount:', amount);
+        showNotification('Please enter a valid amount', 'error');
+        return;
+    }
     
-    // Completăm câmpurile din confirmation modal
-    document.getElementById('confirmationAmount').textContent = amount.toFixed(2);
-    document.getElementById('confirmationCrypto').textContent = amount.toFixed(8);
-    document.getElementById('confirmationSymbol').textContent = symbol;
-    document.getElementById('confirmationTxId').textContent = txId;
-    
-    // Arătăm modalul de confirmare
-    const confirmationModal = document.getElementById('paymentConfirmationModal');
-    confirmationModal.style.display = 'block';
-    
-    // Adăugăm event listener pentru butonul Done
-    const doneBtn = document.getElementById('confirmationDoneBtn');
-    if (doneBtn) {
-        doneBtn.onclick = function() {
-            confirmationModal.style.display = 'none';
-            
-            // Adăugăm fonduri direct la Total Balance
-            addFundsToTotalBalance(amount);
+    try {
+        // Convertim suma la număr
+        const amountNumber = Number(amount);
+        
+        // Adăugăm fondurile în wallet
+        wallet.totalBalance = Number(wallet.totalBalance || 0) + amountNumber;
+        console.log('New wallet balance:', wallet.totalBalance);
+        
+        // Actualizăm UI-ul imediat
+        updateWalletDisplay();
+        
+        // Adăugăm tranzacția
+        if (!wallet.transactions) {
+            wallet.transactions = [];
+        }
+        
+        const newTransaction = {
+            type: 'deposit',
+            description: 'Funds added',
+            amount: amountNumber,
+            value: amountNumber,
+            date: new Date(),
+            status: 'completed'
         };
+        
+        wallet.transactions.unshift(newTransaction);
+        updateTransactionsList();
+        
+        // Salvăm în localStorage
+        saveWalletToStorage();
+        
+        // Ascundem modalul cardDetailsModal
+        const cardDetailsModal = document.getElementById('cardDetailsModal');
+        if (cardDetailsModal) {
+            cardDetailsModal.style.display = 'none';
+        }
+        
+        // Generăm un ID de tranzacție pentru confirmare
+        const txId = 'TX' + Math.floor(Math.random() * 1000000000);
+        
+        // Arătăm modalul de confirmare
+        const confirmationModal = document.getElementById('paymentConfirmationModal');
+        if (confirmationModal) {
+            // Actualizăm detaliile în modal
+            const confirmationAmount = document.getElementById('confirmationAmount');
+            const confirmationCrypto = document.getElementById('confirmationCrypto');
+            const confirmationSymbol = document.getElementById('confirmationSymbol');
+            const confirmationTxId = document.getElementById('confirmationTxId');
+            
+            if (confirmationAmount) confirmationAmount.textContent = formatNumber(amountNumber);
+            if (confirmationCrypto) confirmationCrypto.textContent = amountNumber.toFixed(8);
+            if (confirmationSymbol) confirmationSymbol.textContent = symbol;
+            if (confirmationTxId) confirmationTxId.textContent = txId;
+            
+            confirmationModal.style.display = 'block';
+            
+            // Adăugăm event listener pentru butonul Done
+            const doneBtn = document.getElementById('confirmationDoneBtn');
+            if (doneBtn) {
+                doneBtn.onclick = function() {
+                    confirmationModal.style.display = 'none';
+                    // Actualizăm UI-ul încă o dată pentru siguranță
+                    updateWalletDisplay();
+                };
+            }
+        }
+        
+        // Afișăm notificarea de succes
+        showNotification(`Successfully added $${formatNumber(amountNumber)} to your wallet!`, 'success');
+        
+    } catch (error) {
+        console.error('Error processing payment:', error);
+        showNotification('Error processing payment. Please try again.', 'error');
     }
 }
 
@@ -1951,65 +2079,83 @@ function startPriceFluctuation() {
 
 // Funcție pentru a adăuga fonduri direct la Total Balance
 function addFundsToTotalBalance(amount) {
-    // Adăugăm suma direct la totalBalance din wallet
-    wallet.totalBalance += amount;
+    console.log('Adding funds - Current balance:', wallet.totalBalance);
+    console.log('Amount to add:', amount);
     
-    // Actualizăm afișarea în UI
-    updateWalletDisplay();
+    // Convertim suma la număr și o adăugăm la totalBalance
+    const amountNumber = Number(amount);
+    wallet.totalBalance = Number(wallet.totalBalance || 0) + amountNumber;
     
-    // Adăugăm o tranzacție generică în istoric
+    console.log('New balance after adding funds:', wallet.totalBalance);
+    
+    // Adăugăm tranzacția
+    if (!wallet.transactions) {
+        wallet.transactions = [];
+    }
+    
     const newTransaction = {
         type: 'deposit',
         description: 'Funds added',
-        amount: amount,
-        value: amount,
+        amount: amountNumber,
+        value: amountNumber,
         date: new Date(),
         status: 'completed'
     };
     
-    // Adăugăm în lista de tranzacții
     wallet.transactions.unshift(newTransaction);
     
-    // Actualizăm UI-ul cu noua tranzacție
+    // Actualizăm tot UI-ul
+    updateWalletDisplay();
+    
+    // Actualizăm lista de tranzacții
+    updateTransactionsList();
+    
+    // Salvăm în localStorage
+    saveWalletToStorage();
+    
+    // Afișăm notificarea
+    showNotification(`Successfully added $${formatNumber(amountNumber)} to your wallet!`, 'success');
+}
+
+function updateTransactionsList() {
     const transactionsList = document.getElementById('transactionsList');
-    if (transactionsList) {
-        const noTransactionsMessage = transactionsList.querySelector('.no-transactions-message');
-        if (noTransactionsMessage) {
-            noTransactionsMessage.style.display = 'none';
-        }
-        
+    if (!transactionsList) return;
+    
+    // Curățăm lista existentă
+    transactionsList.innerHTML = '';
+    
+    if (!wallet.transactions || wallet.transactions.length === 0) {
+        const noTransactionsMessage = document.createElement('div');
+        noTransactionsMessage.className = 'no-transactions-message';
+        noTransactionsMessage.innerHTML = '<p>No transactions yet. Your transaction history will appear here.</p>';
+        transactionsList.appendChild(noTransactionsMessage);
+        return;
+    }
+    
+    // Adăugăm fiecare tranzacție
+    wallet.transactions.forEach(tx => {
         const transactionItem = document.createElement('div');
         transactionItem.className = 'transaction-item';
         
         transactionItem.innerHTML = `
-            <div class="transaction-icon receive">
-                <i class="fas fa-arrow-down"></i>
+            <div class="transaction-icon ${tx.type}">
+                <i class="fas ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-exchange-alt'}"></i>
             </div>
             <div class="transaction-details">
-                <div class="transaction-title">Funds Added</div>
-                <div class="transaction-date">Just now</div>
+                <div class="transaction-title">${tx.description}</div>
+                <div class="transaction-date">${new Date(tx.date).toLocaleString()}</div>
             </div>
             <div class="transaction-amount positive">
-                <div class="amount">+$${amount.toFixed(2)}</div>
-                <div class="value">+$${amount.toFixed(2)}</div>
+                <div class="amount">+$${formatNumber(tx.amount)}</div>
+                <div class="value">+$${formatNumber(tx.value)}</div>
             </div>
             <div class="transaction-status">
-                <span class="status completed">Completed</span>
+                <span class="status ${tx.status}">${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}</span>
             </div>
         `;
         
-        if (transactionsList.firstChild) {
-            transactionsList.insertBefore(transactionItem, transactionsList.firstChild);
-        } else {
-            transactionsList.appendChild(transactionItem);
-        }
-    }
-    
-    // Salvăm portofelul actualizat
-    saveWalletToStorage();
-    
-    // Afișăm o notificare
-    showNotification(`Successfully added $${amount.toFixed(2)} to your wallet!`, 'success');
+        transactionsList.appendChild(transactionItem);
+    });
 }
 
 // Funcție pentru verificarea și confirmarea depozitului
@@ -2104,4 +2250,19 @@ function processDeposit(amount, coinId, symbol) {
     
     // Ascundem modalul de depozit
     document.getElementById('depositModal').style.display = 'none';
+}
+
+function getIconContent(coinId) {
+    const icons = {
+        'bitcoin': '₿',
+        'ethereum': 'Ξ',
+        'binancecoin': 'B',
+        'ripple': 'X',
+        'cardano': 'A',
+        'solana': 'S',
+        'polkadot': 'D',
+        'dogecoin': 'Ð'
+    };
+    
+    return icons[coinId.toLowerCase()] || coinId.substring(0, 1).toUpperCase();
 }
