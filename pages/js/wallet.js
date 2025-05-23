@@ -1444,14 +1444,28 @@ function initializeSingleMiniChart(chartCanvas) {
     const ctx = chartCanvas;
     const coin = chartCanvas.dataset.coin;
     
-    let data = [45000, 46200, 45800, 47500, 48200, 47900, 49000];
-    if (coin === 'eth') {
+    // Obținem variația din wallet sau coinData
+    let priceChange = 0;
+    if (wallet.coins[coin]) {
+        priceChange = wallet.coins[coin].change;
+    } else if (coinData[coin]) {
+        priceChange = coinData[coin].price_change_percentage_24h;
+    }
+    
+    let data;
+    // Generăm date în funcție de variația prețului
+    if (priceChange < 0) {
+        // Pentru monede în scădere, generăm un trend descendent
+        data = [100, 98, 96, 94, 92, 90, 88];
+    } else if (coin === 'eth') {
         data = [2800, 2750, 2600, 2500, 2400, 2350, 2250];
     } else if (coin === 'orx') {
         data = [5, 5.2, 5.4, 5.3, 5.5, 5.7, 5.8];
+    } else {
+        data = [45000, 46200, 45800, 47500, 48200, 47900, 49000];
     }
 
-    const isPositive = data[data.length - 1] > data[0];
+    const isPositive = priceChange >= 0;
     const color = isPositive ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)';
     const bgColor = isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
     
