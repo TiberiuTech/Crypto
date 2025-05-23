@@ -659,12 +659,36 @@ function executeSwap(fromCoin, toCoin, fromAmount, toAmount) {
             available: wallet.coins[fromCoin].amount,
             requested: fromAmount
         });
+        showNotification('Insufficient funds', 'error');
         return;
     }
     
-    wallet.coins[fromCoin].amount -= fromAmount;
-    wallet.coins[fromCoin].value = wallet.coins[fromCoin].amount * getCurrentPrice(fromCoin);
+    // Actualizăm balanța monedei sursă
+    wallet.coins[fromCoin].amount = parseFloat((wallet.coins[fromCoin].amount - fromAmount).toFixed(8));
+    wallet.coins[fromCoin].value = parseFloat((wallet.coins[fromCoin].amount * getCurrentPrice(fromCoin)).toFixed(2));
     
+    // Actualizăm UI-ul pentru moneda sursă
+    const fromAssetElement = findAssetElement(fromCoin);
+    if (fromAssetElement) {
+        const amountElement = fromAssetElement.querySelector('.asset-amount');
+        const valueElement = fromAssetElement.querySelector('.asset-value');
+        if (amountElement) {
+            amountElement.textContent = `${wallet.coins[fromCoin].amount.toFixed(8)} ${fromCoin.toUpperCase()}`;
+        }
+        if (valueElement) {
+            valueElement.textContent = `$${wallet.coins[fromCoin].value.toFixed(2)}`;
+        }
+    }
+    
+    // Dacă balanța ajunge la 0, eliminăm moneda din portofel
+    if (wallet.coins[fromCoin].amount <= 0) {
+        delete wallet.coins[fromCoin];
+        if (fromAssetElement) {
+            fromAssetElement.remove();
+        }
+    }
+
+    // Inițializăm sau actualizăm moneda destinație
     if (!wallet.coins[toCoin]) {
         wallet.coins[toCoin] = {
             id: toCoin,
@@ -676,16 +700,21 @@ function executeSwap(fromCoin, toCoin, fromAmount, toAmount) {
         };
     }
     
-    wallet.coins[toCoin].amount += toAmount;
-    wallet.coins[toCoin].value = wallet.coins[toCoin].amount * getCurrentPrice(toCoin);
+    // Actualizăm balanța monedei destinație
+    wallet.coins[toCoin].amount = parseFloat((wallet.coins[toCoin].amount + toAmount).toFixed(8));
+    wallet.coins[toCoin].value = parseFloat((wallet.coins[toCoin].amount * getCurrentPrice(toCoin)).toFixed(2));
     
-    updateWalletDisplay();
-    
-    updateAssetUI(fromCoin);
-    
-    const toAssetItem = findAssetElement(toCoin);
-    if (toAssetItem) {
-        updateAssetUI(toCoin);
+    // Actualizăm UI-ul pentru moneda destinație
+    const toAssetElement = findAssetElement(toCoin);
+    if (toAssetElement) {
+        const amountElement = toAssetElement.querySelector('.asset-amount');
+        const valueElement = toAssetElement.querySelector('.asset-value');
+        if (amountElement) {
+            amountElement.textContent = `${wallet.coins[toCoin].amount.toFixed(8)} ${toCoin.toUpperCase()}`;
+        }
+        if (valueElement) {
+            valueElement.textContent = `$${wallet.coins[toCoin].value.toFixed(2)}`;
+        }
     } else {
         const assetsList = document.getElementById('assetsList');
         if (assetsList) {
@@ -699,7 +728,14 @@ function executeSwap(fromCoin, toCoin, fromAmount, toAmount) {
         }
     }
     
+    // Actualizăm interfața și salvăm în localStorage
+    updateWalletDisplay();
+    
+    // Adăugăm tranzacția în istoric
     addSwapToHistory(fromCoin, toCoin, fromAmount, toAmount);
+    
+    // Arătăm notificare de succes
+    showNotification(`Successfully swapped ${fromAmount} ${fromCoin.toUpperCase()} to ${toAmount} ${toCoin.toUpperCase()}!`, 'success');
 }
 
 function addSwapToHistory(fromCoin, toCoin, fromAmount, toAmount) {
@@ -1892,7 +1928,18 @@ function calculateTotalBalance() {
 
 // Funcție pentru formatarea numerelor monetare
 function formatNumber(value) {
-    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Verificăm dacă valoarea este validă
+    if (value === undefined || value === null || isNaN(value)) {
+        console.warn('Invalid value provided to formatNumber:', value);
+        return '0.00';
+    }
+    
+    // Convertim la număr și formatăm
+    const numValue = parseFloat(value);
+    return numValue.toLocaleString('en-US', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+    });
 }
 
 function prepareCardDetailsModal(coin, symbol) {
@@ -2071,9 +2118,16 @@ function addFundsToTotalBalance(amount) {
     console.log('Adding funds - Current balance:', wallet.totalBalance);
     console.log('Amount to add:', amount);
     
-    // Convertim suma la număr și o adăugăm la totalBalance
-    const amountNumber = Number(amount);
-    wallet.totalBalance = Number(wallet.totalBalance || 0) + amountNumber;
+    // Convertim suma la număr și o validăm
+    const amountNumber = parseFloat(amount);
+    if (isNaN(amountNumber) || amountNumber <= 0) {
+        console.error('Invalid amount:', amount);
+        showNotification('Invalid amount', 'error');
+        return;
+    }
+    
+    // Actualizăm total balance
+    wallet.totalBalance = parseFloat((Number(wallet.totalBalance || 0) + amountNumber).toFixed(2));
     
     console.log('New balance after adding funds:', wallet.totalBalance);
     
@@ -2126,17 +2180,21 @@ function updateTransactionsList() {
         const transactionItem = document.createElement('div');
         transactionItem.className = 'transaction-item';
         
+        // Ne asigurăm că avem valori valide pentru amount și value
+        const amount = tx.amount || 0;
+        const value = tx.value || 0;
+        
         transactionItem.innerHTML = `
             <div class="transaction-icon ${tx.type}">
                 <i class="fas ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-exchange-alt'}"></i>
             </div>
             <div class="transaction-details">
-                <div class="transaction-title">${tx.description}</div>
+                <div class="transaction-title">${tx.description || tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</div>
                 <div class="transaction-date">${new Date(tx.date).toLocaleString()}</div>
             </div>
-            <div class="transaction-amount positive">
-                <div class="amount">+$${formatNumber(tx.amount)}</div>
-                <div class="value">+$${formatNumber(tx.value)}</div>
+            <div class="transaction-amount ${tx.type === 'deposit' ? 'positive' : ''}">
+                <div class="amount">${tx.type === 'deposit' ? '+' : ''}$${formatNumber(amount)}</div>
+                <div class="value">${tx.type === 'deposit' ? '+' : ''}$${formatNumber(value)}</div>
             </div>
             <div class="transaction-status">
                 <span class="status ${tx.status}">${tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}</span>
