@@ -1547,14 +1547,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openAlertModal = function(symbol, currentPrice) {
         const modal = document.createElement('div');
         modal.className = 'modal alert-modal';
-        // Aplică tema curentă la deschidere
-        modal.classList.remove('light-theme', 'dark-theme');
-        const theme = document.documentElement.getAttribute('data-theme');
-        if (theme === 'light') {
-            modal.classList.add('light-theme');
-        } else {
-            modal.classList.add('dark-theme');
-        }
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
@@ -1584,22 +1576,13 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         document.body.appendChild(modal);
-        // Actualizez tema la schimbare
-        const themeObserver = new MutationObserver(() => {
-            modal.classList.remove('light-theme', 'dark-theme');
-            const theme = document.documentElement.getAttribute('data-theme');
-            if (theme === 'light') {
-                modal.classList.add('light-theme');
-            } else {
-                modal.classList.add('dark-theme');
-            }
-        });
-        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
         // Închidere modal
         const closeBtn = modal.querySelector('.modal-close');
-        closeBtn.onclick = () => { themeObserver.disconnect(); modal.remove(); };
-        modal.onclick = (e) => { if (e.target === modal) { themeObserver.disconnect(); modal.remove(); } };
-        // Set Alert (păstrăm funcționalitatea de salvare, dar nu mai afișăm lista)
+        closeBtn.onclick = () => { modal.remove(); };
+        modal.onclick = (e) => { if (e.target === modal) { modal.remove(); } };
+
+        // Set Alert
         let alerts = JSON.parse(localStorage.getItem('cryptoAlerts') || '[]');
         modal.querySelector('.set-alert-btn').onclick = () => {
             const condition = modal.querySelector('.condition-select').value;
@@ -1623,18 +1606,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof updateAlertBadgeAndDropdown === 'function') {
                 updateAlertBadgeAndDropdown();
             }
-            themeObserver.disconnect();
             modal.remove();
         };
-        // Adaug update la datele monedelor după setarea unei alerte
-        const setAlertBtn = modal.querySelector('.set-alert-btn');
-        if (setAlertBtn) {
-            const originalSetAlert = setAlertBtn.onclick;
-            setAlertBtn.onclick = function() {
-                if (originalSetAlert) originalSetAlert();
-                fetchAllCoinData(true); // Forțează update la datele monedelor
-            };
-        }
     };
 
     // Începem inițializarea aplicației cu un mic delay pentru a permite browserului să termine renderizarea inițială
