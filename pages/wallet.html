@@ -70,24 +70,9 @@
         </div>
         
         <div class="dashboard-section">
-            <div class="balance-card">
-                <div class="balance-header">
-                    <h3>Portfolio Overview</h3>
-                    <span class="portfolio-value">$<span id="portfolioValue">0.00</span></span>
-                    <div class="balance-actions">
-                        <button class="view-btn" title="Toggle Balance Visibility" id="toggleBalanceBtn">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="total-balance-section">
-                    <div class="balance-label">Total Balance</div>
-                    <div class="balance-amount">
-                        <span class="currency">$</span>
-                        <span class="amount" id="balanceAmount">0.00</span>
-                        <span class="amount hidden" id="hiddenBalance" style="display: none;">******</span>
-                    </div>
-                </div>
+            <div class="portfolio-overview">
+                <div class="balance-header">Total Balance</div>
+                <div class="text-4xl font-bold text-white">$0.00</div>
                 <div class="portfolio-chart">
                     <canvas id="portfolioChart"></canvas>
                 </div>
@@ -225,7 +210,6 @@
                         </div>
                         <div class="amount-details">
                             <span class="available">Available: <span id="availableAmount">0.00</span> <span id="coinSymbol">BTC</span></span>
-                            <span class="fee">Network Fee: ~<span id="networkFee">0.0005</span> <span id="feeSymbol">BTC</span></span>
                         </div>
                     </div>
                     

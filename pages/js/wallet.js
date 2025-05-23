@@ -935,6 +935,14 @@ function showNotification(message, type = 'success') {
         return;
     }
     
+    // Eliminăm notificările existente de eroare dacă noua notificare este de succes
+    if (type === 'success') {
+        const existingNotifications = notificationContainer.querySelectorAll('.custom-notification.error');
+        existingNotifications.forEach(notification => {
+            notification.remove();
+        });
+    }
+    
     const notification = document.createElement('div');
     notification.className = `custom-notification ${type}`;
     notification.style.backgroundColor = type === 'success' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)';
@@ -970,7 +978,9 @@ function showNotification(message, type = 'success') {
         closeBtn.addEventListener('click', () => {
             notification.style.animation = 'slideOut 0.3s ease forwards';
             setTimeout(() => {
-                notificationContainer.removeChild(notification);
+                if (notification.parentNode === notificationContainer) {
+                    notificationContainer.removeChild(notification);
+                }
             }, 300);
         });
     }
@@ -1021,16 +1031,40 @@ function setupEventListeners() {
     console.log("Setting up event listeners...");
     const actionButtons = document.querySelectorAll('.action-button');
     
-    // Adaug listeners pentru fiecare buton
     actionButtons.forEach(button => {
-        const buttonText = button.querySelector('span').textContent;
+        const buttonText = button.querySelector('span').textContent.toLowerCase();
         console.log("Found button:", buttonText);
         
         button.addEventListener('click', () => {
-            const action = button.querySelector('span').textContent.toLowerCase();
-            console.log("Button clicked:", action);
+            console.log("Button clicked:", buttonText);
             
-            if (action === 'deposit') {
+            if (buttonText === 'withdraw') {
+                console.log("Opening withdraw modal");
+                
+                // Populăm dropdown-ul cu monede
+                populateWithdrawCoinDropdown();
+                
+                // Arătăm modalul
+                const withdrawModal = document.getElementById('withdrawModal');
+                if (withdrawModal) {
+                    withdrawModal.style.display = 'block';
+                    
+                    // Inițializăm evenimentele pentru withdraw
+                    setupWithdrawEvents();
+                    
+                    // Resetăm valoarea input-ului
+                    const withdrawAmount = document.getElementById('withdrawAmount');
+                    if (withdrawAmount) {
+                        withdrawAmount.value = '';
+                    }
+                    
+                    // Actualizăm suma disponibilă pentru prima monedă
+                    const withdrawCoin = document.getElementById('withdrawCoin');
+                    if (withdrawCoin) {
+                        updateAvailableAmount(withdrawCoin.value);
+                    }
+                }
+            } else if (buttonText === 'deposit') {
                 // Acum și butonul Deposit deschide modalul
                 console.log("Deposit button clicked - opening deposit modal");
                 const depositModal = document.getElementById('depositModal');
@@ -1039,48 +1073,7 @@ function setupEventListeners() {
                 } else {
                     console.error("depositModal element not found!");
                 }
-            } else if (action === 'withdraw') {
-                console.log("Opening withdraw modal");
-                
-                populateWithdrawCoinDropdown();
-                
-                const withdrawModal = document.getElementById('withdrawModal');
-                withdrawModal.style.display = 'block';
-                
-                const withdrawBtn = document.getElementById('withdrawSubmitBtn');
-                if (!withdrawBtn) {
-                    console.error("withdrawSubmitBtn not found, trying alternative selector");
-                    const altBtn = withdrawModal.querySelector('button.submit-btn') || 
-                                 withdrawModal.querySelector('button:contains("Withdraw Now")');
-                    if (altBtn) {
-                        console.log("Found button with alternative selector:", altBtn);
-                        altBtn.id = 'withdrawSubmitBtn'; 
-                    }
-                }
-                
-                const allButtons = withdrawModal.querySelectorAll('button');
-                console.log("All buttons in withdraw modal:", allButtons.length);
-                allButtons.forEach((btn, index) => {
-                    console.log(`Button ${index}:`, btn.textContent, btn.className);
-                    
-                    if (btn.textContent.includes('Withdraw') || btn.className.includes('submit') || index === allButtons.length - 1) {
-                        btn.addEventListener('click', function(e) {
-                            console.log("Potential withdraw button clicked:", this.textContent);
-                        });
-                    }
-                });
-                
-                setupWithdrawEvents();
-                
-                const withdrawAmount = document.getElementById('withdrawAmount');
-                if (withdrawAmount) {
-                    withdrawAmount.addEventListener('input', function() {
-                        if (parseFloat(this.value) < 0 || this.value.startsWith('-')) {
-                            this.value = 0;
-                        }
-                    });
-                }
-            } else if (action === 'swap') {
+            } else if (buttonText === 'swap') {
                 console.log("Opening swap modal");
                 
                 initializeSwapModal();
@@ -1123,7 +1116,7 @@ function setupEventListeners() {
                         });
                     }
                 });
-            } else if (action === 'add funds') {
+            } else if (buttonText === 'add funds') {
                 // Deschidem direct modalul cu detalii card pentru Add Funds
                 console.log("Opening card details modal from Add Funds button");
                 
@@ -1612,27 +1605,23 @@ function updateWalletDisplay() {
     const totalBalance = Number(wallet.totalBalance || 0);
     console.log('Total Balance to display:', totalBalance);
 
-    // Actualizăm Total Balance folosind selectorul exact din HTML
-    const totalBalanceElement = document.querySelector('.balance-amount');
+    // Actualizăm Total Balance
+    const totalBalanceElement = document.querySelector('.portfolio-overview .text-4xl');
     if (totalBalanceElement) {
         totalBalanceElement.textContent = '$' + formatNumber(totalBalance);
         console.log('Updated total balance element:', totalBalanceElement.textContent);
-    } else {
-        console.error('Total balance element not found with class .balance-amount');
     }
 
-    // Actualizăm și label-ul de balance dacă există
-    const balanceLabelElement = document.querySelector('.balance-label');
-    if (balanceLabelElement) {
-        balanceLabelElement.textContent = 'Total Balance';
+    // Ascundem Portfolio Overview text și valoare
+    const portfolioOverviewText = document.querySelector('.portfolio-overview > span:first-child');
+    if (portfolioOverviewText) {
+        portfolioOverviewText.style.display = 'none';
     }
 
-    // Actualizăm Portfolio Overview
-    const portfolioValue = calculatePortfolioValue();
-    const portfolioValueElement = document.querySelector('.portfolio-overview span');
-    if (portfolioValueElement) {
-        portfolioValueElement.textContent = '$' + formatNumber(portfolioValue);
-        console.log('Updated portfolio value:', portfolioValueElement.textContent);
+    // Setăm textul la "Total Balance"
+    const balanceLabel = document.querySelector('.portfolio-overview > div:first-child');
+    if (balanceLabel) {
+        balanceLabel.textContent = 'Total Balance';
     }
 
     // Actualizăm lista de active
@@ -2265,4 +2254,293 @@ function getIconContent(coinId) {
     };
     
     return icons[coinId.toLowerCase()] || coinId.substring(0, 1).toUpperCase();
+}
+
+function processWithdraw(amount, coin) {
+    console.log("Processing withdraw:", { amount, coin });
+    
+    // Verificăm dacă avem o sumă validă
+    if (!amount || isNaN(amount) || amount <= 0) {
+        console.error("Invalid amount:", amount);
+        showNotification('Please enter a valid amount', 'error');
+        return;
+    }
+
+    // Verificăm dacă moneda există în portofel
+    if (!wallet.coins[coin]) {
+        console.error("Coin not found in wallet:", coin);
+        showNotification('Error processing withdrawal', 'error');
+        return;
+    }
+    
+    // Calculăm valoarea în USD
+    const coinPrice = coinData[coin] ? coinData[coin].price : getCurrentPrice(coin);
+    const valueUSD = amount * coinPrice;
+    
+    console.log("Withdraw value in USD:", valueUSD);
+    
+    // Verificăm dacă sunt fonduri suficiente
+    if (wallet.coins[coin].amount < amount) {
+        console.error("Insufficient funds:", {
+            available: wallet.coins[coin].amount,
+            requested: amount
+        });
+        showNotification('Insufficient funds', 'error');
+        return;
+    }
+    
+    // Actualizăm balanța monedei
+    wallet.coins[coin].amount = parseFloat((wallet.coins[coin].amount - amount).toFixed(8));
+    wallet.coins[coin].value = parseFloat((wallet.coins[coin].amount * coinPrice).toFixed(2));
+    
+    console.log("Updated coin balance:", {
+        coin,
+        newAmount: wallet.coins[coin].amount,
+        newValue: wallet.coins[coin].value
+    });
+    
+    // Dacă amount-ul a ajuns la 0, eliminăm moneda din assets
+    if (wallet.coins[coin].amount <= 0) {
+        console.log("Removing coin from wallet:", coin);
+        delete wallet.coins[coin];
+        
+        // Eliminăm elementul din UI
+        const assetElement = findAssetElement(coin);
+        if (assetElement) {
+            assetElement.remove();
+        }
+    } else {
+        // Actualizăm UI-ul pentru asset
+        const assetElement = findAssetElement(coin);
+        if (assetElement) {
+            const amountElement = assetElement.querySelector('.asset-amount');
+            const valueElement = assetElement.querySelector('.asset-value');
+            if (amountElement) {
+                amountElement.textContent = `${wallet.coins[coin].amount.toFixed(8)} ${coin.toUpperCase()}`;
+            }
+            if (valueElement) {
+                valueElement.textContent = `$${wallet.coins[coin].value.toFixed(2)}`;
+            }
+        }
+    }
+    
+    // Actualizăm total balance
+    wallet.totalBalance = parseFloat((wallet.totalBalance - valueUSD).toFixed(2));
+    
+    // Creăm tranzacția
+    const transaction = {
+        type: 'withdraw',
+        coin: coin,
+        amount: amount,
+        value: valueUSD,
+        date: new Date(),
+        status: 'completed'
+    };
+    
+    // Adăugăm tranzacția în istoric
+    if (!wallet.transactions) {
+        wallet.transactions = [];
+    }
+    wallet.transactions.unshift(transaction);
+    
+    // Actualizăm UI-ul pentru tranzacții
+    const transactionsList = document.getElementById('transactionsList');
+    if (transactionsList) {
+        // Eliminăm mesajul "no transactions" dacă există
+        const noTransactionsMessage = transactionsList.querySelector('.no-transactions-message');
+        if (noTransactionsMessage) {
+            noTransactionsMessage.remove();
+        }
+        
+        // Creăm elementul pentru noua tranzacție
+        const transactionItem = document.createElement('div');
+        transactionItem.className = 'transaction-item';
+        transactionItem.innerHTML = `
+            <div class="transaction-icon withdraw">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-title">Withdrew ${coin.toUpperCase()}</div>
+                <div class="transaction-date">Just now</div>
+            </div>
+            <div class="transaction-amount">
+                <div class="amount">-${amount.toFixed(8)} ${coin.toUpperCase()}</div>
+                <div class="value">-$${valueUSD.toFixed(2)}</div>
+            </div>
+            <div class="transaction-status">
+                <span class="status completed">Completed</span>
+            </div>
+        `;
+        
+        // Adăugăm noua tranzacție la începutul listei
+        if (transactionsList.firstChild) {
+            transactionsList.insertBefore(transactionItem, transactionsList.firstChild);
+        } else {
+            transactionsList.appendChild(transactionItem);
+        }
+    }
+    
+    // Salvăm în localStorage
+    localStorage.setItem('wallet', JSON.stringify(wallet));
+    
+    // Actualizăm interfața
+    updateWalletDisplay();
+    
+    // Închidem modalul
+    const withdrawModal = document.getElementById('withdrawModal');
+    if (withdrawModal) {
+        withdrawModal.style.display = 'none';
+    }
+    
+    // Resetăm input-urile din modal
+    const withdrawAmount = document.getElementById('withdrawAmount');
+    if (withdrawAmount) {
+        withdrawAmount.value = '';
+    }
+    
+    // Arătăm notificare de succes
+    showNotification(`Successfully withdrew ${amount} ${coin.toUpperCase()}!`, 'success');
+    
+    console.log("Withdraw completed successfully");
+}
+
+function updateAvailableAmount(coin) {
+    console.log("Updating available amount for coin:", coin);
+    
+    const availableAmountElement = document.getElementById('availableAmount');
+    const coinSymbolElement = document.getElementById('coinSymbol');
+    
+    if (!availableAmountElement || !coinSymbolElement) {
+        console.error("Missing elements for available amount update");
+        return;
+    }
+    
+    // Setăm simbolul monedei
+    const symbol = coin.toUpperCase();
+    coinSymbolElement.textContent = symbol;
+    
+    // Obținem balanța pentru moneda selectată
+    let availableAmount = 0;
+    if (wallet && wallet.coins && wallet.coins[coin]) {
+        availableAmount = wallet.coins[coin].amount || 0;
+    }
+    
+    console.log("Available amount:", availableAmount);
+    availableAmountElement.textContent = availableAmount.toFixed(8);
+}
+
+function setupWithdrawEvents() {
+    console.log("Setting up withdraw events...");
+    
+    const withdrawAmount = document.getElementById('withdrawAmount');
+    const withdrawCoin = document.getElementById('withdrawCoin');
+    const maxBtn = document.querySelector('.max-btn');
+    const withdrawSubmitBtn = document.getElementById('withdrawSubmitBtn');
+    
+    if (!withdrawAmount || !withdrawCoin || !maxBtn || !withdrawSubmitBtn) {
+        console.error("Missing withdraw elements");
+        return;
+    }
+    
+    // Actualizează informațiile disponibile când se schimbă moneda
+    withdrawCoin.addEventListener('change', function() {
+        console.log("Coin changed to:", this.value);
+        updateAvailableAmount(this.value);
+    });
+    
+    // Inițializează cu prima monedă
+    updateAvailableAmount(withdrawCoin.value);
+    
+    // Handler pentru butonul MAX
+    maxBtn.addEventListener('click', function() {
+        const availableAmount = parseFloat(document.getElementById('availableAmount').textContent);
+        withdrawAmount.value = availableAmount.toFixed(8);
+    });
+    
+    // Handler pentru submit
+    withdrawSubmitBtn.addEventListener('click', function() {
+        // Validăm și curățăm valoarea introdusă
+        let inputValue = withdrawAmount.value.trim();
+        
+        // Convertim la număr și validăm
+        const amount = parseFloat(inputValue);
+        if (!isNaN(amount) && amount > 0) {
+            const coin = withdrawCoin.value;
+            const availableAmount = parseFloat(document.getElementById('availableAmount').textContent);
+            
+            console.log("Withdraw attempt:", { 
+                inputValue,
+                amount,
+                coin, 
+                availableAmount 
+            });
+            
+            // Verificăm dacă sunt fonduri suficiente
+            if (amount > availableAmount) {
+                showNotification('Insufficient funds', 'error');
+                return;
+            }
+            
+            // Dacă totul este valid, procesăm retragerea
+            processWithdraw(amount, coin);
+        }
+    });
+    
+    // Validare pentru input - permitem doar numere pozitive și prevenim input invalid
+    withdrawAmount.addEventListener('input', function() {
+        let value = this.value;
+        
+        // Eliminăm caracterele non-numerice (exceptând punctul decimal)
+        value = value.replace(/[^\d.]/g, '');
+        
+        // Ne asigurăm că avem doar un punct decimal
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Limităm zecimalele la 8 poziții
+        if (parts.length === 2 && parts[1].length > 8) {
+            value = parts[0] + '.' + parts[1].substring(0, 8);
+        }
+        
+        // Actualizăm valoarea
+        this.value = value;
+    });
+}
+
+function populateWithdrawCoinDropdown() {
+    const withdrawCoin = document.getElementById('withdrawCoin');
+    if (!withdrawCoin) return;
+    
+    withdrawCoin.innerHTML = '';
+    
+    // Adăugăm doar monedele care au un sold pozitiv
+    for (const coinId in wallet.coins) {
+        if (wallet.coins[coinId].amount > 0) {
+            const option = document.createElement('option');
+            option.value = coinId;
+            option.textContent = `${getCoinName(coinId)} (${coinId.toUpperCase()})`;
+            withdrawCoin.appendChild(option);
+        }
+    }
+    
+    // Dacă nu există monede, adăugăm opțiuni implicite
+    if (withdrawCoin.options.length === 0) {
+        const defaultCoins = [
+            { id: 'btc', name: 'Bitcoin' },
+            { id: 'eth', name: 'Ethereum' },
+            { id: 'orx', name: 'Orionix' }
+        ];
+        
+        defaultCoins.forEach(coin => {
+            const option = document.createElement('option');
+            option.value = coin.id;
+            option.textContent = `${coin.name} (${coin.id.toUpperCase()})`;
+            withdrawCoin.appendChild(option);
+        });
+    }
+    
+    // Actualizăm informațiile disponibile pentru prima monedă
+    updateAvailableAmount(withdrawCoin.value);
 }
