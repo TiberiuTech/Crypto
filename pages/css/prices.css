@@ -2,6 +2,41 @@
     padding: 2rem;
     background: var(--background-color);
     min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.prices-container .carousel-container {
+    width: 100%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: hidden;
+    position: relative;
+    margin-top: 20px;
+    margin-bottom: 25px;
+    padding: 10px 1rem;
+}
+
+.prices-container .table-container {
+    max-width: 1400px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem;
+}
+
+.prices-container .crypto-table {
+    width: 100%;
+}
+
+.prices-container .carousel-track {
+    display: flex;
+    gap: 15px;
+    padding: 10px 0;
+    width: 100%;
 }
 
 .prices-title {
@@ -65,24 +100,6 @@
     background: var(--card-background);
     color: var(--text-color);
     padding: 8px;
-}
-
-.carousel-container {
-    width: 100%;
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    overflow: hidden;
-    position: relative;
-    margin-top: 20px;
-    margin-bottom: 25px;
-    padding: 10px 0;
-}
-
-.carousel-track {
-    display: flex;
-    gap: 15px;
-    padding: 10px 0;
 }
 
 .coin-card {
@@ -235,11 +252,7 @@
     margin: 2rem 1rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
-}
-
-.table-container, .crypto-table, .carousel-container {
-    max-width: 1400px;
-    width: 100%;
+    overflow-x: auto;
 }
 
 .crypto-table {
@@ -881,8 +894,8 @@
 }
 
 .table-container {
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    overflow-x: auto;
 }
 
 .crypto-table th:nth-child(7) {
