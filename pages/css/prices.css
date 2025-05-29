@@ -1,42 +1,64 @@
 .prices-container {
-    padding: 2rem;
+    padding: 0;
     background: var(--background-color);
-    min-height: 100vh;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-wrapper {
+    width: 100%;
     max-width: 1400px;
     margin: 0 auto;
-    overflow-y: auto;
-    overflow-x: hidden;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.prices-container .carousel-container {
-    width: 100%;
+.main-content {
     max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
+    padding: 0 1rem;
+    width: 100%;
+}
+
+.carousel-wrapper {
+    width: 100%;
+    margin: 20px 0;
     overflow: hidden;
     position: relative;
-    margin-top: 20px;
-    margin-bottom: 25px;
-    padding: 10px 1rem;
 }
 
-.prices-container .table-container {
+.carousel-container {
+    width: 100%;
     max-width: 1400px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 1rem;
+    margin: 20px auto;
+    overflow: hidden;
+    position: relative;
 }
 
-.prices-container .crypto-table {
-    width: 100%;
-}
-
-.prices-container .carousel-track {
+.carousel-track {
     display: flex;
     gap: 15px;
     padding: 10px 0;
+}
+
+.crypto-table-container {
+    background: var(--card-background);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 2rem auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     width: 100%;
+    max-width: 1400px;
 }
 
 .prices-title {
@@ -48,24 +70,32 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-weight: 800;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .search-container {
     display: flex;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin: 1rem auto 2rem;
+    width: 100%;
+    max-width: 600px;
+    justify-content: center;
     padding: 0 1rem;
 }
 
 .search-input {
     flex: 1;
+    max-width: 600px;
     padding: 0.75rem 1rem;
     border-radius: 12px;
     border: 1px solid var(--border-color);
     background: var(--card-background);
     color: var(--text-color);
-    font-size: 1rem;
+    font-size: 0.95rem;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .search-input:focus {
@@ -219,14 +249,22 @@
 }
 
 @media (max-width: 1200px) {
+    .main-wrapper {
+        padding: 1.5rem;
+    }
+    
     .coin-card {
         flex: 0 0 25%;
     }
 }
 
 @media (max-width: 768px) {
-    .prices-container {
+    .main-wrapper {
         padding: 1rem;
+    }
+    
+    .prices-container {
+        padding: 0;
     }
     
     .coin-card {
@@ -237,22 +275,37 @@
         width: 25px;
         height: 25px;
     }
-}
 
-@media (max-width: 480px) {
-    .coin-card {
-        flex: 0 0 50%;
+    .table-container {
+        margin: 0 0.5rem;
+        width: calc(100% - 1rem);
+    }
+
+    .search-container {
+        padding: 0 0.5rem;
+        margin: 1rem auto 1.5rem;
+    }
+    
+    .search-input {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.8rem;
     }
 }
 
-.crypto-table-container {
-    background: var(--card-background);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin: 2rem 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-color);
-    overflow-x: auto;
+@media (max-width: 480px) {
+    .main-wrapper {
+        padding: 0.5rem;
+    }
+    
+    .coin-card {
+        flex: 0 0 50%;
+    }
+
+    .table-container {
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+    }
 }
 
 .crypto-table {
@@ -260,6 +313,7 @@
     border-collapse: separate;
     border-spacing: 0;
     color: var(--text-color);
+    margin: 0 auto;
 }
 
 .crypto-table th, 
@@ -879,23 +933,26 @@
 /* 2. Centrare titlu și bara de căutare cu tabelul */
 .prices-title {
     text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    width: fit-content;
+    width: 100%;
+    max-width: 1400px;
 }
 
 .search-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: auto;
-    margin-right: auto;
-    width: fit-content;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 1400px;
 }
 
 .table-container {
     width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
     overflow-x: auto;
+    background: var(--card-background);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
 }
 
 .crypto-table th:nth-child(7) {
