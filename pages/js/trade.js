@@ -2681,11 +2681,17 @@ function updateWalletAssetsDisplay() {
     const portfolioOverview = document.querySelector('.portfolio-overview .value');
     const totalBalance = document.querySelector('.total-balance .value');
     
-    if (!assetsList) return;
+    console.log('Updating wallet assets display');
+    
+    if (!assetsList) {
+        console.warn('Wallet assets list element not found');
+        return;
+    }
     
     assetsList.innerHTML = '';
     
     if (!walletData) {
+        console.log('No wallet data found in localStorage');
         const emptyWallet = document.createElement('div');
         emptyWallet.className = 'wallet-asset-placeholder';
         emptyWallet.innerHTML = `
@@ -2699,6 +2705,7 @@ function updateWalletAssetsDisplay() {
     }
     
     const wallet = JSON.parse(walletData);
+    console.log('Current wallet state:', wallet);
     
     // Calculăm valoarea totală a portofoliului (doar monedele crypto, fără USDT)
     let portfolioValue = 0;
@@ -2708,6 +2715,9 @@ function updateWalletAssetsDisplay() {
             const symbol = getCoinSymbolFromId(coinId);
             const currentPrice = cryptoData[symbol]?.price || coin.price;
             portfolioValue += coin.amount * currentPrice;
+            console.log(`Asset ${coinId}: Amount=${coin.amount}, Price=${currentPrice}, Value=${coin.amount * currentPrice}`);
+        } else if (coin) {
+            console.log(`Skipping asset ${coinId}: Amount=${coin?.amount}`);
         }
     }
     
@@ -2738,6 +2748,7 @@ function updateWalletAssetsDisplay() {
     }
     
     if (!wallet.coins || Object.keys(wallet.coins).length === 0) {
+        console.log('No coins in wallet');
         const emptyWallet = document.createElement('div');
         emptyWallet.className = 'wallet-asset-placeholder';
         emptyWallet.innerHTML = `
@@ -2748,8 +2759,47 @@ function updateWalletAssetsDisplay() {
         return;
     }
     
-    // Restul codului pentru afișarea activelor rămâne neschimbat
-    // ... existing code ...
+    // Pentru fiecare monedă, verificăm și afișăm
+    for (const coinId in wallet.coins) {
+        const coin = wallet.coins[coinId];
+        // Modificăm condiția pentru a afișa și monedele cu amount = 0
+        if (!coin) {
+            console.log(`Skipping invalid coin: ${coinId}`);
+            continue;
+        }
+        
+        console.log(`Processing coin ${coinId} with amount ${coin.amount}`);
+        
+        const currentPrice = getCurrentPrice(coinId);
+        const value = coin.amount * currentPrice;
+        const changePercent = coinData[coinId]?.price_change_percentage_24h || 0;
+        
+        const assetItem = document.createElement('div');
+        assetItem.className = 'wallet-asset-item';
+        assetItem.innerHTML = `
+            <div class="wallet-asset-icon ${coinId.toLowerCase()}-icon">${getIconContent(coinId)}</div>
+            <div class="wallet-asset-details">
+                <div class="wallet-asset-name-row">
+                    <span class="wallet-asset-name">${getCoinName(coinId)}</span>
+                    <span class="wallet-asset-symbol">${coinData[coinId]?.symbol || coinId.toUpperCase()}</span>
+                </div>
+                <div class="wallet-asset-amount-row">
+                    <span class="wallet-asset-amount">${coin.amount.toFixed(4)} ${coinData[coinId]?.symbol || coinId.toUpperCase()}</span>
+                    <span class="wallet-asset-change ${changePercent >= 0 ? 'positive' : 'negative'}">
+                        <i class="fas fa-caret-${changePercent >= 0 ? 'up' : 'down'}"></i>
+                        <span>${Math.abs(changePercent).toFixed(1)}%</span>
+                    </span>
+                </div>
+                <div class="wallet-asset-value-row">
+                    <span class="wallet-asset-value">$${formatNumber(value)}</span>
+                </div>
+            </div>
+        `;
+        
+        assetsList.appendChild(assetItem);
+    }
+    
+    console.log('Finished updating wallet assets display');
 }
 
 // Adăugăm stiluri CSS pentru a îmbunătăți afișarea
@@ -3072,79 +3122,118 @@ function setupOrderHistory() {
 function updateWalletAfterPurchase(pair, amount, price) {
     console.log(`Actualizare portofel după cumpărare: ${amount} ${pair.split('/')[0]} la prețul $${price}`);
     
-    const symbol = pair.split('/')[0];
+    const [symbol, quoteCurrency] = pair.split('/');
     const coinId = getCoinIdFromSymbol(symbol);
     
-    if (!coinId) {
-        console.error(`Nu s-a putut determina coinId pentru simbolul ${symbol}`);
+    // Validăm parametrii
+    if (!symbol || !amount || !price) {
+        console.error('Missing required parameters:', { symbol, amount, price });
         return;
     }
     
-    const valueUSD = amount * price;
-    
-    let wallet = JSON.parse(localStorage.getItem('wallet') || '{"totalBalance":0,"coins":{}}');
-    
-    // Verificăm dacă avem suficiente fonduri USDT
-    if (valueUSD > wallet.totalBalance) {
-        console.error(`Fonduri insuficiente: necesar $${valueUSD}, disponibil $${wallet.totalBalance}`);
+    if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
+        console.error('Invalid amount:', amount);
         return;
     }
     
-    // Scădem suma cheltuită din balanța totală
-    wallet.totalBalance -= valueUSD;
+    if (typeof price !== 'number' || isNaN(price) || price <= 0) {
+        console.error('Invalid price:', price);
+        return;
+    }
     
+    // Încărcăm wallet-ul din localStorage pentru a ne asigura că avem datele cele mai recente
+    const storedWallet = localStorage.getItem('wallet');
+    if (storedWallet) {
+        try {
+            const parsedWallet = JSON.parse(storedWallet);
+            if (parsedWallet && typeof parsedWallet === 'object') {
+                wallet = parsedWallet;
+            }
+        } catch (e) {
+            console.error('Error parsing wallet from localStorage:', e);
+        }
+    }
+    
+    // Asigurăm că avem structura corectă pentru monedă
     if (!wallet.coins) {
         wallet.coins = {};
     }
     
-    // Adăugăm sau actualizăm moneda în portofel
     if (!wallet.coins[coinId]) {
         wallet.coins[coinId] = {
-            amount: amount,
+            id: coinId,
+            name: getCoinName(symbol),
+            ticker: symbol,
+            amount: 0,
+            value: 0,
             price: price,
-            value: valueUSD,
-            valueUSD: valueUSD,
-            changePercent: cryptoData[symbol]?.priceChange24h || 0
-        };
-    } else {
-        const existingAmount = wallet.coins[coinId].amount || 0;
-        const newAmount = existingAmount + amount;
-        
-        const existingValue = wallet.coins[coinId].value || 0;
-        const newValue = existingValue + valueUSD;
-        const newAvgPrice = newValue / newAmount;
-        
-        wallet.coins[coinId] = {
-            amount: newAmount,
-            price: newAvgPrice,
-            value: newValue,
-            valueUSD: newValue,
-            changePercent: cryptoData[symbol]?.priceChange24h || wallet.coins[coinId].changePercent || 0
+            change: 0
         };
     }
     
-    // Calculăm valoarea totală a portofoliului (Portfolio Value)
-    let portfolioValue = wallet.totalBalance; // Începem cu USDT disponibil
+    // Actualizăm amount-ul cu verificare
+    const currentAmount = wallet.coins[coinId].amount || 0;
+    const newAmount = parseFloat((currentAmount + amount).toFixed(8));
+    
+    if (typeof newAmount === 'number' && !isNaN(newAmount)) {
+        wallet.coins[coinId].amount = newAmount;
+        wallet.coins[coinId].price = price;
+        wallet.coins[coinId].value = parseFloat((newAmount * price).toFixed(2));
+        
+        console.log('Updated coin values:', {
+            coinId,
+            oldAmount: currentAmount,
+            newAmount: wallet.coins[coinId].amount,
+            price,
+            value: wallet.coins[coinId].value
+        });
+    } else {
+        console.error('Invalid new amount calculated:', {
+            currentAmount,
+            amount,
+            newAmount
+        });
+        return;
+    }
+    
+    // Actualizăm balanța USDT
+    const cost = amount * price;
+    if (wallet.totalBalance >= cost) {
+        wallet.totalBalance = parseFloat((wallet.totalBalance - cost).toFixed(2));
+    } else {
+        console.error('Insufficient balance for purchase');
+        return;
+    }
+    
+    // Calculăm valoarea totală a portofoliului
+    let portfolioValue = wallet.totalBalance;
     for (const id in wallet.coins) {
         const coin = wallet.coins[id];
         if (coin && coin.amount > 0) {
-            // Folosim prețul curent din cryptoData dacă este disponibil
             const currentPrice = cryptoData[getCoinSymbolFromId(id)]?.price || coin.price;
             portfolioValue += coin.amount * currentPrice;
         }
     }
     
-    // Salvăm și valoarea portofoliului separat
-    wallet.portfolioValue = portfolioValue;
+    wallet.portfolioValue = parseFloat(portfolioValue.toFixed(2));
     
-    localStorage.setItem('wallet', JSON.stringify(wallet));
+    // Salvăm în localStorage
+    try {
+        localStorage.setItem('wallet', JSON.stringify(wallet));
+        console.log('Wallet saved to localStorage');
+    } catch (e) {
+        console.error('Error saving wallet to localStorage:', e);
+    }
     
     console.log(`Portofel actualizat: ${amount} ${symbol} adăugat, total ${wallet.coins[coinId].amount} ${symbol}`);
     console.log(`Balanță USDT rămasă: $${wallet.totalBalance.toFixed(2)}`);
     console.log(`Valoare totală portofoliu: $${wallet.portfolioValue.toFixed(2)}`);
     
-    setTimeout(updateWalletAssetsDisplay, 500);
-    updateTradeBalance();
+    // Actualizăm UI-ul
+    setTimeout(() => {
+        updateWalletAssetsDisplay();
+        updateTradeBalance();
+    }, 100);
 }
 
 // Funcție pentru a determina coinId din simbolul monedei

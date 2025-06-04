@@ -1292,9 +1292,22 @@ function setupEventListeners() {
 function updateAssetAfterDeposit(coin, amount) {
     const coinId = coin.includes('coin') || Object.keys(coinData).includes(coin) ? coin : getCoinIdFromSymbol(coin);
     
-    console.log('Deposit for coin:', coin, 'CoinGecko ID:', coinId);
+    console.log('Updating asset after deposit:', {
+        coin,
+        coinId,
+        amount,
+        currentWallet: wallet.coins[coinId]
+    });
     
+    // Validăm amount-ul
+    if (typeof amount !== 'number' || isNaN(amount)) {
+        console.error('Invalid amount provided:', amount);
+        return;
+    }
+    
+    // Asigurăm că avem un obiect valid pentru monedă
     if (!wallet.coins[coinId]) {
+        console.log('Creating new coin entry for:', coinId);
         wallet.coins[coinId] = {
             id: coinId,
             name: getCoinName(coin),
@@ -1305,13 +1318,43 @@ function updateAssetAfterDeposit(coin, amount) {
         };
     }
     
-    wallet.coins[coinId].amount += amount;
-    wallet.coins[coinId].value += amount * getCurrentPrice(coin);
+    // Actualizăm amount-ul cu verificare
+    const currentAmount = wallet.coins[coinId].amount || 0;
+    const newAmount = currentAmount + amount;
     
+    // Verificăm dacă noua valoare este validă
+    if (typeof newAmount === 'number' && !isNaN(newAmount)) {
+        wallet.coins[coinId].amount = parseFloat(newAmount.toFixed(8));
+        const currentPrice = getCurrentPrice(coin);
+        wallet.coins[coinId].value = parseFloat((wallet.coins[coinId].amount * currentPrice).toFixed(2));
+        
+        console.log('Updated coin values:', {
+            coinId,
+            oldAmount: currentAmount,
+            newAmount: wallet.coins[coinId].amount,
+            price: currentPrice,
+            value: wallet.coins[coinId].value
+        });
+    } else {
+        console.error('Invalid new amount calculated:', {
+            currentAmount,
+            amount,
+            newAmount
+        });
+        return;
+    }
+    
+    // Salvăm în localStorage
+    saveWalletToStorage();
+    
+    // Actualizăm UI-ul
     updateWalletDisplay();
     
     const assetsList = document.getElementById('assetsList');
-    if (!assetsList) return;
+    if (!assetsList) {
+        console.warn('Assets list element not found');
+        return;
+    }
     
     const noAssetsMessage = assetsList.querySelector('.no-assets-message');
     if (noAssetsMessage) {
@@ -1321,6 +1364,7 @@ function updateAssetAfterDeposit(coin, amount) {
     const existingAsset = findAssetElement(coinId);
     
     if (existingAsset) {
+        console.log('Updating existing asset element');
         const assetAmountElement = existingAsset.querySelector('.asset-amount');
         const assetValueElement = existingAsset.querySelector('.asset-value');
         
@@ -1332,6 +1376,7 @@ function updateAssetAfterDeposit(coin, amount) {
             assetValueElement.textContent = `$${wallet.coins[coinId].value.toFixed(2)}`;
         }
     } else {
+        console.log('Creating new asset element');
         const assetItem = createAssetElement(coinId);
         assetsList.appendChild(assetItem);
     }
