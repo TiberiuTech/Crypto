@@ -1,3 +1,6 @@
+// Import Firebase auth from the config file
+import { auth } from './pages/js/firebase-config.js';
+
 function setupPasswordToggle(inputId, toggleIconId) {
     const passwordInput = document.getElementById(inputId);
     const toggleIcon = document.getElementById(toggleIconId);
@@ -11,7 +14,7 @@ function setupPasswordToggle(inputId, toggleIconId) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async function() {
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -138,32 +141,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LOGICA AUTENTIFICARE FIREBASE ---
-    // Asigurăm-ne că inițializăm autentificarea după ce DOM-ul este complet încărcat
-    setTimeout(() => {
-        if (typeof window.firebaseAuth !== 'undefined') {
-            console.log("Firebase Auth detectat - inițializăm logica de autentificare");
-            
-            // Verificăm starea de autentificare la încărcarea paginii
-            window.firebaseAuth.onAuthStateChanged(function(user) {
-                console.log("Starea de autentificare s-a schimbat:", user ? "utilizator logat" : "utilizator nelogat");
+    let authInitAttempts = 0;
+    const maxAuthAttempts = 5;
+    
+    // Improved Firebase Auth initialization
+    async function initializeFirebaseAuth() {
+        try {
+            // Wait for auth to be ready
+            if (!auth) {
+                throw new Error('Firebase Auth not available');
+            }
+
+            // Set up auth state listener
+            auth.onAuthStateChanged(function(user) {
+                console.log("Auth state changed:", user ? "user logged in" : "user logged out");
                 updateUIForAuthState(user);
             });
-        } else {
-            console.warn("Firebase Auth nu este disponibil încă, încercăm din nou în 500ms");
-            
-            // Încercăm din nou după 500ms
-            setTimeout(() => {
-                if (typeof window.firebaseAuth !== 'undefined') {
-                    console.log("Firebase Auth detectat (a doua încercare)");
-                    window.firebaseAuth.onAuthStateChanged(function(user) {
-                        updateUIForAuthState(user);
-                    });
-                } else {
-                    console.error("Firebase Auth nu a putut fi inițializat după mai multe încercări");
-                }
-            }, 500);
+
+            console.log("Firebase Auth initialized successfully");
+            return true;
+        } catch (error) {
+            console.error("Error initializing Firebase Auth:", error);
+            return false;
         }
-    }, 100);
+    }
+
+    // Initialize Firebase Auth
+    await initializeFirebaseAuth();
 
     // Determinăm calea corectă în funcție de locația curentă
     const isInPagesDir = window.location.pathname.includes('/pages/');
