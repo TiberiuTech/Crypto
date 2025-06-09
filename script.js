@@ -207,6 +207,50 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         });
     }
+
+    // Funcție pentru gestionarea click-urilor pe link-urile protejate
+    function handleProtectedLinks() {
+        const walletLinks = document.querySelectorAll('a[href*="wallet.html"]');
+        const tradeLinks = document.querySelectorAll('a[href*="trade.html"]');
+        
+        const isInPagesDir = window.location.pathname.includes('/pages/');
+        const loginPath = isInPagesDir ? 'login.html' : 'pages/login.html';
+        const walletPath = isInPagesDir ? 'wallet.html' : 'pages/wallet.html';
+        const tradePath = isInPagesDir ? 'trade.html' : 'pages/trade.html';
+        
+        const checkAuth = () => {
+            if (typeof window.isAuthenticated === 'function') {
+                return window.isAuthenticated();
+            }
+            // Fallback dacă funcția nu este disponibilă
+            return localStorage.getItem('userToken') !== null;
+        };
+        
+        walletLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!checkAuth()) {
+                    window.location.href = loginPath;
+                } else {
+                    window.location.href = walletPath;
+                }
+            });
+        });
+        
+        tradeLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!checkAuth()) {
+                    window.location.href = loginPath;
+                } else {
+                    window.location.href = tradePath;
+                }
+            });
+        });
+    }
+
+    // Adăugăm event listener pentru încărcarea paginii
+    handleProtectedLinks();
 });
 
 // Event pentru actualizarea alertelor când se schimbă în alt tab
