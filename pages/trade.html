@@ -104,11 +104,56 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0/dist/chartjs-plugin-zoom.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@dataable/chartjs-chart-financial@1.3.1/dist/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trading-view-widget@3.0.0/dist/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Verificare imediată la încărcarea paginii
+        if (!localStorage.getItem('userToken')) {
+            window.location.href = 'login.html';
+        }
+    </script>
 </head>
+<<<<<<< HEAD
 <body>
     <div id="auth-loading-overlay">
         <div class="loading-spinner"></div>
     </div>
+=======
+<body onload="protectRoute()">
+    <nav class="navbar">
+        <a href="../index.html" class="logo">Crypto-Platform</a>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="news.html" class="nav-item">News</a>
+            <a href="prices.html" class="nav-item">Prices</a>
+            <a href="orionix.html" class="nav-item">Orionix</a>
+            <a href="wallet.html" class="nav-item">Wallet</a>
+            <a href="trade.html" class="nav-item active">Trade</a>
+           
+            <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="controls-desktop">
+            <button id="notificationBtn" class="notification-btn">
+                <i class="fas fa-bell"></i>
+            </button>
+            <button id="themeToggleBtn" class="theme-toggle-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="auth-buttons desktop">
+                <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+                <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+            <div id="user-info-desktop" class="user-info-desktop" style="display:none; align-items:center; gap:10px;">
+                <img id="user-photo-desktop" src="" alt="User Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:none;">
+                <span id="user-name-desktop" style="font-weight:600;"></span>
+                <button id="logoutBtnDesktop" class="auth-btn" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+>>>>>>> 12be9c9e58085cdc9ca18afb3a38290f691cbabe
 
     <div class="main-content">
         <nav class="navbar">

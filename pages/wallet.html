@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,10 +71,176 @@
     <link rel="stylesheet" href="css/wallet.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Verificare imediată la încărcarea paginii
+        if (!localStorage.getItem('userToken')) {
+            window.location.href = 'login.html';
+        }
+    </script>
 </head>
+<<<<<<< HEAD
 <body>
     <div id="auth-loading-overlay">
         <div class="loading-spinner"></div>
+=======
+<body onload="protectRoute()">
+    <button id="resetWalletBtn" onclick="resetWallet()" style="position:fixed; bottom:5px; right:5px; opacity:0.1; z-index:9999; font-size:10px; padding:5px; background-color:red; color:white; border:none; border-radius:4px;">Reset Wallet</button>
+    <nav class="navbar">
+        <a href="../index.html" class="logo">Crypto-Platform</a>
+        <button class="hamburger">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="news.html" class="nav-item">News</a>
+            <a href="prices.html" class="nav-item">Prices</a>
+            <a href="orionix.html" class="nav-item">Orionix</a>
+            <a href="wallet.html" class="nav-item active">Wallet</a>
+            <a href="trade.html" class="nav-item">Trade</a>
+
+            <button id="themeToggleBtnMobile" class="theme-toggle-btn mobile">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="controls-desktop">
+            <button id="notificationBtn" class="notification-btn">
+                <i class="fas fa-bell"></i>
+            </button>
+            <button id="themeToggleBtn" class="theme-toggle-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+            <div class="auth-buttons desktop" style="display:flex; gap:0.5rem;">
+                <button id="loginBtn" class="auth-btn" onclick="window.location.href='login.html'">Login</button>
+                <button id="signupBtn" class="auth-btn" onclick="window.location.href='signup.html'">Sign Up</button>
+            </div>
+            <div id="user-info-desktop" class="user-info-desktop" style="display:none; align-items:center; gap:10px;">
+                <img id="user-photo-desktop" src="" alt="User Photo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:none;">
+                <span id="user-name-desktop" style="font-weight:600;"></span>
+                <button id="logoutBtnDesktop" class="auth-btn" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="wallet-container">
+        <div class="about-title">
+            <h2 class="page-title">Crypto Wallet</h2>
+        </div>
+        
+        <div class="dashboard-section">
+            <div class="portfolio-overview">
+                <div class="balance-header">Total Balance</div>
+                <div class="text-4xl font-bold text-white">$0.00</div>
+                <div class="portfolio-chart">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="action-button" id="depositButton">
+                    <div class="action-icon deposit">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <span>Deposit</span>
+                </button>
+                <button class="action-button" id="withdrawButton">
+                    <div class="action-icon withdraw">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <span>Withdraw</span>
+                </button>
+                <button class="action-button" id="swapButton">
+                    <div class="action-icon swap">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <span>Swap</span>
+                </button>
+                <button class="action-button" id="addFundsButton">
+                    <div class="action-icon funds">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <span>Add Funds</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="assets-section">
+            <div class="section-header">
+                <h3>Your Assets</h3>
+            </div>
+            
+            <div class="assets-list" id="assetsList">
+                <div class="no-assets-message">
+                    <p>No assets yet. Make a deposit to add assets to your wallet.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="transactions-section">
+            <div class="section-header">
+                <h3>Recent Transactions</h3>
+            </div>
+            
+            <div class="transactions-list" id="transactionsList">
+                <div class="no-transactions-message">
+                    <p>No transactions yet. Your transaction history will appear here.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="depositModal" class="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Deposit Crypto</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label for="depositCoin">Select Coin</label>
+                        <div class="custom-dropdown">
+                            <div class="selected-option" id="selectedCoin">
+                                <img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" alt="Bitcoin" class="coin-icon">
+                                <span class="coin-name">Bitcoin (BTC)</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="dropdown-options" id="coinOptions">
+                            </div>
+                            <input type="hidden" id="depositCoin" value="btc">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="depositAmount">Amount</label>
+                        <div class="input-with-symbol">
+                            <input type="number" id="depositAmount" class="form-input" step="any" min="0" placeholder="0.00">
+                            <span id="depositCoinSymbol" style="display: none;">BTC</span>
+                        </div>
+                    </div>
+                    
+                    <div class="transaction-preview-card">
+                        <h4 class="preview-title">Transaction Summary</h4>
+                        <div class="preview-content">
+                            <div class="preview-row">
+                                <span class="preview-label">You will receive:</span>
+                                <span class="preview-value"><span id="previewAmount">0.00</span> <span id="previewSymbol">BTC</span></span>
+                            </div>
+                            <div class="preview-row">
+                                <span class="preview-label">Estimated value:</span>
+                                <span class="preview-value">$<span id="previewValue">0.00</span></span>
+                            </div>
+                            <div class="preview-row">
+                                <span class="preview-label">Processing time:</span>
+                                <span class="preview-value" id="processingTime">~10-60 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="depositSubmitBtn" class="submit-btn">Deposit Now</button>
+                </div>
+            </div>
+        </div>
+>>>>>>> 12be9c9e58085cdc9ca18afb3a38290f691cbabe
     </div>
     <div class="main-content">
         <button id="resetWalletBtn" onclick="resetWallet()" style="position:fixed; bottom:5px; right:5px; opacity:0.1; z-index:9999; font-size:10px; padding:5px; background-color:red; color:white; border:none; border-radius:4px;">Reset Wallet</button>
