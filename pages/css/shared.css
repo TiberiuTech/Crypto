@@ -1,0 +1,24 @@
+/* Loading Spinner */
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Theme-specific colors for loading overlay */
+html[data-theme="light"] #auth-loading-overlay {
+    background-color: #ffffff;
+}
+
+html[data-theme="dark"] #auth-loading-overlay {
+    background-color: #1a1a1a;
+} 

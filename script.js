@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             auth.onAuthStateChanged(function(user) {
                 console.log("Auth state changed:", user ? "user logged in" : "user logged out");
                 updateUIForAuthState(user);
+                checkAuthAndRedirect();
             });
 
             console.log("Firebase Auth initialized successfully");
@@ -1839,5 +1840,20 @@ function updateModalsTheme(theme) {
     if (alertModal) {
         alertModal.classList.remove('light-theme', 'dark-theme');
         alertModal.classList.add(theme + '-theme');
+    }
+}
+
+// Function to check if user is logged in and redirect if not
+function checkAuthAndRedirect() {
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath.includes('login.html') || currentPath.includes('signup.html');
+    const isWalletPage = currentPath.includes('wallet.html');
+    const isTradePage = currentPath.includes('trade.html');
+    
+    // If we're on wallet or trade page and not logged in, redirect to login
+    if ((isWalletPage || isTradePage) && !auth.currentUser) {
+        const isInPagesDir = window.location.pathname.includes('/pages/');
+        const loginPath = isInPagesDir ? 'login.html' : 'pages/login.html';
+        window.location.href = loginPath;
     }
 }

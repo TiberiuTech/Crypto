@@ -1,55 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, initializing components");
     
-    const swapModal = document.getElementById('swapModal');
-    if (swapModal) {
-        swapModal.remove();
-        console.log("Swap modal removed from DOM");
-    }
-    
-    if (typeof fixXRPValue === 'function') {
-        console.log("Calling fixXRPValue() to ensure consistent values");
-        fixXRPValue();
-    } else {
-        console.warn("Function fixXRPValue not found, possible XRP values will not be displayed correctly");
-        window.fixXRPValue = function() {
-            console.log("fixXRPValue dummy function");
-        };
-    }
-    
-    setupChart();
-    initCustomDropdown();
-    initEmptyUI();
-    
-    console.log("Initializing API and forcing data update");
-    initCryptoAPI();
-    
-    setupEventListeners();
-    
-    startPriceUpdates();
-    
-    updateTradeBalance();
-    
-    initializeBalanceVisibilityToggle();
-    
-    setTimeout(() => {
+    // Initialize trading functionality
+    function initializeTrading() {
+        const swapModal = document.getElementById('swapModal');
+        if (swapModal) {
+            swapModal.remove();
+            console.log("Swap modal removed from DOM");
+        }
+        
+        setupChart();
+        initCustomDropdown();
+        initEmptyUI();
+        
+        console.log("Initializing API and forcing data update");
+        initCryptoAPI();
+        
+        setupEventListeners();
+        
+        // Start price updates immediately
+        startPriceUpdates();
+        
+        // Initial data fetch
         fetchCryptoData().then(() => {
-            console.log("Data fetch updated, updating wallet assets");
+            console.log("Initial data fetch completed");
             updateWalletAssetsDisplay();
+            updateInterfaceWithCoinData();
         }).catch(err => {
-            console.warn("Error updating wallet assets data:", err);
-            updateWalletAssetsDisplay();
+            console.error("Error during initial data fetch:", err);
+            showAPIErrorMessage();
         });
-    }, 500);
+        
+        // Regular updates for wallet assets
+        setInterval(() => {
+            fetchCryptoData().then(() => {
+                updateWalletAssetsDisplay();
+                updateInterfaceWithCoinData();
+            }).catch(err => {
+                console.error("Error updating data:", err);
+                showAPIErrorMessage();
+            });
+        }, 15000); // Update every 15 seconds
+        
+        setupOrderHistory();
+    }
     
-    setInterval(() => {
-        updateWalletAssetsDisplay();
-    }, 30000);
-    
-    setupOrderHistory();
+    initializeTrading();
 });
 
-const marketData = {
+
+
+let marketData = {
     'BTC/USDT': {
         lastPrice: 0.00,
         priceChange: 0.00,
@@ -94,7 +95,7 @@ let priceChartData = {};
 let currentCoin = 'BTC';
 let priceUpdateInterval;
 let lastAPICall = 0;
-const API_CALL_DELAY = 10000;
+const API_CALL_DELAY = 15000; // Minimum time between API calls (15 seconds)
 
 const COINGECKO_PROXY = 'https://cors-anywhere.herokuapp.com/';
 
@@ -671,7 +672,7 @@ function forceVisualUpdate() {
 })();
 
 function startPriceUpdates() {
-    const UPDATE_INTERVAL = 2000; 
+    const UPDATE_INTERVAL = 15000; // Aligned with proxy cache duration (15 seconds)
     fetchCryptoData();
     
     if (priceUpdateInterval) {
@@ -775,20 +776,50 @@ if (tradingPairEl) {
 }
 
 async function fetchCryptoData() {
-    const now = Date.now();
-    if (now - lastAPICall < API_CALL_DELAY) return;
     try {
-        const success = await fetchFromBinance();
-        if (!success) throw new Error('Binance did not return data');
-        lastAPICall = now;
+        console.log("Fetching crypto data from proxy server...");
+        const response = await fetch('http://127.0.0.1:5000/api/prices');
+        if (!response.ok) {
+            throw new Error('Failed to fetch prices from proxy');
+        }
         
-        updateWalletWithRealData();
+        const data = await response.json();
         
+        // Update global cryptoData object
+        window.cryptoData = {};
+        for (const coin of data) {
+            const symbol = coin.symbol.toUpperCase();
+            window.cryptoData[symbol] = {
+                price: parseFloat(coin.current_price),
+                priceChange24h: parseFloat(coin.price_change_percentage_24h),
+                volume24h: parseFloat(coin.total_volume),
+                high24h: parseFloat(coin.high_24h),
+                low24h: parseFloat(coin.low_24h)
+            };
+        }
+        
+        // Update market data
+        for (const pair in marketData) {
+            const symbol = pair.split('/')[0];
+            if (window.cryptoData[symbol]) {
+                marketData[pair] = {
+                    lastPrice: window.cryptoData[symbol].price,
+                    priceChange: window.cryptoData[symbol].priceChange24h,
+                    high24h: window.cryptoData[symbol].high24h,
+                    low24h: window.cryptoData[symbol].low24h,
+                    volume: formatVolume(window.cryptoData[symbol].volume24h)
+                };
+            }
+        }
+        
+        // Update interface
+        updateWalletAssetsDisplay();
+        updateInterfaceWithCoinData();
+        
+        console.log("Crypto data updated successfully:", window.cryptoData);
         return true;
     } catch (error) {
-        console.error('Error fetching data:', error);
-        useFallbackData();
-        showAPIErrorMessage();
+        console.error("Error fetching crypto data:", error);
         return false;
     }
 }
@@ -808,71 +839,93 @@ async function fetchFromBinance() {
     try {
         const selectedPair = document.getElementById('tradingPair').value;
         const symbol = selectedPair.split('/')[0];
-        const binanceSymbol = binanceSymbolMap[symbol];
+        const coinId = coinGeckoIdMap[symbol];
         
-        if (!binanceSymbol) {
-            console.warn(`Coin ${symbol} does not have a Binance mapping`);
+        if (!coinId) {
+            console.warn(`Coin ${symbol} does not have a CoinGecko mapping`);
             return false;
         }
         
-        console.log(`Attempting to fetch Binance for ${binanceSymbol}...`);
+        console.log(`Attempting to fetch CoinGecko data for ${coinId}...`);
         
-        const tickerUrl = `https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`;
-        console.log(`Fetch ticker URL: ${tickerUrl}`);
+        // Use proxy server for all API calls
+        const proxyBaseUrl = 'http://127.0.0.1:5000/api/proxy?url=';
         
-        let tickerResponse;
-        try {
-            tickerResponse = await fetch(tickerUrl);
-            console.log(`Ticker response status: ${tickerResponse.status}`);
-        } catch (err) {
-            console.error(`Error fetching ticker: ${err.message}`);
-            throw err;
+        // Fetch current price data using the dedicated prices endpoint
+        const priceResponse = await fetch('http://127.0.0.1:5000/api/prices');
+        
+        if (!priceResponse.ok) {
+            throw new Error(`Price API error: ${priceResponse.status}`);
         }
         
-        if (!tickerResponse.ok) {
-            console.error(`Ticker negative response: ${tickerResponse.status} ${tickerResponse.statusText}`);
-            throw new Error(`Binance API error: ${tickerResponse.status}`);
+        const priceData = await priceResponse.json();
+        console.log(`Price data received for ${coinId}:`, priceData);
+        
+        // Find the specific coin data
+        const coinData = priceData.find(coin => coin.id === coinId);
+        if (!coinData) {
+            throw new Error(`No price data found for ${coinId}`);
         }
         
-        const tickerData = await tickerResponse.json();
-        console.log(`Ticker data received for ${binanceSymbol}:`, tickerData);
+        // Fetch OHLC data through proxy
+        const ohlcUrl = `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=1`;
+        const ohlcResponse = await fetch(proxyBaseUrl + encodeURIComponent(ohlcUrl));
         
-        if (!tickerData.lastPrice || !tickerData.highPrice || !tickerData.lowPrice) {
-            console.error(`Invalid or incomplete ticker data:`, tickerData);
-            throw new Error(`Invalid ticker data for ${binanceSymbol}`);
+        if (!ohlcResponse.ok) {
+            throw new Error(`OHLC API error: ${ohlcResponse.status}`);
         }
         
-        const klineUrl = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=15m&limit=100`;
-        console.log(`Fetch kline URL: ${klineUrl}`);
-        
-        let klineResponse;
-        try {
-            klineResponse = await fetch(klineUrl);
-            console.log(`Kline response status: ${klineResponse.status}`);
-        } catch (err) {
-            console.error(`Error fetching kline: ${err.message}`);
-            throw err;
-        }
-        
-        if (!klineResponse.ok) {
-            console.error(`Kline negative response: ${klineResponse.status} ${klineResponse.statusText}`);
-            throw new Error(`Binance Kline API error: ${klineResponse.status}`);
-        }
-        
-        const klineData = await klineResponse.json();
-        console.log(`Received ${klineData.length} candles for ${binanceSymbol}`);
+        const ohlcData = await ohlcResponse.json();
+        console.log(`Received ${ohlcData.length} OHLC points for ${coinId}`);
         
         const currentPair = document.getElementById('tradingPair').value;
         if (currentPair !== selectedPair) {
             console.warn(`Selected coin changed between fetching (${selectedPair} → ${currentPair}), cancelling processing`);
             return false;
         }
+
+        // Process the data
+        const currentPrice = coinData.current_price;
+        const priceChange24h = coinData.price_change_percentage_24h || 0;
+        const high24h = coinData.high_24h;
+        const low24h = coinData.low_24h;
+        const volume24h = coinData.total_volume;
+
+        cryptoData[symbol] = {
+            price: currentPrice,
+            priceChange24h: priceChange24h,
+            high24h: high24h,
+            low24h: low24h,
+            volume: formatVolume(volume24h),
+            lastUpdated: new Date()
+        };
         
-        processBinanceData(symbol, tickerData, klineData);
+        // Convert OHLC data to chart format
+        priceChartData[symbol] = ohlcData.map(candle => ({
+            x: new Date(candle[0]),
+            y: candle[4] // closing price
+        }));
+        
+        processBinanceData(symbol, {
+            lastPrice: currentPrice,
+            priceChangePercent: priceChange24h,
+            highPrice: high24h,
+            lowPrice: low24h,
+            volume: volume24h
+        }, ohlcData);
+        
         console.log(`Data processed successfully for ${symbol}`);
         return true;
     } catch (error) {
-        console.error(`Binance error for ${document.getElementById('tradingPair').value.split('/')[0]}:`, error);
+        console.error(`API error for ${document.getElementById('tradingPair').value.split('/')[0]}:`, error);
+        
+        // If we have cached data, use it
+        const symbol = document.getElementById('tradingPair').value.split('/')[0];
+        if (cryptoData[symbol] && cryptoData[symbol].price) {
+            console.log('Using cached data as fallback');
+            return true;
+        }
+        
         usingRealData = false;
         return false;
     }
@@ -1567,21 +1620,33 @@ function setupEventListeners() {
         placeOrderBtn.addEventListener('click', processOrder);
     }
     
+    // Order tabs functionality
     const orderTabButtons = document.querySelectorAll('.orders-tab-btn');
     orderTabButtons.forEach(button => {
         button.addEventListener('click', function() {
+            // Remove active class from all buttons
             orderTabButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
             this.classList.add('active');
             
+            // Get the tab ID from data attribute
             const tabId = this.getAttribute('data-orders-tab');
-            const containers = document.querySelectorAll('.orders-table-container');
-            containers.forEach(container => {
-                container.classList.remove('active');
-            });
             
-            const activeContainer = document.getElementById(tabId + 'OrdersTable');
-            if (activeContainer) {
-                activeContainer.classList.add('active');
+            // Hide all containers
+            const containers = document.querySelectorAll('.orders-table-container');
+            containers.forEach(container => container.classList.remove('active'));
+            
+            // Show the selected container
+            const selectedContainer = document.getElementById(tabId + 'OrdersTable');
+            if (selectedContainer) {
+                selectedContainer.classList.add('active');
+            }
+            
+            // If switching to history tab, refresh the order history
+            if (tabId === 'history') {
+                renderOrderHistory();
+            } else if (tabId === 'open') {
+                renderOpenOrders();
             }
         });
     });
@@ -2004,33 +2069,69 @@ function formatVolume(volume) {
 }
 
 function updateInterfaceWithCoinData() {
-    const selectedPair = document.getElementById('tradingPair').value;
-    const symbol = selectedPair.split('/')[0];
+    const walletData = localStorage.getItem('wallet');
+    if (!walletData) return;
     
-    if (cryptoData[symbol]) {
-        const data = cryptoData[symbol];
-        
-        syncAllPrices(data.price, symbol);
-        
-        const priceChangeText = (data.priceChange24h >= 0 ? '+' : '') + data.priceChange24h.toFixed(2) + '%';
-        const priceChangeEl = document.getElementById('priceChange');
-        if (priceChangeEl) {
-            priceChangeEl.textContent = priceChangeText;
-            priceChangeEl.className = 'stat-value ' + (data.priceChange24h >= 0 ? 'positive' : 'negative');
+    const wallet = JSON.parse(walletData);
+    if (!wallet.coins) return;
+    
+    const assetsContainer = document.querySelector('.assets-container');
+    const noAssetsMessage = document.getElementById('no-assets-message');
+
+    // Clear existing asset cards
+    Array.from(assetsContainer.children).forEach(child => {
+        if (!child.classList.contains('no-assets-message')) {
+            child.remove();
         }
-        
-        const volumeEl = document.getElementById('volume');
-        if (volumeEl) {
-            volumeEl.textContent = data.volume;
+    });
+
+    // Get all coins from wallet
+    const coins = Object.entries(wallet.coins);
+
+    if (coins.length === 0) {
+        // Show no assets message if wallet is empty
+        if (noAssetsMessage) {
+            noAssetsMessage.style.display = 'block';
         }
-        
-        const spread = data.price * 0.0005;
-        const spreadPercent = 0.05;
-        const spreadEl = document.getElementById('spread');
-        if (spreadEl) {
-            spreadEl.textContent = `$${spread.toFixed(2)} (${spreadPercent.toFixed(2)}%)`;
-        }
+        return;
     }
+
+    // Hide no assets message if we have coins
+    if (noAssetsMessage) {
+        noAssetsMessage.style.display = 'none';
+    }
+
+    // Create asset cards for each coin
+    coins.forEach(([coinId, coinData]) => {
+        const assetCard = document.createElement('div');
+        assetCard.className = `asset-card ${coinId}`;
+        
+        let price = 0;
+        let priceChange = 0;
+
+        if (window.cryptoData && window.cryptoData[coinData.ticker]) {
+            price = window.cryptoData[coinData.ticker].price || 0;
+            priceChange = window.cryptoData[coinData.ticker].priceChange24h || 0;
+        }
+
+        const value = price * coinData.amount;
+        
+        assetCard.innerHTML = `
+            <div class="asset-info">
+                <div class="asset-icon">${getIconContent(coinId)}</div>
+                <div class="asset-details">
+                    <div class="asset-name">${coinData.name} <span class="asset-symbol">${coinData.ticker}</span></div>
+                    <div class="asset-amount">${coinData.amount.toFixed(4)} ${coinData.ticker}</div>
+                    <div class="asset-value">$${value.toFixed(2)}</div>
+                    <div class="asset-change ${priceChange >= 0 ? 'positive' : 'negative'}">
+                        ${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(1)}%
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        assetsContainer.appendChild(assetCard);
+    });
 }
 
 function updateChart(symbol) {
@@ -2677,129 +2778,86 @@ document.addEventListener('DOMContentLoaded', () => {
 // === AFIȘARE ASSETS DIN WALLET ===
 function updateWalletAssetsDisplay() {
     const walletData = localStorage.getItem('wallet');
-    const assetsList = document.getElementById('walletAssetsList');
-    const portfolioOverview = document.querySelector('.portfolio-overview .value');
-    const totalBalance = document.querySelector('.total-balance .value');
-    
-    console.log('Updating wallet assets display');
-    
-    if (!assetsList) {
-        console.warn('Wallet assets list element not found');
-        return;
-    }
-    
-    assetsList.innerHTML = '';
-    
-    if (!walletData) {
-        console.log('No wallet data found in localStorage');
-        const emptyWallet = document.createElement('div');
-        emptyWallet.className = 'wallet-asset-placeholder';
-        emptyWallet.innerHTML = `
-            <i class="fas fa-wallet"></i>
-            <span>No assets found in your wallet</span>
-        `;
-        assetsList.appendChild(emptyWallet);
-        if (portfolioOverview) portfolioOverview.textContent = '$0.00';
-        if (totalBalance) totalBalance.textContent = '$0.00';
-        return;
-    }
-    
+    if (!walletData) return;
+
     const wallet = JSON.parse(walletData);
-    console.log('Current wallet state:', wallet);
-    
-    // Calculăm valoarea totală a portofoliului (doar monedele crypto, fără USDT)
-    let portfolioValue = 0;
-    for (const coinId in wallet.coins) {
-        const coin = wallet.coins[coinId];
-        if (coin && coin.amount > 0) {
-            const symbol = getCoinSymbolFromId(coinId);
-            const currentPrice = cryptoData[symbol]?.price || coin.price;
-            portfolioValue += coin.amount * currentPrice;
-            console.log(`Asset ${coinId}: Amount=${coin.amount}, Price=${currentPrice}, Value=${coin.amount * currentPrice}`);
-        } else if (coin) {
-            console.log(`Skipping asset ${coinId}: Amount=${coin?.amount}`);
+    if (!wallet.coins) return;
+
+    const assetsContainer = document.querySelector('.assets-container');
+    const noAssetsMessage = document.getElementById('no-assets-message');
+
+    // Clear existing asset cards
+    Array.from(assetsContainer.children).forEach(child => {
+        if (!child.classList.contains('no-assets-message')) {
+            child.remove();
         }
-    }
-    
-    // Afișăm Portfolio Overview (doar valoarea monedelor crypto)
-    if (portfolioOverview) {
-        portfolioOverview.textContent = '$' + portfolioValue.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-    
-    // Calculăm și afișăm Total Balance (USDT + valoarea monedelor)
-    const totalValue = (wallet.totalBalance || 0) + portfolioValue;
-    if (totalBalance) {
-        totalBalance.textContent = '$' + totalValue.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-    
-    // Actualizăm și textul din Portfolio Overview header
-    const portfolioOverviewHeader = document.querySelector('.portfolio-overview .value-label');
-    if (portfolioOverviewHeader) {
-        portfolioOverviewHeader.textContent = '$' + portfolioValue.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-    
-    if (!wallet.coins || Object.keys(wallet.coins).length === 0) {
-        console.log('No coins in wallet');
-        const emptyWallet = document.createElement('div');
-        emptyWallet.className = 'wallet-asset-placeholder';
-        emptyWallet.innerHTML = `
-            <i class="fas fa-wallet"></i>
-            <span>No assets found in your wallet</span>
-        `;
-        assetsList.appendChild(emptyWallet);
+    });
+
+    // Get all coins from wallet
+    const coins = Object.entries(wallet.coins);
+
+    if (coins.length === 0) {
+        // Show no assets message if wallet is empty
+        if (noAssetsMessage) {
+            noAssetsMessage.style.display = 'block';
+        }
         return;
     }
-    
-    // Pentru fiecare monedă, verificăm și afișăm
-    for (const coinId in wallet.coins) {
-        const coin = wallet.coins[coinId];
-        // Modificăm condiția pentru a afișa și monedele cu amount = 0
-        if (!coin) {
-            console.log(`Skipping invalid coin: ${coinId}`);
-            continue;
+
+    // Hide no assets message if we have coins
+    if (noAssetsMessage) {
+        noAssetsMessage.style.display = 'none';
+    }
+
+    // Create asset cards for each coin
+    coins.forEach(([coinId, coinData]) => {
+        const assetCard = document.createElement('div');
+        assetCard.className = `asset-card ${coinId}`;
+        
+        let price = 0;
+        let priceChange = 0;
+
+        if (window.cryptoData && window.cryptoData[coinData.ticker]) {
+            price = window.cryptoData[coinData.ticker].price || 0;
+            priceChange = window.cryptoData[coinData.ticker].priceChange24h || 0;
         }
+
+        const value = price * coinData.amount;
         
-        console.log(`Processing coin ${coinId} with amount ${coin.amount}`);
-        
-        const currentPrice = getCurrentPrice(coinId);
-        const value = coin.amount * currentPrice;
-        const changePercent = coinData[coinId]?.price_change_percentage_24h || 0;
-        
-        const assetItem = document.createElement('div');
-        assetItem.className = 'wallet-asset-item';
-        assetItem.innerHTML = `
-            <div class="wallet-asset-icon ${coinId.toLowerCase()}-icon">${getIconContent(coinId)}</div>
-            <div class="wallet-asset-details">
-                <div class="wallet-asset-name-row">
-                    <span class="wallet-asset-name">${getCoinName(coinId)}</span>
-                    <span class="wallet-asset-symbol">${coinData[coinId]?.symbol || coinId.toUpperCase()}</span>
-                </div>
-                <div class="wallet-asset-amount-row">
-                    <span class="wallet-asset-amount">${coin.amount.toFixed(4)} ${coinData[coinId]?.symbol || coinId.toUpperCase()}</span>
-                    <span class="wallet-asset-change ${changePercent >= 0 ? 'positive' : 'negative'}">
-                        <i class="fas fa-caret-${changePercent >= 0 ? 'up' : 'down'}"></i>
-                        <span>${Math.abs(changePercent).toFixed(1)}%</span>
-                    </span>
-                </div>
-                <div class="wallet-asset-value-row">
-                    <span class="wallet-asset-value">$${formatNumber(value)}</span>
+        assetCard.innerHTML = `
+            <div class="asset-info">
+                <div class="asset-icon">${getIconContent(coinId)}</div>
+                <div class="asset-details">
+                    <div class="asset-name">${coinData.name} <span class="asset-symbol">${coinData.ticker}</span></div>
+                    <div class="asset-amount">${coinData.amount.toFixed(4)} ${coinData.ticker}</div>
+                    <div class="asset-value">$${value.toFixed(2)}</div>
+                    <div class="asset-change ${priceChange >= 0 ? 'positive' : 'negative'}">
+                        ${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(1)}%
+                    </div>
                 </div>
             </div>
         `;
         
-        assetsList.appendChild(assetItem);
-    }
+        assetsContainer.appendChild(assetCard);
+    });
+}
+
+// La încărcarea paginii, inițializăm afișajul cu asseturile din wallet
+document.addEventListener('DOMContentLoaded', () => {
+    updateWalletAssetsDisplay();
     
-    console.log('Finished updating wallet assets display');
+    // Actualizăm periodic afișajul
+    setInterval(updateWalletAssetsDisplay, 5000);
+});
+
+function showEmptyWalletMessage(container) {
+    const emptyWallet = document.createElement('div');
+    emptyWallet.className = 'wallet-asset-placeholder';
+    emptyWallet.innerHTML = `
+        <i class="fas fa-wallet"></i>
+        <span>No assets found in your wallet</span>
+    `;
+    container.appendChild(emptyWallet);
 }
 
 // Adăugăm stiluri CSS pentru a îmbunătăți afișarea
@@ -3398,21 +3456,50 @@ function updateWalletWithRealData() {
 
 // Modificăm funcția fetchCryptoData pentru a actualiza și wallet-ul
 async function fetchCryptoData() {
-    const now = Date.now();
-    if (now - lastAPICall < API_CALL_DELAY) return;
     try {
-        const success = await fetchFromBinance();
-        if (!success) throw new Error('Binance nu a returnat date');
-        lastAPICall = now;
+        console.log("Fetching crypto data from proxy server...");
+        const response = await fetch('http://127.0.0.1:5000/api/prices');
+        if (!response.ok) {
+            throw new Error('Failed to fetch prices from proxy');
+        }
         
-        // După ce obținem date reale, actualizăm și wallet-ul
-        updateWalletWithRealData();
+        const data = await response.json();
         
+        // Update global cryptoData object
+        window.cryptoData = {};
+        for (const coin of data) {
+            const symbol = coin.symbol.toUpperCase();
+            window.cryptoData[symbol] = {
+                price: parseFloat(coin.current_price),
+                priceChange24h: parseFloat(coin.price_change_percentage_24h),
+                volume24h: parseFloat(coin.total_volume),
+                high24h: parseFloat(coin.high_24h),
+                low24h: parseFloat(coin.low_24h)
+            };
+        }
+        
+        // Update market data
+        for (const pair in marketData) {
+            const symbol = pair.split('/')[0];
+            if (window.cryptoData[symbol]) {
+                marketData[pair] = {
+                    lastPrice: window.cryptoData[symbol].price,
+                    priceChange: window.cryptoData[symbol].priceChange24h,
+                    high24h: window.cryptoData[symbol].high24h,
+                    low24h: window.cryptoData[symbol].low24h,
+                    volume: formatVolume(window.cryptoData[symbol].volume24h)
+                };
+            }
+        }
+        
+        // Update interface
+        updateWalletAssetsDisplay();
+        updateInterfaceWithCoinData();
+        
+        console.log("Crypto data updated successfully:", window.cryptoData);
         return true;
     } catch (error) {
-        console.error('Eroare la preluarea datelor:', error);
-        useFallbackData();
-        showAPIErrorMessage();
+        console.error("Error fetching crypto data:", error);
         return false;
     }
 }

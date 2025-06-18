@@ -1,27 +1,48 @@
 document.addEventListener('DOMContentLoaded', () => {
-    fixXRPValue();
-    
-    fetchCoinData().then(() => {
-        initializeModals();
-        initializePortfolioChart();
-        initializeDepositDropdown();
-        initializeSwapModal();
-        setupCustomNotifications();
+    // Initialize wallet functionality
+    function initializeWallet() {
+        fixXRPValue();
         
-        removeNoAssetsMessage();
-        
-        initializeBalanceVisibilityToggle();
-        
-        startPriceFluctuation();
-        
-        restoreWalletUI();
-        
-        updateCoinValues();
-        
-        updateWalletDisplay();
-        
-        setupEventListeners();
-    });
+        fetchCoinData().then(() => {
+            initializeModals();
+            initializePortfolioChart();
+            initializeDepositDropdown();
+            initializeSwapModal();
+            setupCustomNotifications();
+            
+            removeNoAssetsMessage();
+            
+            initializeBalanceVisibilityToggle();
+            
+            startPriceFluctuation();
+            
+            restoreWalletUI();
+            
+            updateCoinValues();
+            
+            updateWalletDisplay();
+            
+            setupEventListeners();
+        }).catch(error => {
+            console.error('Error initializing wallet:', error);
+        });
+    }
+
+    // Check if Firebase Auth is available and wait for auth state
+    if (window.firebaseAuth) {
+        window.firebaseAuth.onAuthStateChanged(function(user) {
+            if (user) {
+                console.log('User is authenticated, initializing wallet...');
+                initializeWallet();
+            } else {
+                console.log('User is not authenticated, redirecting to login...');
+                window.location.href = 'login.html';
+            }
+        });
+    } else {
+        console.error('Firebase Auth is not initialized');
+        window.location.href = 'login.html';
+    }
 });
 
 let wallet = {
@@ -34,10 +55,14 @@ let wallet = {
 const savedWallet = localStorage.getItem('wallet');
 if (savedWallet) {
     try {
-        wallet = JSON.parse(savedWallet);
+        const parsedWallet = JSON.parse(savedWallet);
+        wallet = parsedWallet;
     } catch (e) {
         console.error('Error parsing wallet from localStorage:', e);
+        localStorage.setItem('wallet', JSON.stringify(wallet));
     }
+} else {
+    localStorage.setItem('wallet', JSON.stringify(wallet));
 }
 
 const coinData = {};
@@ -1175,10 +1200,10 @@ function setupEventListeners() {
     });
     
     // Adaug event listener specific pentru butonul Add Funds folosind ID-ul
-    const addFundsButton = document.getElementById('addFundsButton');
-    if (addFundsButton) {
+    let addFundsBtn = document.getElementById('addFundsButton');
+    if (addFundsBtn) {
         console.log("Found addFundsButton by ID");
-        addFundsButton.addEventListener('click', function() {
+        addFundsBtn.addEventListener('click', function() {
             console.log("Add Funds button clicked by ID");
             
             // Moneda implicită
@@ -2660,4 +2685,38 @@ function populateWithdrawCoinDropdown() {
     
     // Actualizăm informațiile disponibile pentru prima monedă
     updateAvailableAmount(withdrawCoin.value);
+}
+
+// Initialize wallet if it doesn't exist
+if (!localStorage.getItem('wallet')) {
+    const defaultWallet = {
+        coins: {
+            ethereum: {
+                id: 'ethereum',
+                name: 'Ethereum',
+                ticker: 'ETH',
+                amount: 1.0004,
+                value: 0,
+                change: 0
+            },
+            bitcoin: {
+                id: 'bitcoin',
+                name: 'Bitcoin',
+                ticker: 'BTC',
+                amount: 0.05,
+                value: 0,
+                change: 0
+            },
+            binancecoin: {
+                id: 'binancecoin',
+                name: 'Binance Coin',
+                ticker: 'BNB',
+                amount: 2.5,
+                value: 0,
+                change: 0
+            }
+        },
+        transactions: []
+    };
+    localStorage.setItem('wallet', JSON.stringify(defaultWallet));
 }

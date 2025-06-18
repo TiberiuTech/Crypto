@@ -30,4 +30,12 @@ window.firebaseAuth = auth;
 console.log("Firebase initialized:", app);
 console.log("Auth initialized:", auth);
 
+// Add auth state change listener
+auth.onAuthStateChanged(function(user) {
+    console.log("Auth state changed:", user ? "user logged in" : "user logged out");
+    if (user) {
+        console.log("User is signed in with email:", user.email);
+    }
+});
+
 export { auth, app }; 
