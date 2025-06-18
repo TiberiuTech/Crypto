@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             auth.onAuthStateChanged(function(user) {
                 console.log("Auth state changed:", user ? "user logged in" : "user logged out");
                 updateUIForAuthState(user);
+                checkAuthAndRedirect();
             });
 
             console.log("Firebase Auth initialized successfully");
@@ -207,6 +208,50 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         });
     }
+
+    // Funcție pentru gestionarea click-urilor pe link-urile protejate
+    function handleProtectedLinks() {
+        const walletLinks = document.querySelectorAll('a[href*="wallet.html"]');
+        const tradeLinks = document.querySelectorAll('a[href*="trade.html"]');
+        
+        const isInPagesDir = window.location.pathname.includes('/pages/');
+        const loginPath = isInPagesDir ? 'login.html' : 'pages/login.html';
+        const walletPath = isInPagesDir ? 'wallet.html' : 'pages/wallet.html';
+        const tradePath = isInPagesDir ? 'trade.html' : 'pages/trade.html';
+        
+        const checkAuth = () => {
+            if (typeof window.isAuthenticated === 'function') {
+                return window.isAuthenticated();
+            }
+            // Fallback dacă funcția nu este disponibilă
+            return localStorage.getItem('userToken') !== null;
+        };
+        
+        walletLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!checkAuth()) {
+                    window.location.href = loginPath;
+                } else {
+                    window.location.href = walletPath;
+                }
+            });
+        });
+        
+        tradeLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!checkAuth()) {
+                    window.location.href = loginPath;
+                } else {
+                    window.location.href = tradePath;
+                }
+            });
+        });
+    }
+
+    // Adăugăm event listener pentru încărcarea paginii
+    handleProtectedLinks();
 });
 
 // Event pentru actualizarea alertelor când se schimbă în alt tab
@@ -1839,5 +1884,20 @@ function updateModalsTheme(theme) {
     if (alertModal) {
         alertModal.classList.remove('light-theme', 'dark-theme');
         alertModal.classList.add(theme + '-theme');
+    }
+}
+
+// Function to check if user is logged in and redirect if not
+function checkAuthAndRedirect() {
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath.includes('login.html') || currentPath.includes('signup.html');
+    const isWalletPage = currentPath.includes('wallet.html');
+    const isTradePage = currentPath.includes('trade.html');
+    
+    // If we're on wallet or trade page and not logged in, redirect to login
+    if ((isWalletPage || isTradePage) && !auth.currentUser) {
+        const isInPagesDir = window.location.pathname.includes('/pages/');
+        const loginPath = isInPagesDir ? 'login.html' : 'pages/login.html';
+        window.location.href = loginPath;
     }
 }

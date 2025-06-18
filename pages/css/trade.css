@@ -724,18 +724,29 @@ html[data-theme="light"] .orders-table tbody tr:hover {
 }
 
 .no-orders-message {
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 0;
+    padding: 2rem;
     color: var(--secondary-text-color);
+    text-align: center;
+    font-size: 0.9rem;
 }
 
 .no-orders-message i {
-    font-size: 2.5rem;
+    font-size: 2rem;
     margin-bottom: 1rem;
-    opacity: 0.5;
+    opacity: 0.7;
+}
+
+.no-orders-message p {
+    margin: 0;
+}
+
+/* Make sure the message is visible when there are no orders */
+.orders-table:empty + .no-orders-message {
+    display: flex;
 }
 
 /* Responsive design */
@@ -1230,4 +1241,245 @@ button[data-coin-id],
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-weight: 800;
+}
+
+/* Asset Cards Styles */
+.assets-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.asset-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    min-width: 200px;
+    flex: 1;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="light"] .asset-card {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.asset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent-color);
+}
+
+.asset-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.asset-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-color);
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.asset-details {
+    flex: 1;
+}
+
+.asset-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.asset-symbol {
+    font-size: 14px;
+    color: var(--secondary-text-color);
+    margin-left: 4px;
+}
+
+.asset-amount {
+    font-size: 14px;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+.asset-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+.asset-change {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.asset-change.positive {
+    color: var(--success-color);
+}
+
+.asset-change.negative {
+    color: var(--error-color);
+}
+
+@keyframes price-flash {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+.price-flash {
+    animation: price-flash 0.3s ease-out;
+}
+
+@media (max-width: 768px) {
+    .assets-container {
+        gap: 12px;
+    }
+    
+    .asset-card {
+        min-width: 160px;
+        padding: 12px;
+    }
+    
+    .asset-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    .asset-name {
+        font-size: 14px;
+    }
+    
+    .asset-symbol {
+        font-size: 12px;
+    }
+    
+    .asset-amount,
+    .asset-value,
+    .asset-change {
+        font-size: 13px;
+    }
+}
+
+/* Asset Cards */
+.assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.asset-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.asset-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.asset-info {
+    flex: 1;
+}
+
+.asset-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.symbol {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-left: 0.25rem;
+}
+
+.asset-amount {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.asset-value {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.asset-change {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.asset-change.positive {
+    color: var(--positive-color);
+}
+
+.asset-change.negative {
+    color: var(--negative-color);
+}
+
+/* Total Balance */
+.total-balance {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+@keyframes price-flash {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+.price-flash {
+    animation: price-flash 0.3s ease-out;
+}
+
+.no-assets-message {
+    text-align: center;
+    padding: 2rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+html[data-theme="light"] .no-assets-message {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.no-assets-message p {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin: 0;
+    opacity: 0.8;
 } 

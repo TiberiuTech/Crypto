@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Crypto-Platform</title>
+    <title>Login - Crypto</title>
     <script>
       (function() {
         try { 
@@ -19,6 +19,24 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/auth.js"></script>
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            // Aici va fi logica de autentificare cu backend-ul
+            // Pentru exemplu, simulăm o autentificare reușită
+            setAuthToken('dummy_token');
+            
+            // Verificăm dacă există o pagină salvată pentru redirecționare
+            const redirectPath = localStorage.getItem('redirectAfterLogin');
+            if (redirectPath) {
+                localStorage.removeItem('redirectAfterLogin');
+                window.location.href = redirectPath;
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
 </head>
 <body>
     <nav class="navbar">
@@ -53,7 +71,7 @@
     <main class="form-page-container">
         <div class="form-container">
             <h1 class="form-title">Login</h1>
-            <form id="login-form">
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="login-email">Email</label>
                     <input type="email" id="login-email" name="email" required>

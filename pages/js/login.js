@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
           errorMessage = 'Adresa de email este invalidă.';
           break;
         case 'auth/user-disabled':
-          errorMessage = 'Acest cont a fost dezactivat.';
+          errorMessage = 'Acest cont a fost dezactivat.';kl
           break;
         case 'auth/user-not-found':
           errorMessage = 'Nu există niciun cont cu acest email.';

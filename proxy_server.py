@@ -248,54 +248,43 @@ def make_request_with_retry(url, params=None):
             
             # Adăugăm un delay aleator pentru a evita detecția de cereri automatizate
             if attempt > 0:
-                jitter = random.uniform(0.5, 1.5)
-                time.sleep(RETRY_DELAY * (attempt + 1) * jitter)
-                logging.info(f"Reîncercare {attempt+1}/{MAX_RETRIES} pentru {url[:50]}...")
+                time.sleep(RETRY_DELAY * (1 + attempt))
             
-            if params:
-                response = requests.get(url, params=params, headers=headers, timeout=10)
-            else:
-                response = requests.get(url, headers=headers, timeout=10)
+            # Facem cererea cu timeout și verificare SSL
+            response = requests.get(
+                url,
+                params=params,
+                headers=headers,
+                timeout=10,
+                verify=True
+            )
             
-            # Verificăm dacă răspunsul conține JSON valid înainte de a continua
-            response.raise_for_status()
-            json_data = response.json()  # Va ridica o excepție dacă răspunsul nu este JSON valid
-            
-            # Adăugăm un log pentru cererea reușită
-            logging.info(f"✅ Cerere reușită pentru {url[:50]}")
-            
-            # Actualizăm timestamp-ul pentru rate limiting
-            with rate_limit_lock:
-                rate_limits[api_domain] = time.time()
-            
-            return json_data
-            
-        except requests.exceptions.HTTPError as e:
-            # Verificăm dacă eroarea este din cauza limitării de rate
-            if e.response.status_code == 429:
-                logging.warning(f"⚠️ Rate limit depășit, încercare {attempt+1}/{MAX_RETRIES}, așteptăm...")
-                # Așteptăm mai mult pentru rate limit
-                time.sleep(RETRY_DELAY * 2 * (attempt + 1))
+            # Verificăm codul de răspuns
+            if response.status_code == 429:  # Too Many Requests
+                logging.warning(f"⚠️ Rate limit API atins pentru {api_domain}, așteptăm...")
+                time.sleep(RETRY_DELAY * (2 ** attempt))  # Exponential backoff
                 continue
-            elif e.response.status_code == 404:
-                logging.error(f"❌ Resursa nu a fost găsită (404): {url}")
-                raise
-            elif attempt == MAX_RETRIES - 1:
-                logging.error(f"❌ Eroare HTTP după {MAX_RETRIES} încercări: {e}")
-                raise
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-            logging.warning(f"⚠️ Eroare de conexiune, încercare {attempt+1}/{MAX_RETRIES}: {e}")
+                
+            response.raise_for_status()
+            
+            # Încercăm să decodăm JSON-ul
+            try:
+                data = response.json()
+                logging.info(f"✅ Cerere reușită către {api_domain}")
+                return data
+            except json.JSONDecodeError as e:
+                logging.error(f"❌ Eroare decodare JSON de la {api_domain}: {e}")
+                if attempt == MAX_RETRIES - 1:
+                    raise
+                continue
+                
+        except requests.exceptions.RequestException as e:
+            logging.error(f"❌ Eroare cerere către {api_domain}: {e}")
             if attempt == MAX_RETRIES - 1:
-                logging.error(f"❌ Eroare de conexiune după {MAX_RETRIES} încercări: {e}")
                 raise
-        except (json.JSONDecodeError, ValueError) as e:
-            logging.error(f"❌ Eroare la decodarea JSON pentru {url}: {e}")
-            if attempt == MAX_RETRIES - 1:
-                raise
-        except Exception as e:
-            logging.error(f"❌ Eroare neașteptată: {e}")
-            if attempt == MAX_RETRIES - 1:
-                raise
+            continue
+            
+    raise Exception(f"Toate încercările au eșuat pentru {url}")
 
 def get_cache_with_lock(key, default=None):
     """Obține o valoare din cache cu lock pentru thread safety"""
