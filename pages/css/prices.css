@@ -1515,4 +1515,56 @@ td.blockchain-type[data-type="Nativ"]::before {
 
 td.blockchain-type[data-type="Token"]::before {
     background-color: #3b82f6;
+}
+
+html[data-theme="light"] .coin-modal {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+html[data-theme="light"] .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    color: #222;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+html[data-theme="light"] .modal-header {
+    background: rgba(240, 240, 240, 0.8);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+html[data-theme="light"] .modal-header h2 {
+    color: #222;
+    text-shadow: none;
+}
+
+html[data-theme="light"] .modal-close {
+    color: #888;
+}
+html[data-theme="light"] .modal-close:hover {
+    color: #222;
+}
+
+html[data-theme="light"] .stat-card {
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.08);
+    color: #222;
+}
+
+html[data-theme="light"] .info-card {
+    background: rgba(0,0,0,0.02);
+    border: 1px solid rgba(0,0,0,0.06);
+    color: #222;
+}
+
+html[data-theme="light"] .stat-label,
+html[data-theme="light"] .info-label {
+    color: #666;
+}
+
+html[data-theme="light"] .stat-value,
+html[data-theme="light"] .info-value {
+    color: #222;
+    text-shadow: none;
 } 
